@@ -1,13 +1,13 @@
 
 # enhanced Green's Function Reaction Dynamics
 
-## modern C++ implementation
+## a modern C++ implementation
 
 
-Copyright (C) 2015-2017 AMOLF
-Copyright (C) 2005-2008 The Molecular Sciences Institute
-Copyright (C) 2009-2010 FOM Institute AMOLF
-Copyright (C) 2008-2010 RIKEN
+* Copyright (C) 2015-2017 AMOLF
+* Copyright (C) 2005-2008 The Molecular Sciences Institute
+* Copyright (C) 2009-2010 FOM Institute AMOLF
+* Copyright (C) 2008-2010 RIKEN
 
 
 ### About this package

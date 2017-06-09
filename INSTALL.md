@@ -6,11 +6,11 @@
 
 If you use Fedora or any other RedHat lines of distributions: 
 
-sudo yum install gcc-c++ gsl gsl-devel
+`sudo yum install gcc-c++ gsl gsl-devel`
 
 or on Ubuntu Linux and some other Debian families, install the following:
 
-sudo apt-get install gcc-c++ gsl-bin libgsl0-dev
+`sudo apt-get install gcc-c++ gsl-bin libgsl0-dev`
 
 
 
@@ -18,35 +18,38 @@ sudo apt-get install gcc-c++ gsl-bin libgsl0-dev
 
 1. Get source codes: 
 
->  git clone https://github.com/gfrd/modern_rgfrd
+```git clone https://github.com/gfrd/modern_egfrd
 	or
-   download and unzip
+download and unzip
+```
    
 2. Run make to build:
 	
->	make samples
+`make samples`
 
 3. Execute the sample:
 
->  cd bin
->  export LD_LIBRARY_PATH=$(pwd)
->  ./RunGfrd Equilbrium
+```cd bin
+export LD_LIBRARY_PATH=$(pwd)
+./RunGfrd Equilbrium
+```
 
 4. Execute UnitTest
 
->  make tests
->  cd bin
->  export LD_LIBRARY_PATH=$(pwd)
->  ./TestGreensFunctions
->  ./TestGFRD
+```make tests
+cd bin
+export LD_LIBRARY_PATH=$(pwd)
+./TestGreensFunctions
+./TestGFRD
+```
 
    
 has been tested on:
-Ubuntu 14.04 LTS
-Ubuntu 10.04 LTS
-Debian 7.7.0
-Fedora 20.1
-CentOS 7.0.14.06
+* Ubuntu 14.04 LTS
+* Ubuntu 10.04 LTS
+* Debian 7.7.0
+* Fedora 20.1
+* CentOS 7.0.14.06
 
 
 ### Building on Windows
