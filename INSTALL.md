@@ -1,8 +1,13 @@
 
 ### Prerequisites
 
-1. GNU Scientific Library (GSL) 1.16 or later.
-2. GNU GCC (C++14 compatible) version 5.0 or later
+1. an ISO C++14 compiler, like GNU GCC v5.0 or Microsoft Visual C++ 2017
+2. GNU Scientific Library (GSL) 1.16.
+
+
+### Building on Linux
+
+1. Get prerequisites
 
 If you use Fedora or any other RedHat lines of distributions: 
 
@@ -13,37 +18,37 @@ or on Ubuntu Linux and some other Debian families, install the following:
 `sudo apt-get install gcc-c++ gsl-bin libgsl0-dev`
 
 
+2. Get source codes: 
 
-### Building on Linux
-
-1. Get source codes: 
-
-```git clone https://github.com/gfrd/modern_egfrd
+```
+git clone https://github.com/gfrd/modern_egfrd
 	or
 download and unzip
 ```
    
-2. Run make to build:
+3. Run make to build:
 	
 `make samples`
 
-3. Execute the sample:
+4. Execute the sample:
 
-```cd bin
+```
+cd bin
 export LD_LIBRARY_PATH=$(pwd)
 ./RunGfrd Equilbrium
 ```
 
-4. Execute UnitTest
+5. Execute UnitTest
 
-```make tests
+```
+make tests
 cd bin
 export LD_LIBRARY_PATH=$(pwd)
 ./TestGreensFunctions
 ./TestGFRD
 ```
 
-   
+
 has been tested on:
 * Ubuntu 14.04 LTS
 * Ubuntu 10.04 LTS
