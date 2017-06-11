@@ -4,6 +4,9 @@
 1. an ISO C++14 compiler, like GNU GCC v5.0 or Microsoft Visual C++ 2017
 2. GNU Scientific Library (GSL) 1.16.
 
+or newer version
+
+
 
 ### Building on Linux
 
@@ -30,6 +33,7 @@ download and unzip
 	
 `make samples`
 
+
 4. Execute the sample:
 
 ```
@@ -37,6 +41,7 @@ cd bin
 export LD_LIBRARY_PATH=$(pwd)
 ./RunGfrd Equilbrium
 ```
+
 
 5. Execute UnitTest
 
@@ -49,15 +54,42 @@ export LD_LIBRARY_PATH=$(pwd)
 ```
 
 
-has been tested on:
-* Ubuntu 14.04 LTS
-* Ubuntu 10.04 LTS
-* Debian 7.7.0
-* Fedora 20.1
-* CentOS 7.0.14.06
+6. Optional 3D Visualizer
+
+`sudo yum install freeglut freeglut-devel`
+or
+`sudo apt-get install freeglut3-dev`
+
+```
+make visualize
+cd bin
+export LD_LIBRARY_PATH=$(pwd)
+./gfrdVisualizer
+```
+
+
+
+This package has been tested on:
+
+| **Distribution** |  **GNU GCC/G++**  | **GSL** |
+|--------------|:-----:|:----:|
+| CentOS 7     | v5.3.1 | v1.15 |
+| Fedora 25    | v6.3.1 | v2.1 |
+| Ubuntu 16    | v5.4.0 | v2.1 |
+| Debian 8.8   | v4.9.2 | v1.16 |
+| Ubuntu 14    | v4.9.2 | v1.16 |
+| CentOS 5     | v4.9.2 | v1.13 |
+
+
+For all tests we have done so far everthing compiles with zero errors and zero warnings!
+If you have compilation problems please let us know!
+
 
 
 ### Building on Windows
+
+
+TODO
 
 1. Get Visual Studio 2017 (...)
 
