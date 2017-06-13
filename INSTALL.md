@@ -15,57 +15,65 @@
 
 If you use Fedora or any other RedHat lines of distributions: 
 
-`sudo yum install gcc-c++ gsl gsl-devel`
+```
+> sudo yum install gcc-c++ gsl gsl-devel`
+```
 
 or on Ubuntu Linux and some other Debian families, install the following:
 
-`sudo apt-get install gcc-c++ gsl-bin libgsl0-dev`
+```
+> sudo apt-get install gcc-c++ gsl-bin libgsl0-dev
+```
 
 
 2. Get source codes: 
 
 ```
-git clone https://github.com/gfrd/modern_egfrd
-	or
-download and unzip
+> git clone https://github.com/gfrd/modern_egfrd
 ```
    
 3. Run make to build:
 	
-`make samples`
+```
+make samples
+```
 
 
 4. Execute the sample:
 
 ```
-cd bin
-export LD_LIBRARY_PATH=$(pwd)
-./RunGfrd Equilbrium
+> cd bin
+> export LD_LIBRARY_PATH=$(pwd)
+> ./RunGfrd Equilibrium -ka 1e-19 -kd 2e-2 -p 100 -e 200 > data.out
 ```
 
 
-5. Execute UnitTest
+5. Build and execute UnitTests
 
 ```
-make tests
-cd bin
-export LD_LIBRARY_PATH=$(pwd)
-./TestGreensFunctions
-./TestGFRD
+> make tests
+> cd bin
+> export LD_LIBRARY_PATH=$(pwd)
+> ./TestGreensFunctions
+> ./TestGFRD
 ```
 
 
-6. Optional 3D Visualizer
+6. Optional run 3D Visualizer
 
-`sudo yum install freeglut freeglut-devel`
+```
+> sudo yum install freeglut freeglut-devel
+```
 or
-`sudo apt-get install freeglut3-dev`
+```
+> sudo apt-get install freeglut3-dev
+```
 
 ```
-make visualize
-cd bin
-export LD_LIBRARY_PATH=$(pwd)
-./gfrdVisualizer
+> make visualize
+> cd bin
+> export LD_LIBRARY_PATH=$(pwd)
+> ./gfrdVisualizer
 ```
 
 
@@ -97,17 +105,21 @@ If you have compilation problems please let us know!
 2. Get source codes: 
 
 ```
-git clone https://github.com/gfrd/modern_egfrd
-	or
-download and unzip
+> git clone https://github.com/gfrd/modern_egfrd
 ```
 
-3. Get windows versions of the dependancies: FreeGlut3 / GSL1.16 / LibCCD.
-   For convineance we bundeled these in a [support package](http://egfrd.org/includes/packages/WinSupport.zip)
-   extract it in the project root, so you get the Libs-folder.
+3. Get windows versions of the dependencies: FreeGlut3 / GSL1.16.
+
    
-	FreeGlut3 for MSVC from [Transmission Zero](http://www.transmissionzero.co.uk/software/freeglut-devel/), 
-	GSL for MSVC from Brian Gladman.
+   For convenience we bundled these in a [WinSupportPackage](http://egfrd.org/includes/packages/WinSupport.zip).
+   
+   
+   Extract it in the project root.
+   
+   
+* FreeGlut3 for MSVC from [Transmission Zero](http://www.transmissionzero.co.uk/software/freeglut-devel/), 
+* GSL for MSVC from Brian Gladman.
+
 
 3. Open solution newGfrd.sln
 
