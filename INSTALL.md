@@ -16,7 +16,7 @@
 If you use Fedora or any other RedHat lines of distributions: 
 
 ```
-> sudo yum install gcc-c++ gsl gsl-devel`
+> sudo yum install gcc-c++ gsl gsl-devel
 ```
 
 or on Ubuntu Linux and some other Debian families, install the following:
@@ -35,7 +35,7 @@ or on Ubuntu Linux and some other Debian families, install the following:
 3. Run make to build:
 	
 ```
-make samples
+> make samples
 ```
 
 
@@ -62,11 +62,8 @@ make samples
 6. Optional run 3D Visualizer
 
 ```
-> sudo yum install freeglut freeglut-devel
-```
-or
-```
-> sudo apt-get install freeglut3-dev
+fedora> sudo yum install freeglut freeglut-devel
+ubuntu> sudo apt-get install freeglut3-dev
 ```
 
 ```
@@ -100,8 +97,11 @@ If you have compilation problems please let us know!
 
 
 1. Get [Visual Studio Community 2017](https://www.visualstudio.com/)
+
+
    install "Desktop development with C++" (check if 'WindowsSDK 10.0.15063.0 for Desktop' is selected)
 
+   
 2. Get source codes: 
 
 ```
