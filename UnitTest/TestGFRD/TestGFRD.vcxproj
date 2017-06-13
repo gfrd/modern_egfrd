@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BDSimulator_test.cpp" />
+    <ClCompile Include="GenericIterator_test.cpp" />
+    <ClCompile Include="Box_test.cpp" />
+    <ClCompile Include="Cylinder_test.cpp" />
+    <ClCompile Include="Disk_test.cpp" />
+    <ClCompile Include="EventScheduler_test.cpp" />
+    <ClCompile Include="Identifier_test.cpp" />
+    <ClCompile Include="MatrixSpace_test.cpp" />
+    <ClCompile Include="Model_test.cpp" />
+    <ClCompile Include="ParticleContainer_test.cpp" />
+    <ClCompile Include="ParticleSimulator_test.cpp" />
+    <ClCompile Include="Plane_test.cpp" />
+    <ClCompile Include="Single_test.cpp" />
+    <ClCompile Include="Sphere_test.cpp" />
+    <ClCompile Include="Persistence_test.cpp" />
+    <ClCompile Include="TestSimple.cpp" />
+    <ClCompile Include="tinytest.cpp" />
+    <ClCompile Include="Vector2_test.cpp" />
+    <ClCompile Include="Vector3_test.cpp" />
+    <ClCompile Include="World_test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\tinytest.h" />
+    <ClInclude Include="BDSimulator_test.hpp" />
+    <ClInclude Include="GenericIterator_test.hpp" />
+    <ClInclude Include="Box_test.hpp" />
+    <ClInclude Include="Cylinder_test.hpp" />
+    <ClInclude Include="Disk_test.hpp" />
+    <ClInclude Include="EventScheduler_test.hpp" />
+    <ClInclude Include="Identifier_test.hpp" />
+    <ClInclude Include="MatrixSpace_test.hpp" />
+    <ClInclude Include="Model_test.hpp" />
+    <ClInclude Include="ParticleContainer_test.hpp" />
+    <ClInclude Include="ParticleSimulator_test.hpp" />
+    <ClInclude Include="Plane_test.hpp" />
+    <ClInclude Include="Single_test.hpp" />
+    <ClInclude Include="Sphere_test.hpp" />
+    <ClInclude Include="Persistence_test.hpp" />
+    <ClInclude Include="TestSimple.hpp" />
+    <ClInclude Include="Vector2_test.hpp" />
+    <ClInclude Include="Vector3_test.hpp" />
+    <ClInclude Include="World_test.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{99023DEF-A838-45DC-BDF2-06457EB987C2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>TestGreensFunctions</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>GSL_DLL;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet />
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>GSL_DLL;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>GSL_DLL;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>GSL_DLL;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

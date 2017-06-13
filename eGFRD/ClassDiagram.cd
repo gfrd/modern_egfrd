@@ -1,0 +1,600 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access">
+  <Class Name="Box" Collapsed="true">
+    <Position X="25.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQgAAIAAAAAAAEMMwAAAEIAAAAQAAAAAAAAACA=</HashCode>
+      <FileName>Box.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cylinder" Collapsed="true">
+    <Position X="25.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AADAAAQgCAIAAAAAAAEMMwAAAEAAAAAAAAQAAAAIAAA=</HashCode>
+      <FileName>Cylinder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Disk" Collapsed="true">
+    <Position X="25.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAQgCAIAAAAAAAEMMwAAAEAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Disk.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Plane" Collapsed="true">
+    <Position X="25.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQgAEIAAAAAAAEMMwAACEAAAAAQAAIAAAAAACA=</HashCode>
+      <FileName>Plane.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Sphere" Collapsed="true">
+    <Position X="25.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AADAAAQgCAAAAAAAAAQMMwAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Sphere.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Domain" Collapsed="true">
+    <Position X="2.25" Y="6.5" Width="2.25" />
+    <NestedTypes>
+      <Enum Name="Domain::EventType" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Domain.hpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IAIAAAAgAAIAIgAAAQQIRAggAgAAAQAAAAQAAAAAEkg=</HashCode>
+      <FileName>Domain.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MatrixSpace&lt;TObj, TKey, NX, NY, NZ&gt;" Collapsed="true">
+    <Position X="21.5" Y="2.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AEgABAECABIAAEAAAMUYgAAYAAREAIAACAAAABQFAAA=</HashCode>
+      <FileName>MatrixSpace.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PairSpherical" Collapsed="true">
+    <Position X="7.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAggAAAAAAAAAAAAQAAAAQAACAAAo=</HashCode>
+      <FileName>Pair.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PairCylindrical" Collapsed="true">
+    <Position X="7.75" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>Pair.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ParticleSimulator" Collapsed="true">
+    <Position X="20.75" Y="10.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AggFEAAAAAAAAAAAAAAAAAAAAAEAAAgAAAQAAAAgAQA=</HashCode>
+      <FileName>ParticleSimulator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ParticleContainer" Collapsed="true">
+    <Position X="12" Y="6" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>QAAABAAQBpIAAAAAAAAAAAAIAAAAAAAAAAAQAAAgAAA=</HashCode>
+      <FileName>ParticleContainer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ParticleContainerImpl" Collapsed="true">
+    <Position X="12" Y="7.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>QAAABAAQBJIAAAAQABGAAAAIAAAAAAAAQAAQAAAgAAA=</HashCode>
+      <FileName>ParticleContainerImpl.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SingleSpherical" Collapsed="true">
+    <Position X="7.75" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAiAQAAAAAAg=</HashCode>
+      <FileName>Single.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SingleCylindrical" Collapsed="true">
+    <Position X="7.75" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAgAAAQAAAAAAAAAAAAgIQAAAAAAg=</HashCode>
+      <FileName>Single.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Transaction" Collapsed="true">
+    <Position X="16.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAIAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Transaction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TransactionImpl&lt;TParticleContainer&gt;" Collapsed="true">
+    <Position X="15.75" Y="8.75" Width="2.75" />
+    <InheritanceLine Type="Transaction" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="17.312" Y="8.191" />
+        <Point X="17.312" Y="8.45" />
+        <Point X="17.125" Y="8.45" />
+        <Point X="17.125" Y="8.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>QCAABAEQBJIAAQQAAAAABgAIAACEAAAAEAAQAAAgEAA=</HashCode>
+      <FileName>Transaction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="World" Collapsed="true">
+    <Position X="12" Y="8.75" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>ABgkAgwQEJAIKAAIAAEAAEQAAEECoAAAAEC0ICEwEBI=</HashCode>
+      <FileName>World.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CuboidalRegion" Collapsed="true">
+    <Position X="9.25" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAQEAEIAAAAAAAAAAAIEAAAIAAAAAAAAAAABAAAg=</HashCode>
+      <FileName>CuboidalRegion.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CylindricalSurface" Collapsed="true">
+    <Position X="7.5" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAQEAEIAAAAAAAAAAAIEAAAIAAAAAAAAAAAAAAAw=</HashCode>
+      <FileName>CylindricalSurface.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DiskSurface" Collapsed="true">
+    <Position X="5.75" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAQEAEIAAAAAAAAAAAIEAAAIAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>DiskSurface.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlanarSurface" Collapsed="true">
+    <Position X="4" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAQEAEIgAAAAAAAAAAIEAAAIAAIAAAAAAAAAAAAg=</HashCode>
+      <FileName>PlanarSurface.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SphericalSurface" Collapsed="true">
+    <Position X="2.25" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAQEAEIQAAAAAAAAAAoEAAAIAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>SphericalSurface.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Structure" Collapsed="true">
+    <Position X="3" Y="11.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAYEAEIwgAAQCAAAIN4UEAMIEIAAAAAAAAAAAowg=</HashCode>
+      <FileName>Structure.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StructureContainer" Collapsed="true">
+    <Position X="6" Y="12.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAEAgwQAAAABEBAAAACAMAhADAAAAAAABAAAAAAAAA=</HashCode>
+      <FileName>StructureContainer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Surface&lt;TShape&gt;" Collapsed="true">
+    <Position X="3.5" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAACAAAANwAEAEAAIAAAAAAAAAAAhQg=</HashCode>
+      <FileName>Surface.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DynamicPriorityQueue&lt;TID, TItem&gt;" Collapsed="true">
+    <Position X="16.5" Y="10.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>CcAQIAAIgAAIEAAABogAQagCEAAAEAAAIAIIQQABAQA=</HashCode>
+      <FileName>DynamicPriorityQueue.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EventScheduler" Collapsed="true">
+    <Position X="16.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEABAAAAAAAIAAAEEoAAQIgAAAAAAAAAABAAAAAmAAA=</HashCode>
+      <FileName>EventScheduler.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model" Collapsed="true">
+    <Position X="22.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAQEAAAAAEAgAAQigAAAAEgAAAAQCAA=</HashCode>
+      <FileName>Model.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Reactants&lt;TID&gt;" Collapsed="true">
+    <Position X="14.25" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAQIAAAQAAAAEAAAAAAAAgAAAAAQA=</HashCode>
+      <FileName>Reactants.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ReactionRule" Collapsed="true">
+    <Position X="12.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAIAIAAQAEAQAAgAAAAAAgBAAAggA=</HashCode>
+      <FileName>ReactionRule.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SpeciesType" Collapsed="true">
+    <Position X="22.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAJAAAAACAAAAEAAAAAAAQAECAIEAAAAABAgBAAAIgA=</HashCode>
+      <FileName>SpeciesType.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StructureType" Collapsed="true">
+    <Position X="22.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAABAEAAAEAAAAAAAgAAAAIgA=</HashCode>
+      <FileName>StructureType.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Pair" Collapsed="true">
+    <Position X="5.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BhMIAAAAGAwIKACAgAgIJIQ6AAYBCAQQDQOQBACAIAk=</HashCode>
+      <FileName>Pair.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Single" Collapsed="true">
+    <Position X="5.25" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ASIAAAAACAwAqAKAgAgIBICyAAAACIAEBgEQAAAAAAA=</HashCode>
+      <FileName>Single.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ReactionRuleCollection" Collapsed="true">
+    <Position X="12.5" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAARAAABAAAAAABAAAAAAAAAAAggAAAACAAAAAAAA=</HashCode>
+      <FileName>ReactionRuleCollection.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VolumeClearer" Collapsed="true">
+    <Position X="26" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BDPropagator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BDPropagator" Collapsed="true">
+    <Position X="24.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AoAAUAAQCAAAAAAAQABABABAAAMAABAiAgQAAAgAIAA=</HashCode>
+      <FileName>BDPropagator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BDSimulator" Collapsed="true">
+    <Position X="22.75" Y="12.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAIAAEAAQAAQABAAIAAoQQBAAAAAABBAAQA=</HashCode>
+      <FileName>BDSimulator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EGFRDSimulator" Collapsed="true">
+    <Position X="21" Y="12.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAQCAQsMAZAACCAAUBwGECEUBgCAkEgAAgEBBAA8A=</HashCode>
+      <FileName>EGFRDSimulator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Multi" Collapsed="true">
+    <Position X="5.25" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AkIAEAAYBAIIIAgBQAkIBAAwAAIgACBkAACAAAEQAAw=</HashCode>
+      <FileName>Multi.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Shell" Collapsed="true">
+    <Position X="8.75" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAKQAAACAAAAAIQEAMAAAAAAAAAAAAAAABAA=</HashCode>
+      <FileName>Shell.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="gfrd_exception" Collapsed="true">
+    <Position X="38" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="illegal_state" Collapsed="true">
+    <Position X="33.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="illegal_argument" Collapsed="true">
+    <Position X="40.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="not_found" Collapsed="true">
+    <Position X="44.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="already_exists" Collapsed="true">
+    <Position X="29" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="unsupported" Collapsed="true">
+    <Position X="35.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="propagation_error" Collapsed="true">
+    <Position X="42.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="illegal_propagation_attempt" Collapsed="true">
+    <Position X="47" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="not_implemented" Collapsed="true">
+    <Position X="31.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="no_space" Collapsed="true">
+    <Position X="38" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAA=</HashCode>
+      <FileName>exceptions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="gi::Itr2&lt;TContainer, E, TSelector&gt;" Collapsed="true">
+    <Position X="33.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAAAAQACAAQAgAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="gi::iteratorRange&lt;TContainer, E, TSelector&gt;" Collapsed="true">
+    <Position X="31.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAhAAAAAAAAAAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="agi::ItrBase&lt;E&gt;" Collapsed="true">
+    <Position X="29" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAIQAAAAQAAAAAAAAAAAAAgEAAAAgA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="agi::Itr&lt;E&gt;" Collapsed="true">
+    <Position X="31.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAAAAQAAAIgAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="agi::ItrAll&lt;TContainer, E, TSelector&gt;" Collapsed="true">
+    <Position X="29" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAACAAAAAQACAAAAgAAEAAAAAAAAgEAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="agi::iteratorRange&lt;E, TSelector&gt;" Collapsed="true">
+    <Position X="33.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAhAAAAAAAAAAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GreenFunctionHelper" Collapsed="true">
+    <Position X="38" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAIAAAEAAAAAAAAAAAAAAAAAAEAAAAAIAAAAA=</HashCode>
+      <FileName>GreenFunctionHelpers.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="make_string" Collapsed="true">
+    <Position X="38" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAAgEAAAAAA=</HashCode>
+      <FileName>makeString.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="orderedVector&lt;TElement, TOrdering&gt;" Collapsed="true">
+    <Position X="38" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JEAAAAADAAAAAAAAAIAIAAAQAAAAAQAgCAAIAAAAAAA=</HashCode>
+      <FileName>orderedVector.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RandomNumberGenerator" Collapsed="true">
+    <Position X="38" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgACAAAAAAEAQAAAEAAAAAkQAAAAAAAAEAAAAgAAAAA=</HashCode>
+      <FileName>randomNumberGenerator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Matrix4" Collapsed="true">
+    <Position X="19.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAACAAIAAEMAAAAAAQAACwQgAgIACAAwAIBCQAA=</HashCode>
+      <FileName>Matrix4.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Vector2" Collapsed="true">
+    <Position X="19.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAACBAAEAEEAIAQ4AAQAAAgAAAAQgAIBCYAA=</HashCode>
+      <FileName>Vector2.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Vector3" Collapsed="true">
+    <Position X="19.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAgAAAAICAAAUAEEAIgQ4AAQAAAoAAAAwgAIACYEk=</HashCode>
+      <FileName>Vector3.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="DomainID" Collapsed="true">
+    <Position X="14.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DomainID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="EventID" Collapsed="true">
+    <Position X="16.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EventID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Identifier&lt;TBase&gt;" Collapsed="true">
+    <Position X="2" Y="2.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAUAAAAQAAAIAAACAAAAAgQAAAAAA=</HashCode>
+      <FileName>Identifier.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ReactionRuleID" Collapsed="true">
+    <Position X="2.25" Y="4.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <FileName>ReactionRuleID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ParticleID" Collapsed="true">
+    <Position X="4.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ParticleID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SerialIDGenerator&lt;TIdentifier&gt;" Collapsed="true">
+    <Position X="4.5" Y="2.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SerialIDGenerator.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ShellID" Collapsed="true">
+    <Position X="6.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>ShellID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SpeciesTypeID" Collapsed="true">
+    <Position X="8.5" Y="4.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SpeciesTypeID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="StructureID" Collapsed="true">
+    <Position X="10.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAA=</HashCode>
+      <FileName>StructureID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="StructureTypeID" Collapsed="true">
+    <Position X="12.5" Y="4.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>StructureTypeID.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Particle" Collapsed="true">
+    <Position X="15.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAACAAACAQAAAAAIQAIAAAAAAAAABAABAgABAA=</HashCode>
+      <FileName>Particle.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ParticleContainerUtils" Collapsed="true">
+    <Position X="17.25" Y="6" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ParticleContainerImpl.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WorldNoBounds" Collapsed="true">
+    <Position X="19.75" Y="6" Width="2" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAEIIAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ParticleContainerImpl.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WorldCyclic" Collapsed="true">
+    <Position X="19.75" Y="6.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAEIIAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ParticleContainerImpl.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Event" Collapsed="true">
+    <Position X="18.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABBAAAAAAAAAAAAAAAAAIAAgAAAAAAAAAAAAAgEgA=</HashCode>
+      <FileName>Event.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ShellCreateUtils" Collapsed="true">
+    <Position X="8.75" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ShellCreateUtils.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="gi::Select&lt;E&gt;" Collapsed="true">
+    <Position X="31.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="gi::SelectFirst&lt;E&gt;" Collapsed="true">
+    <Position X="33.25" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="gi::SelectSecond&lt;E&gt;" Collapsed="true">
+    <Position X="31.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>genericIterator.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

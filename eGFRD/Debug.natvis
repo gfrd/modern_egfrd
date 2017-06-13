@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="Identifier&lt;*&gt;">
+    <DisplayString>{value_}</DisplayString>
+  </Type>
+
+  <Type Name="Reactants&lt;*&gt;">
+    <!-- <DisplayString Condition="item2_ != 0">empty</DisplayString>      for some reason, Conditions don't seem to work   -->
+    <DisplayString>{item1_} + {item2_}</DisplayString>
+  </Type>
+
+
+  <Type Name="Vector2">
+    <DisplayString>{x_} , {y_}</DisplayString>
+  </Type>
+
+  <Type Name="Vector3">
+    <DisplayString>{x_} , {y_} , {z_}</DisplayString>
+  </Type>
+
+
+</AutoVisualizer>

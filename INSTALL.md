@@ -1,10 +1,11 @@
 
 ### Prerequisites
 
-1. an ISO C++14 compiler, like GNU GCC v5.0 or Microsoft Visual C++ 2017
-2. GNU Scientific Library (GSL) 1.16.
+1. an ISO C++14 compiler, like GNU GCC v5.0 or Microsoft Visual C++ 2017*
+2. GNU Scientific Library (GSL) 1.16*
+3. [optional] FreeGlut3 for visualization
 
-or newer version
+*or newer version
 
 
 
@@ -78,27 +79,39 @@ This package has been tested on:
 | Ubuntu 16    | v5.4.0 | v2.1 |
 | Debian 8.8   | v4.9.2 | v1.16 |
 | Ubuntu 14    | v4.9.2 | v1.16 |
-| CentOS 5     | v4.9.2 | v1.13 |
+| CentOS 6.6   | v4.9.2 | v1.13 |
 
 
-For all tests we have done so far everthing compiles with zero errors and zero warnings!
+For all distributions we have checked so far everthing compiles with zero errors and zero warnings!
+
 If you have compilation problems please let us know!
 
 
 
-### Building on Windows
+### Building on Microsoft Windows
 
 
-TODO
+1. Get [Visual Studio Community 2017](https://www.visualstudio.com/)
+   install "Desktop development with C++" (check if 'WindowsSDK 10.0.15063.0 for Desktop' is selected)
 
-1. Get Visual Studio 2017 (...)
+2. Get source codes: 
 
-2. Get FreeGlut / GSL1.16 / libccd  (link to win support package)
-   extract under folder Libs
+```
+git clone https://github.com/gfrd/modern_egfrd
+	or
+download and unzip
+```
+
+3. Get windows versions of the dependancies: FreeGlut3 / GSL1.16 / LibCCD.
+   For convineance we bundeled these in a [support package](http://egfrd.org/includes/packages/WinSupport.zip)
+   extract it in the project root, so you get the Libs-folder.
+   
+	FreeGlut3 for MSVC from [Transmission Zero](http://www.transmissionzero.co.uk/software/freeglut-devel/), 
+	GSL for MSVC from Brian Gladman.
 
 3. Open solution newGfrd.sln
 
-4. Select startup project (RunGfrd)
+4. Select build configuration (e.g. x64 Release) and startup project RunGfrd 
 
 5. Build and Run
 

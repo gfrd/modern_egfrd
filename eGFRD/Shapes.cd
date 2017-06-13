@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="Box">
+    <Position X="0.5" Y="1.75" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQgAAIAAAAAAAEMMwAAAEIAAAAQAAAAAAAAACA=</HashCode>
+      <FileName>Box.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cylinder">
+    <Position X="5.25" Y="1.75" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAQgCAIAAAAAAAEMMwAAAEAAAAAAAAQAAAAIACA=</HashCode>
+      <FileName>Cylinder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Disk">
+    <Position X="10" Y="1.75" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAQgCAIAAAAAAAEMMwAAAEAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Disk.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Plane">
+    <Position X="14.75" Y="1.75" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQgAEIAAAAAAAEMMwAACEAAAAAQAAIAAAAAACA=</HashCode>
+      <FileName>Plane.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Sphere">
+    <Position X="19.5" Y="1.75" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAQgCAAAAAAAAAQMMwAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Sphere.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

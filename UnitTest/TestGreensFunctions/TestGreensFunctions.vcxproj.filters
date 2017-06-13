@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GreensFunctions">
+      <UniqueIdentifier>{a15ac7ce-bde9-434f-af99-b11521b68962}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{e802bf8e-276c-4bc2-a132-1f3ea77244be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{6b97ce71-ac76-4333-8d9e-7968244fef35}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\tinytest.h" />
+    <ClInclude Include="CylindricalBesselGenerator_test.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="SphericalBesselGenerator_test.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="GreensFunction3D_test.hpp">
+      <Filter>GreensFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="Factorial_test.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GreensFunction3DAbsSym_test.hpp">
+      <Filter>GreensFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="GreensFunction3DRadAbs_test.hpp">
+      <Filter>GreensFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="GslSumLevinU_test.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="GreensFunction3DAbs_test.hpp">
+      <Filter>GreensFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="GreensFunction3DRadInf_test.hpp">
+      <Filter>GreensFunctions</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GreensFunction3DAbsSym_test.cpp">
+      <Filter>GreensFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="CylindricalBesselGenerator_test.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="SphericalBesselGenerator_test.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="GreensFunction3D_test.cpp">
+      <Filter>GreensFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="tinytest.cpp" />
+    <ClCompile Include="Factorial_test.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GreensFunction3DRadAbs_test.cpp">
+      <Filter>GreensFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="GslSumLevinU_test.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="GreensFunction3DAbs_test.cpp">
+      <Filter>GreensFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="GreensFunction3DRadInf_test.cpp">
+      <Filter>GreensFunctions</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

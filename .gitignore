@@ -37,6 +37,7 @@
 .vs/*
 .svn/*
 _build/*
+*.vcxproj.user
 
 # Temperary files
 *~

@@ -1,0 +1,19 @@
+; eGFRD simple simulation
+
+[Simulator]
+           Seed = <param2>
+        EndTime = 1.0; sec.
+MaintenanceStep = 10000
+MaintenanceFile = <param3>
+
+[World]
+  Matrix = 8
+    Size = 1e-6; m
+	
+[SpeciesType]
+Name = A
+   r = 1e-9; m
+   D = 1e-12; m^2*s^-1
+
+[Particles]
+A = <param1>

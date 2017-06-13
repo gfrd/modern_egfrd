@@ -17,8 +17,8 @@ This package is a modern C++ implementation of the eGFRD algorithm.
 It has some important improvements over its predecessor:
 
 * Minimal dependencies, allowing quick getting started.
-* It's very fast.
-* Rewritten from scratch, in modern C++, using new and efficient language features.
+* It is very fast.
+* Rewritten mostly from scratch, in modern C++, using new and efficient language features.
 * Improved code-style, bug- and design fixes, easier to understand and maintain.
 * Multi platform support
 
@@ -46,7 +46,8 @@ and EventScheduler. Remaining simulation code in Python was converted to C++.
 Software engineering principles were implemented, like splitting code into a more 
 modular system. The GreenFunctions, the Simulator and Logger now have their own 
 separate libraries. The Bessel look-up tables are stored in data-files and not 
-in-lined in the executable. This all resulting in a novel and very fast simulator. 
+in-lined in the executable. This ongoing revision process now resulting in the first 
+publicly available re-release of a novel and very fast simulator. 
 
 
 
@@ -131,10 +132,14 @@ started working on the interplay of DNA sliding and 3D diffusion.
 
 ### Plans
 
-Some features planned to be added are; surfaces, interactions between
-membrane proteins and proteins in solution, model-entry frontend, 
-simulations of polymers with multiple binding sites and states (fold 
-reaction-rules to overcome combinatorial explosion of possible speciesType).
+Some features planned to be added are; migration of the surfaces / interactions
+code (not available yet), model-entry frontend, simulations of polymers with 
+multiple binding sites and states (fold reaction-rules to overcome combinatorial 
+explosion of possible speciesType).
+
+In addition to new features we are also working on improving the codebase; 
+clean-up, commenting and documenting, unit-testing. Keeping up with compiler and 
+library improvements, like using ISO C++17 mathematical special functions over of GSL. 
 
 
 

@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BDPropagator.hpp" />
+    <ClInclude Include="BDSimulator.hpp" />
+    <ClInclude Include="convert.hpp" />
+    <ClInclude Include="CopyNumbers.hpp" />
+    <ClInclude Include="genericIterator.hpp" />
+    <ClInclude Include="Box.hpp" />
+    <ClInclude Include="ConnectivityContainer.hpp" />
+    <ClInclude Include="CuboidalRegion.hpp" />
+    <ClInclude Include="Cylinder.hpp" />
+    <ClInclude Include="CylindricalSurface.hpp" />
+    <ClInclude Include="DefsEgfrd.hpp" />
+    <ClInclude Include="Disk.hpp" />
+    <ClInclude Include="DiskSurface.hpp" />
+    <ClInclude Include="Domain.hpp" />
+    <ClInclude Include="DomainID.hpp" />
+    <ClInclude Include="DynamicPriorityQueue.hpp" />
+    <ClInclude Include="Event.hpp" />
+    <ClInclude Include="EventID.hpp" />
+    <ClInclude Include="EventScheduler.hpp" />
+    <ClInclude Include="exceptions.hpp" />
+    <ClInclude Include="GreenFunctionHelpers.hpp" />
+    <ClInclude Include="helperFunctions.hpp" />
+    <ClInclude Include="Identifier.hpp" />
+    <ClInclude Include="InteractionRule.hpp" />
+    <ClInclude Include="makeString.hpp" />
+    <ClInclude Include="Matrix4.hpp" />
+    <ClInclude Include="MatrixSpace.hpp" />
+    <ClInclude Include="Model.hpp" />
+    <ClInclude Include="Multi.hpp" />
+    <ClInclude Include="Persistence.hpp" />
+    <ClInclude Include="Progress.hpp" />
+    <ClInclude Include="ReactionRecorder.hpp" />
+    <ClInclude Include="ReactionRuleCollection.hpp" />
+    <ClInclude Include="Pair.hpp" />
+    <ClInclude Include="ParticleSimulator.hpp" />
+    <ClInclude Include="Reactants.hpp" />
+    <ClInclude Include="ReactionRuleID.hpp" />
+    <ClInclude Include="Particle.hpp" />
+    <ClInclude Include="ParticleContainer.hpp" />
+    <ClInclude Include="ParticleContainerImpl.hpp" />
+    <ClInclude Include="ParticleID.hpp" />
+    <ClInclude Include="PlanarSurface.hpp" />
+    <ClInclude Include="Plane.hpp" />
+    <ClInclude Include="randomNumberGenerator.hpp" />
+    <ClInclude Include="ReactionRule.hpp" />
+    <ClInclude Include="Region.hpp" />
+    <ClInclude Include="SerialIDGenerator.hpp" />
+    <ClInclude Include="Shell.hpp" />
+    <ClInclude Include="ShellCreateUtils.hpp" />
+    <ClInclude Include="ShellID.hpp" />
+    <ClInclude Include="EGFRDSimulator.hpp" />
+    <ClInclude Include="Single.hpp" />
+    <ClInclude Include="SpeciesType.hpp" />
+    <ClInclude Include="SpeciesTypeID.hpp" />
+    <ClInclude Include="Sphere.hpp" />
+    <ClInclude Include="SphericalSurface.hpp" />
+    <ClInclude Include="Structure.hpp" />
+    <ClInclude Include="StructureContainer.hpp" />
+    <ClInclude Include="StructureID.hpp" />
+    <ClInclude Include="StructureType.hpp" />
+    <ClInclude Include="StructureTypeID.hpp" />
+    <ClInclude Include="Surface.hpp" />
+    <ClInclude Include="Transaction.hpp" />
+    <ClInclude Include="Vector2.hpp" />
+    <ClInclude Include="Vector3.hpp" />
+    <ClInclude Include="World.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EGFRDSimulator.cpp" />
+    <ClCompile Include="Matrix4.cpp" />
+    <ClCompile Include="Multi.cpp" />
+    <ClCompile Include="Pair.cpp" />
+    <ClCompile Include="PlanarSurface.cpp" />
+    <ClCompile Include="Single.cpp" />
+    <ClCompile Include="Vector2.cpp" />
+    <ClCompile Include="Vector3.cpp" />
+    <ClCompile Include="Persistence.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="Shapes.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Debug.natvis" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{71B4CDFF-D7F0-41A2-855E-C84C433A8791}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>eGFRD</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>EGFRD_EXPORTS;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>
+      </EnableEnhancedInstructionSet>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>EGFRD_EXPORTS;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>EGFRD_EXPORTS;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <StringPooling>
+      </StringPooling>
+      <WarningLevel>Level4</WarningLevel>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>EGFRD_EXPORTS;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>
+      </StringPooling>
+      <WarningLevel>Level4</WarningLevel>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

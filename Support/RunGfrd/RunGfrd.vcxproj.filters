@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Equilibrium.hpp" />
+    <ClInclude Include="PowerSpectrum.hpp" />
+    <ClInclude Include="Simulation.hpp" />
+    <ClInclude Include="Simulation3P.hpp" />
+    <ClInclude Include="RunGfrd.hpp" />
+    <ClInclude Include="Reversible.hpp" />
+    <ClInclude Include="Resume.hpp" />
+    <ClInclude Include="mapK.hpp" />
+    <ClInclude Include="getoptions.hpp" />
+    <ClInclude Include="Custom.hpp" />
+    <ClInclude Include="ParseIni\ReactionRuleSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\SectionBase.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\SimulatorSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\SimulatorSettings.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\SpeciesTypeSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\WorldSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\ParserExceptions.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\CopyNumbersSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseIni\ParticlesSection.hpp">
+      <Filter>ParseIni</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="RunGfrd.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ParseIni">
+      <UniqueIdentifier>{ecff004a-26fb-4ddb-8119-1087904d5c55}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
