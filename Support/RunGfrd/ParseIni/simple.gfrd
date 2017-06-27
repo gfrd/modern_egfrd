@@ -1,10 +1,10 @@
 ; eGFRD simple simulation
 
 [Simulator]
-           Seed = <param2>
-        EndTime = 1.0; sec.
+           Seed = 0x123ABC
+        EndTime = 300.0; sec.
 MaintenanceStep = 10000
-MaintenanceFile = <param3>
+MaintenanceFile = sim_data.out
 
 [World]
   Matrix = 8
@@ -16,4 +16,4 @@ Name = A
    D = 1e-12; m^2*s^-1
 
 [Particles]
-A = <param1>
+A = 100

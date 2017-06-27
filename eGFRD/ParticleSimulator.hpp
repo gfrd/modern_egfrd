@@ -30,7 +30,31 @@ public:
 
    size_t num_steps() const { return num_steps_; }
 
-   void set_reaction_recorder(reaction_recorder* rrec) { rrec_ = rrec; }
+   void add_reaction_recorder(reaction_recorder* rrec) { rrec->link(rrec_); rrec_ = rrec; }     // chain in front of rrec_
+   
+   void remove_reaction_recorder(reaction_recorder* rrec)
+   {
+      if (!rrec_) return;     // no chain
+
+      if (rrec_ == rrec)      // first chain?
+      {
+         rrec_ = rrec->next();
+         rrec->link(nullptr);
+         return;
+      }
+
+      auto p = rrec_;
+      while (p->next())      // loop chain
+      {
+         if (p->next() == rrec) // when found, remove chain
+         {
+            p->link(rrec->next());
+            rrec->link(nullptr);
+            return;
+         }
+         p = p->next();
+      }
+   }
 
    void set_repulsive() const
    {

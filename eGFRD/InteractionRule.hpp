@@ -48,6 +48,7 @@ public:
 
    bool operator!=(const InteractionRule& rhs) const { return !(*this == rhs); }
 
+   static InteractionRule empty() { return InteractionRule(SpeciesTypeID(0), StructureTypeID(0), 0.0, std::vector<SpeciesTypeID>()); }
 
 protected:
    friend class ReactionRuleCollection;

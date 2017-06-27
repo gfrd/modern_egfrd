@@ -50,6 +50,7 @@ public:
 
    bool operator!=(const ReactionRule& rhs) const { return !(*this == rhs); }
 
+   static ReactionRule empty() { return ReactionRule(SpeciesTypeID(1), 0.0, std::vector<SpeciesTypeID>()); }
 
 protected:
    friend class ReactionRuleCollection;

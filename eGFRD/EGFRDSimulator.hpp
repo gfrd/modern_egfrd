@@ -581,7 +581,7 @@ private:
             eventType = single.draw_iv_event_type(rng_);
 
          ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE || eventType == Domain::EventType::BURST);
-         ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule(SpeciesTypeID(1), 0.0, std::vector<SpeciesTypeID>());      // ugly but only way to 
+         ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule::empty();
 
          // get the(new) position and structure on which the particle is located.
          position_structid_pair pos_struct = single.draw_new_position(rng_);
@@ -681,8 +681,7 @@ private:
       // copy some more parameters from the pair before its destroyed.
       auto reactingsingle = pair.get_reacting_single();
       ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? pair.draw_single_reaction_rule(rng_, reaction_rules_) :
-         eventType == Domain::EventType::IV_REACTION ? pair.draw_reaction_rule(rng_) :
-         ReactionRule(SpeciesTypeID(1), 0.0, std::vector<SpeciesTypeID>());      // ugly but only way to 
+         eventType == Domain::EventType::IV_REACTION ? pair.draw_reaction_rule(rng_) : ReactionRule::empty();
       Vector3 new_com = eventType == Domain::EventType::IV_REACTION ? world_.apply_boundary(pair.draw_new_com(rng_)) : Vector3();
 
       // newpos1 / 2 now hold the new positions of the particles(not yet committed to the world)

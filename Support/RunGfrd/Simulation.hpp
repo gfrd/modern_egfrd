@@ -111,7 +111,7 @@ public:
          {
             auto now = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::duration<float>>(now - begin).count();
-            Log("RunGfrd").info() << "Pre-simulation took  " << elapsed << " seconds / " << num_steps() << " steps.";
+            Log("RunGfrd").info() << "Pre-simulation took  " << std::fixed << std::setprecision(3) << elapsed << " seconds / " << num_steps() << " steps.";
             simulator_->reset();
             PostPreSimulation();
          }
@@ -127,7 +127,7 @@ public:
 
       auto now = std::chrono::high_resolution_clock::now();
       auto elapsed = std::chrono::duration_cast<std::chrono::duration<float>>(now - begin).count();
-      Log("RunGfrd").info() << "Simulation " << (failed_ ? "failed after" : (abort_ ? *abort_ : false) ? "aborted after" : "took") << " : " << elapsed << " seconds / " << num_steps() << " steps.";
+      Log("RunGfrd").info() << "Simulation " << (failed_ ? "failed after" : (abort_ ? *abort_ : false) ? "aborted after" : "took") << " : " << std::fixed << std::setprecision(3) << elapsed << " seconds / " << num_steps() << " steps.";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------

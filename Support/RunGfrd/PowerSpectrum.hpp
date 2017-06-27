@@ -13,20 +13,21 @@ using double_arr = std::vector<double>;
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class ReactionRecorder : public reaction_recorder
+class ReactionRecorder : public reaction_recorder_log
 {
 public:
-   explicit ReactionRecorder(const ReactionRuleCollection& reaction_rules, const Model& model) : reaction_recorder(reaction_rules, model), count_(0), time_(0) { }
-
-   void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2) override
-   {
-      reaction_recorder::StoreReaction(time, rid, r1, r2, p1, p2);
-      count_++;
-      time_ = time;
-   }
+   explicit ReactionRecorder(const ReactionRuleCollection& reaction_rules, const Model& model) : reaction_recorder_log(reaction_rules, model), count_(0), time_(0) { }
 
    size_t count() const { return count_; }
    double final_time() const { return time_; }
+
+protected:
+   void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2) override
+   {
+      reaction_recorder_log::StoreReaction(time, rid, r1, r2, p1, p2);
+      count_++;
+      time_ = time;
+   }
 
 private:
    size_t count_;
@@ -91,7 +92,7 @@ protected:
    {
       Simulation3P::SetupSimulation();
       rrec_ = std::make_unique<ReactionRecorder>(rules_, model_);
-      simulator_->set_reaction_recorder(rrec_.get());
+      simulator_->add_reaction_recorder(rrec_.get());
       rfile_.open(rfilename_, std::fstream::in | std::fstream::out | std::fstream::trunc);
       rrec_->set_output(rfile_);
 

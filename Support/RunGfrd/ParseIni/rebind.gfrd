@@ -1,21 +1,21 @@
 ; eGFRD rebinding simulation
 
 [Simulator]
-           Seed = 0xA2529C06
-    PrepareTime = 0.5; sec.
-        EndTime = 15.0; sec.
+           Seed = 0x1234CAFE
+        EndTime = 60.0			; sec.
    ShowProgress = False
-MaintenanceStep = 10000
+MaintenanceStep = 100000
 MaintenanceFile = sim_dump.out
 
-[World] ;this is some comment
-  Matrix = 8
-    Size = 1e-6; m
+[World]
+Matrix = 8
+  Size = 1e-6; m
 	
 [CopyNumbers]
+Interval = 1E-1
     Mode = On
-Interval = 1E-3
     File = copy_num.out
+	Type = Instantaneous
 
 [SpeciesType]
 Name = A
@@ -29,18 +29,18 @@ Name = B
 
 [SpeciesType]
 Name = C
-   r = 1.5e-9; m
+   r = 1e-9; m
    D = 1e-12; m^2*s^-1
 
 [ReactionRule]
 Rule = A + B --> C
-   k = 1e-16; m^3*s^-1
+   k = 1e-19; m^3*s^-1
 
 [ReactionRule]
 Rule = C --> A + B
-   k = 1e3; 	s^-1
+   k = 2e-2; 	s^-1
 
 [Particles]
-A = 50
-B = 50
+A = 25
+B = 25
 C = 0

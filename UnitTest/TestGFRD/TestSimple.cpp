@@ -134,7 +134,7 @@ int testCopyNumbers()
    rules.add_reaction_rule(ReactionRule(s2, 2.0E6, std::vector < SpeciesTypeID > {s3}));
    rules.add_reaction_rule(ReactionRule(s3, 1.0E6, std::vector < SpeciesTypeID > {s1}));
 
-   CopyNumbers cn(w, 1E-6);
+   CopyNumbersInst cn(w, 1E-6);
    EGFRDSimulator s(w, rules, rng);
    s.add_extrnal_event(0, &cn);
    TINYTEST_TIME_START();

@@ -61,11 +61,13 @@ or on Ubuntu Linux and some other Debian families, install the following:
 
 6. Optional run 3D Visualizer
 
+Get prerequisites for you plaform:
 ```
 fedora> sudo yum install freeglut freeglut-devel
 ubuntu> sudo apt-get install freeglut3-dev
 ```
 
+build the project:
 ```
 > make visualize
 > cd bin

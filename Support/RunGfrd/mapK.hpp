@@ -152,7 +152,7 @@ protected:
       rules_.add_reaction_rule(ReactionRule(sPi, k7, std::vector<SpeciesTypeID>{ sP }));
 
       // copy nunmbers
-      cn_ = std::make_unique<CopyNumbers>(world_, ctime_);
+      cn_ = std::make_unique<CopyNumbersInst>(world_, ctime_);
       simulator_->add_extrnal_event(0, cn_.get());
       if (!cfilename_.empty())
       {
@@ -162,7 +162,7 @@ protected:
 
       // reaction record
       rrec_ = std::make_unique<ReactionRecorder>(rules_, model_);
-      simulator_->set_reaction_recorder(rrec_.get());
+      simulator_->add_reaction_recorder(rrec_.get());
       rfile_.open(rfilename_, std::fstream::in | std::fstream::out | std::fstream::trunc);
       rrec_->set_output(rfile_);
    }
@@ -195,7 +195,7 @@ private:
    double ctime_ = 0.1;
    std::string cfilename_;
    std::fstream cfile_;
-   std::unique_ptr<CopyNumbers> cn_;
+   std::unique_ptr<CopyNumbersInst> cn_;
    std::string rfilename_;
    std::fstream rfile_;
    std::unique_ptr<ReactionRecorder> rrec_;

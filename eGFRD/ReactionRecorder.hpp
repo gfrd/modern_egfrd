@@ -13,26 +13,10 @@
 class reaction_recorder
 {
 public:
-   explicit reaction_recorder(const ReactionRuleCollection& reaction_rules, const Model& model) : reaction_rules_(reaction_rules), model_(model), log_(Log("ReactionRecord")), first_(true)
-   {
-      log_.set_stream(std::clog);
-      log_.set_flags(Logger::logflags::None);
-   }
-
+   explicit reaction_recorder() : next_(nullptr) { }
    virtual ~reaction_recorder() { }
 
-
    virtual const char * type_name() const { return "ReactionRecorder"; };     // type implementation name (for Persistence)
-
-   void set_output(std::ostream& stream) const { log_.set_stream(stream); }
-
-
-   virtual void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2)
-   {
-      if (first_) print_header();
-      log_.info() << std::scientific << std::setprecision(16) << std::setw(2 * c) << std::setfill(' ') <<
-         time << std::setw(c / 2) << static_cast<idtype>(rid) << std::setw(c) << f(r1) << std::setw(c) << f(r2) << std::setw(c) << f(p1) << std::setw(c) << f(p2);
-   }
 
    void StoreDecayReaction(double time, ReactionRuleID rid, ParticleID r)
    {
@@ -57,6 +41,42 @@ public:
    void StoreUnbindingReaction(double time, ReactionRuleID rid, ParticleID r, ParticleID p1, ParticleID p2)
    {
       StoreReaction(time, rid, r, ParticleID(0), p1, p2);
+   }
+
+   void link(reaction_recorder* next) { next_ = next; }
+   reaction_recorder* next() const { return next_; }
+
+protected:
+   virtual void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2)
+   {
+      if (next_) next_->StoreReaction(time, rid, r1, r2, p1, p2);
+   }
+
+private:
+   reaction_recorder* next_;
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+class reaction_recorder_log : public reaction_recorder
+{
+public:
+   explicit reaction_recorder_log(const ReactionRuleCollection& reaction_rules, const Model& model) : reaction_rules_(reaction_rules), model_(model), log_(Log("ReactionRecord")), first_(true)
+   {
+      log_.set_stream(std::clog);
+      log_.set_flags(Logger::logflags::None);
+   }
+
+   const char * type_name() const override { return "ReactionRecorderLog"; };     // type implementation name (for Persistence)
+
+   void set_output(std::ostream& stream) const { log_.set_stream(stream); }
+
+   void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2) override
+   {
+      if (first_) print_header();
+      log_.info() << std::scientific << std::setprecision(16) << std::setw(2 * c) << std::setfill(' ') <<
+         time << std::setw(c / 2) << static_cast<idtype>(rid) << std::setw(c) << f(r1) << std::setw(c) << f(r2) << std::setw(c) << f(p1) << std::setw(c) << f(p2);
+      reaction_recorder::StoreReaction(time, rid, r1, r2, p1, p2);
    }
 
 private:
@@ -90,7 +110,7 @@ private:
             if (ra.size() > 0) tmp1 << model_.get_species_type_by_id(ra.item1()).name();
             if (ra.size() > 1) tmp1 << " + " << model_.get_species_type_by_id(ra.item2()).name();
             io << std::setw(2 * c) << tmp1.str();
-            
+
             std::stringstream tmp2;
             const auto& products = rule.get_products();
             if (products.size() > 0) tmp2 << model_.get_species_type_by_id(products[0]).name();

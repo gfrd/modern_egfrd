@@ -53,6 +53,21 @@ public:
       interaction_rules_map_.erase(ir.get_reactants());
    }
 
+   const ReactionRule& get_reaction_rule(ReactionRuleID rid) const
+   {
+      for (const auto& rrs : reaction_rules_map_)
+         for (const auto& rr : rrs.second)
+            if (rr.id() == rid) return rr;
+      throw not_found(make_string() << "ReactionRule '" << rid << " does not exist.");
+   }
+   const InteractionRule& get_interaction_rule(ReactionRuleID rid) const
+   {
+      for (const auto& rrs : interaction_rules_map_)
+         for (const auto& rr : rrs.second)
+            if (rr.id() == rid) return rr;
+      throw not_found(make_string() << "InteractionRule '" << rid << " does not exist.");
+   }
+
    const reaction_rule_set& query_reaction_rules(const SpeciesTypeID s1) const
    {
       auto i(reaction_rules_map_.find(ReactionRule::reactants(s1)));

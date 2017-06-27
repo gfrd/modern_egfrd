@@ -6,29 +6,40 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class CopyNumbersAvg : public CopyNumbers
+class CopyNumberFull : public CopyNumbersAvg
 {
+   // Computes the average number of particles of type 'sid' over the whole simulation time
+
 public:
-   CopyNumbersAvg(const World& w, double interval, SpeciesTypeID sid) : CopyNumbers(w, interval), sid_(sid), count_(0), sum_(0) { }
+   CopyNumberFull(const World& w, const ReactionRuleCollection& rules, double interval, SpeciesTypeID sid) : CopyNumbersAvg(w, rules, interval), sid_(sid) { }
 
    void do_action(double time) override
    {
-      CopyNumbers::do_action(time);
-      sum_ += world_.get_particle_ids(sid_).size();
-      count_++;
+      CopyNumbersAvg::do_action(time);
+      if (time == 0) accu_sid_.reset(world_.get_particle_ids(sid_).size());
    }
 
-   void print_avg() const
+   void print_avg(double time)
    {
-      if (count_ > 0) log_.info() << "Average NC  = " << static_cast<double>(sum_) / count_;
-      else log_.info() << "Average NC  = N.A. ";
+      auto avg = accu_sid_.update_time(time);
+      if (time > 0) log_.info() << "Average NC  = " << avg;
+      else log_.info() << "Averag2 NC  = N.A. ";
    }
 
-   const char* type_name() const override { return "CopyNumbersAvg"; }
+   const char* type_name() const override { return "CopyNumberFull"; }
+
+protected:
+   void StoreReaction(double time, ReactionRuleID rid, ParticleID r1, ParticleID r2, ParticleID p1, ParticleID p2) override
+   {
+      CopyNumbersAvg::StoreReaction(time, rid, r1, r2, p1, p2);
+
+      size_t count = world_.get_particle_ids(sid_).size();
+      accu_sid_.update_count(time, count);
+   }
 
 private:
    SpeciesTypeID sid_;     // Calculate average number of particles with id
-   size_t count_, sum_;
+   avg_accu accu_sid_;
 };
 
 // ================================================================================================================================
@@ -104,8 +115,10 @@ protected:
 
    void AddCopyNumbers()
    {
-      cn_ = std::make_unique<CopyNumbersAvg>(world_, ctime_, sid_c);
+      cn_ = std::make_unique<CopyNumberFull>(world_, rules_, ctime_, sid_c);
       simulator_->add_extrnal_event(0, cn_.get());
+      simulator_->add_reaction_recorder(cn_.get());
+
       if (!cfilename_.empty())
       {
          cfile_.open(cfilename_, std::fstream::in | std::fstream::out | std::fstream::trunc);
@@ -136,7 +149,7 @@ protected:
 
    void PostSimulation() override
    {
-      if (cn_.get()) cn_->print_avg();
+      if (cn_.get()) cn_->print_avg(simulator_->time());
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +172,7 @@ private:
    bool equil_start_;
    std::string cfilename_;
    std::fstream cfile_;
-   std::unique_ptr<CopyNumbersAvg> cn_;
+   std::unique_ptr<CopyNumberFull> cn_;
    double ctime_ = 1E-1;
 
 

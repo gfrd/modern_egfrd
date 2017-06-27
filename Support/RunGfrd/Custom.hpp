@@ -1,5 +1,8 @@
 #ifndef CUSTOM_HPP
 #define CUSTOM_HPP
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 #include "ParseIni/SimulatorSettings.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -61,7 +64,7 @@ protected:
    {
       Simulation::PrintSettings();
       std::cout << std::setw(14) << "input file = " << settingsfile_ << "\n";
-      for (size_t i=0; i< settings_.parameter_size(); i++)
+      for (size_t i = 0; i < settings_.parameter_size(); i++)
          if (!settings_.get_parameter(i).empty()) std::cout << std::setw(14) << ("p" + std::to_string(i) + " = ") << settings_.get_parameter(i) << "\n";
    }
 
@@ -92,12 +95,26 @@ private:
 
    void set_copynumbers_section(const CopyNumbersSection& cns)
    {
-      cn_ = std::make_unique<CopyNumbers>(world_, cns.interval());
-      simulator_->add_extrnal_event(0, cn_.get());
-      if (!cns.file().empty())
+      if (cns.type() == CopyNumbersSection::types::Average)
       {
-         cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
-         cn_->set_output(cfile_);
+         cna_ = std::make_unique<CopyNumbersAvg>(world_, rules_, cns.interval());
+         simulator_->add_extrnal_event(0, cna_.get());
+         simulator_->add_reaction_recorder(cna_.get());
+         if (!cns.file().empty())
+         {
+            cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+            cna_->set_output(cfile_);
+         }
+      }
+      else
+      {
+         cni_ = std::make_unique<CopyNumbersInst>(world_, cns.interval());
+         simulator_->add_extrnal_event(0, cni_.get());
+         if (!cns.file().empty())
+         {
+            cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+            cni_->set_output(cfile_);
+         }
       }
    }
 
@@ -140,12 +157,13 @@ private:
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
-   
+
    std::string settingsfile_;
    SimulatorSettings settings_;
 
    std::fstream cfile_;
-   std::unique_ptr<CopyNumbers> cn_;
+   std::unique_ptr<CopyNumbersInst> cni_;
+   std::unique_ptr<CopyNumbersAvg> cna_;
 
 };
 

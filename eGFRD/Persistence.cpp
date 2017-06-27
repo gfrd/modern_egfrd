@@ -50,6 +50,7 @@ void Persistence::store_egfrd(const EGFRDSimulator& gfrd)
    write(gfrd.time_);
    write(gfrd.dt_);
    write(gfrd.num_steps_);
+   // TODO reaction recorder !!
    write(gfrd.sidgen_.next_);
    write(gfrd.didgen_.next_);
 
@@ -128,6 +129,7 @@ void Persistence::retreive_egfrd(EGFRDSimulator& gfrd)
    read(gfrd.time_);
    read(gfrd.dt_);
    read(gfrd.num_steps_);
+   // TODO reaction recorder !!
    read(gfrd.sidgen_.next_);
    read(gfrd.didgen_.next_);
 
