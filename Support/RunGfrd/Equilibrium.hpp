@@ -55,6 +55,8 @@ public:
       world_size_ = 3.42e-6;        // 40 femto Liter = 4E-17 m3
       equil_start_ = false;
       prep_time_ = 0.0;
+      ka_ = 1e-19;                  // The association constant ka of the reaction [m^3*s^-1]
+      kd_ = 2e-2;                   // The dissociation constant kd of the reaction [s^-1]
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------

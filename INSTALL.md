@@ -33,7 +33,7 @@ or on Ubuntu Linux and some other Debian families, install the following:
 ```
    
 3. Run make to build:
-	
+
 ```
 > make samples
 ```
@@ -110,20 +110,46 @@ If you have compilation problems please let us know!
 > git clone https://github.com/gfrd/modern_egfrd
 ```
 
-3. Get windows versions of the dependencies: FreeGlut3 / GSL1.16.
+3. Get the dependencies: 
 
+Method A: (vcpkg)
+
+   Install and setup Microsoft Vcpkg (https://github.com/Microsoft/vcpkg)
+
+   Get and build the packages:
    
-   For convenience we bundled these in a [WinSupportPackage](http://egfrd.org/includes/packages/WinSupport.zip).
    
+```
+> vcpkg install gsl:x64-windows freeglut:x64-windows
+```
+   If you wish to do so, you can also install the x86-windows (32bit) versions of these packages.
+
+   Vcpkg automatically handles include directorties, library directories, linkage and runtime-dll copying!
+
+
+Method B: (manual)
    
-   Extract it in the project root.
+   Download the [WinSupportPackage](http://egfrd.org/includes/packages/WinSupport.zip).
+   and extract it to some <path> you prefer.
    
-   
+   For project(s): genBesselTables, gfrdVisualizer, RunGfrd, TestGFRD, TestGreensFunctions, eGFRD and greensfunctions:
+*   Add '<path>\gsl-1.16' to the VC++ include directories.
+*   Add '<path>\gsl-1.16\lib\[win32/x64]' to the VC++ library directories.
+*   Add 'gsl.lib' and 'cblas.lib' to the linker additional dependencies.
+*   Copy 'gsl.dll' and 'cblas.dll' from '[Win32\X64]\[Debug/Release]' to '_bin'-target folder.
+
+   For project(s): gfrdVisualizer:
+*   Add '<path>\freeglut\include' to the VC++ include directories.
+*   Add '<path>\freeglut\lib\[win32/x64]' to the VC++ library directories.
+*   Add 'freeglut.lib' to the linker additional dependencies.
+*   Copy 'freeglut.dll' from '[Win32\X64]\[Debug/Release]' to '_bin'-target folder.
+
+   The WinSupportPackage contains prebuild versions of the packages, created by:
 * FreeGlut3 for MSVC from [Transmission Zero](http://www.transmissionzero.co.uk/software/freeglut-devel/), 
 * GSL for MSVC from Brian Gladman.
 
 
-3. Open solution newGfrd.sln
+3. Open solution modern_egfrd.sln
 
 4. Select build configuration (e.g. x64 Release) and startup project RunGfrd 
 

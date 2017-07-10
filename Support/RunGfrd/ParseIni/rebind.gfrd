@@ -2,19 +2,19 @@
 
 [Simulator]
            Seed = 0x1234CAFE
-        EndTime = 60.0			; sec.
+        EndTime = 90.0			; sec.
    ShowProgress = False
 MaintenanceStep = 100000
 MaintenanceFile = sim_dump.out
 
 [World]
 Matrix = 8
-  Size = 1e-6; m
+  Size = 3.42e-6;          // 40 femto Liter = 4E-17 m3
 	
 [CopyNumbers]
 Interval = 1E-1
     Mode = On
-    File = copy_num.out
+;    File = copy_num.out
 	Type = Instantaneous
 
 [SpeciesType]
@@ -41,6 +41,6 @@ Rule = C --> A + B
    k = 2e-2; 	s^-1
 
 [Particles]
-A = 25
-B = 25
+A = 100
+B = 100
 C = 0

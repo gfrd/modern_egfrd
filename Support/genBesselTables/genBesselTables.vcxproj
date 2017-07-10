@@ -73,29 +73,21 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)libs\gsl-1.16;$(IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)libs\gsl-1.16;$(IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)libs\gsl-1.16;$(IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)libs\gsl-1.16;$(IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -109,14 +101,10 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying GSL Libraries
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\gsl.dll" "$(TargetDir)"
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\cblas.dll" "$(TargetDir)"
-
-IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
+      <Command>IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
 IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(TargetDir)CylindricalBesselTable.bin"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -132,14 +120,10 @@ IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(Targ
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying GSL Libraries
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\gsl.dll" "$(TargetDir)"
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\cblas.dll" "$(TargetDir)"
-
-IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
+      <Command>IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
 IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(TargetDir)CylindricalBesselTable.bin"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -158,14 +142,10 @@ IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(Targ
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying GSL Libraries
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\gsl.dll" "$(TargetDir)"
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\cblas.dll" "$(TargetDir)"
-
-IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
+      <Command>IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
 IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(TargetDir)CylindricalBesselTable.bin"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -184,14 +164,10 @@ IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(Targ
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying GSL Libraries
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\gsl.dll" "$(TargetDir)"
-COPY "$(SolutionDir)\libs\gsl-1.16\lib\$(Platform)\$(Configuration)\cblas.dll" "$(TargetDir)"
-
-IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
+      <Command>IF NOT EXIST "$(TargetDir)SphericalBesselTable.bin" "$(TargetPath)" -s "$(TargetDir)SphericalBesselTable.bin"
 IF NOT EXIST "$(TargetDir)CylindricalBesselTable.bin" "$(TargetPath)" -c "$(TargetDir)CylindricalBesselTable.bin"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

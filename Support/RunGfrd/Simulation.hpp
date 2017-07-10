@@ -214,6 +214,7 @@ protected:
       if (prep_time_ > 0.0) std::cout << std::setw(14) << "prep_time = " << prep_time_ << " [s]\n";
       if (end_time_ > 0.0) std::cout << std::setw(14) << "end_time = " << end_time_ << " [s]\n";
       if (maintenance_step_ > 0) std::cout << std::setw(14) << "maintenance = " << maintenance_step_ << "\n";
+      if (!simstate_file_.empty()) std::cout << std::setw(14) << "simstatefile = " << simstate_file_ << "\n";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------

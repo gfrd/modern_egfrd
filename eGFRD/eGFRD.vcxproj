@@ -195,7 +195,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
@@ -211,7 +211,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
     </Link>
     <Bscmake>
@@ -238,7 +238,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
@@ -260,7 +260,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>greensfunctions.lib;Logger.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>

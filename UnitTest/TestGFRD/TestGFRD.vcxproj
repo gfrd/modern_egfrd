@@ -115,29 +115,29 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -152,7 +152,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -167,7 +167,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -190,7 +190,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
@@ -210,7 +210,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>

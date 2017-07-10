@@ -73,29 +73,29 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\freeglut\include;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\freeglut\lib\$(Platform)\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\freeglut\include;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\freeglut\lib\$(Platform)\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\freeglut\include;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\freeglut\lib\$(Platform)\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(SolutionDir)_build\$(Configuration)_$(PlatformTarget)\$(TargetName)\</IntDir>
-    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)libs\freeglut\include;$(SolutionDir)libs\gsl-1.16;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(SolutionDir)libs\freeglut\lib\$(Platform)\;$(SolutionDir)libs\gsl-1.16\lib\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\eGFRD\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\Logger\;$(SolutionDir)/_build/$(Configuration)_$(PlatformTarget)\greensfunctions\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Support\Logger;$(SolutionDir)GreensFunctions;$(SolutionDir)eGFRD;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,11 +111,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;Logger.lib;freeglut.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying Libraries
-COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -130,11 +130,11 @@ COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;Logger.lib;freeglut.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying Libraries
-COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,12 +154,12 @@ COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalDependencies>gdiplus.lib;Logger.lib;freeglut.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying Libraries
-COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -178,12 +178,12 @@ COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalDependencies>gdiplus.lib;Logger.lib;freeglut.lib;eGFRD.lib;greensfunctions.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Logger.lib;eGFRD.lib;greensfunctions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>ECHO Copying Libraries
-COPY "$(SolutionDir)libs\freeglut\bin\$(Platform)\freeglut.dll" "$(TargetDir)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

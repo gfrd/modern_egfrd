@@ -55,8 +55,6 @@ protected:
 
       set_simulator_section(settings_.getSimulatorSection());
       set_world_section(settings_.getWorldSection());
-      set_species_section(settings_.getSpeciesTypeSections());
-      set_reactionrule_section(settings_.getReactionRuleSections());
       return Simulation::PrepareSimulation();
    }
 
@@ -66,11 +64,32 @@ protected:
       std::cout << std::setw(14) << "input file = " << settingsfile_ << "\n";
       for (size_t i = 0; i < settings_.parameter_size(); i++)
          if (!settings_.get_parameter(i).empty()) std::cout << std::setw(14) << ("p" + std::to_string(i) + " = ") << settings_.get_parameter(i) << "\n";
+
+      for (auto& species : settings_.getSpeciesTypeSections())
+      {
+         std::cout << std::setw(14) << "species = " << "'" << species.name() << "'" << ", D = " << species.D() << " [m^2*s^-1], r = " << species.r() << " [m]";
+         if (species.v() != 0) std::cout << ", v = " << species.v();
+         std::cout << "\n";
+      }
+
+      for (auto& rule : settings_.getReactionRuleSections())
+      {
+         std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k = " << rule.k() << "\n";
+      }
+
+      for (auto& pair : settings_.getParticlesSection().particles())
+      {
+         std::cout << std::setw(14) << "particle = " << "'" << pair.first << "'" << ", N = " << pair.second << "\n";
+      }
    }
 
    bool SetupSimulation() override
    {
+      set_species_section(settings_.getSpeciesTypeSections());
+      set_reactionrule_section(settings_.getReactionRuleSections());
+      
       Simulation::SetupSimulation();
+      
       set_throw_particles_section(settings_.getParticlesSection());
 
       auto cns = settings_.getCopyNumbersSection();
