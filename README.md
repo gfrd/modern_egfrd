@@ -17,7 +17,7 @@ This package is a modern C++ implementation of the eGFRD algorithm.
 It has some important improvements over its predecessor:
 
 * Minimal dependencies, allowing quick getting started.
-* It is very fast.
+* It is very fast (3 to 4 orders of magnitude faster than previous version).
 * Rewritten mostly from scratch, in modern C++, using new and efficient language features.
 * Improved code-style, bug- and design fixes, easier to understand and maintain.
 * Multi platform support
@@ -139,7 +139,7 @@ explosion of possible speciesType).
 
 In addition to new features we are also working on improving the codebase; 
 clean-up, commenting and documenting, unit-testing. Keeping up with compiler and 
-library improvements, like using ISO C++17 mathematical special functions over of GSL. 
+library improvements, adding CMake support.
 
 
 
