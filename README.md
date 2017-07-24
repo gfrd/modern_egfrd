@@ -139,7 +139,7 @@ explosion of possible speciesType).
 
 In addition to new features we are also working on improving the codebase; 
 clean-up, commenting and documenting, unit-testing. Keeping up with compiler and 
-library improvements, adding CMake support.
+library improvements. Adding more examples and usage information.
 
 
 

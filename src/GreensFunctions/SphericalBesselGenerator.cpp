@@ -49,10 +49,11 @@ void LoadTable(std::ifstream &file, sbTable& table)
 
 SphericalBesselGenerator::SphericalBesselGenerator()
 {
-   std::string fileName(GetExecutablePath() + "SphericalBesselTable.bin");
-
-   std::ifstream file(fileName, std::ios::in | std::ios::binary);
-   if (!file.is_open()) throw std::runtime_error("SphericalBesselTable.bin not found!");
+   std::string filename = GetExecutablePath() + "SphericalBesselTable";
+   if (!file_exists(filename)) filename = GetExecutablePath() + "../SphericalBesselTable";
+   
+   std::ifstream file(filename, std::ios::in | std::ios::binary);
+   if (!file.is_open()) throw std::runtime_error("SphericalBesselTable not found!");
 
    file.read(reinterpret_cast<char *>(&minNj_), sizeof(uint));
    file.read(reinterpret_cast<char *>(&maxNj_), sizeof(uint));

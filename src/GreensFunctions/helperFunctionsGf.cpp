@@ -7,6 +7,7 @@
 #include "SphericalBesselGenerator.hpp"
 #include "CylindricalBesselGenerator.hpp"
 #include <iomanip>
+#include <fstream>
 
 #if defined(_MSC_VER)
 #include <windows.h>
@@ -39,6 +40,14 @@ std::string GetExecutablePath()
       buffer[0] = '\0';
 
    return std::string(buffer);
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+bool file_exists(const std::string& name)
+{
+   std::ifstream file(name);
+   return file.good();	
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------

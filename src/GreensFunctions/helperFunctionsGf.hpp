@@ -18,6 +18,8 @@ double funcSum(std::function<double(uint i)> f, uint max_i, double tolerance = G
 
 std::string GetExecutablePath();
 
+bool file_exists(const std::string& name);
+
 // --------------------------------------------------------------------------------------------------------------------------------
 
 // Template class to map Lambda functions to GSL function pointers

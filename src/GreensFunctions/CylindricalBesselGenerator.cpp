@@ -50,10 +50,11 @@ void LoadTable(std::ifstream &file, cbTable& table)
 
 CylindricalBesselGenerator::CylindricalBesselGenerator()
 {
-   std::string fileName(GetExecutablePath() + "CylindricalBesselTable.bin");
+   std::string filename = GetExecutablePath() + "CylindricalBesselTable";
+   if (!file_exists(filename)) filename = GetExecutablePath() + "../CylindricalBesselTable";
 
-   std::ifstream file(fileName, std::ios::in | std::ios::binary);
-   if (!file.is_open()) throw std::runtime_error("CylindricalBesselTable.bin not found!");
+   std::ifstream file(filename, std::ios::in | std::ios::binary);
+   if (!file.is_open()) throw std::runtime_error("CylindricalBesselTable not found!");
 
    file.read(reinterpret_cast<char *>(&minNJ_), sizeof(uint));
    file.read(reinterpret_cast<char *>(&maxNJ_), sizeof(uint));

@@ -1,45 +1,38 @@
-# Compiled Object files
+# Compiler Related files
 *.slo
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
 *.gch
 *.pch
-
-# Compiled Dynamic libraries
 *.so
 *.dylib
 *.dll
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
-
-# Executables
+*.log
+*.tlog
 *.exe
 *.out
 *.app
+build/*
+
 
 # Generated lookup-tables
-/bin/CylindricalBesselTable.bin
-/bin/SphericalBesselTable.bin
-
-# Libs folder 
-# contains dependancies for windows platform
-/Libs/*
+*/CylindricalBesselTable.bin
+*/SphericalBesselTable.bin
 
 # Visual Studio stuff
 *.VC.DB
 .vs/*
 .svn/*
-_build/*
 *.vcxproj.user
 
 # Temperary files
 *~
 *.bak
 *.swp
+.DS_Store
+Thumbs.db

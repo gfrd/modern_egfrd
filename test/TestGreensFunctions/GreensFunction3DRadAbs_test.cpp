@@ -434,9 +434,11 @@ int GreensFunction3DRadAbs_draw_theta_conv()
    double theta = gf.drawTheta(rnd, r, t);
    // Not all cpu's/gsl version give the same result here.... anyone knows what theta should be ??
 
-   //TINYTEST_ALMOST_EQUAL(0.26722309705279157, theta, 5*DBL_EPSILON);       // WITH TABLE (fixed) 
+   TINYTEST_ALMOST_EQUAL(0.26722309705279157, theta, 5*DBL_EPSILON);       // WITH TABLE (fixed) 
    //TINYTEST_ALMOST_EQUALS(0.3392448267008449, theta);                    // WITH GSL BESSEL (also for small N) old code: 0.33924482669750622
    //TINYTEST_ALMOST_EQUALS(0.26722306378307309, theta);                   // WITH GSL BESSEL (not for small N)
+
+   TINYTEST_FAIL(theta <= 0.0 || theta >= INFINITY);
    return 1;
 }
 
@@ -459,6 +461,8 @@ int GreensFunction3DRadAbs_draw_theta_conv2()
    // Not all cpu's/gsl version give the same result here.... anyone knows what theta should be ??
    
    //TINYTEST_ALMOST_EQUAL(1.3949050836260224, theta, 5*DBL_EPSILON);
+   
+   TINYTEST_FAIL(theta <= 0.0 || theta >= INFINITY); 
    return 1;
 }
 

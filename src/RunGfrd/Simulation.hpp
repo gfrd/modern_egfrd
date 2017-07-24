@@ -207,7 +207,7 @@ protected:
       auto now = std::chrono::system_clock::now();
       auto time = std::chrono::system_clock::to_time_t(now);
       auto time_local = std::localtime(&time);
-      std::cout << std::setw(14) << "time local = " << asctime(time_local);
+      std::cout << std::setw(14) << "time local = " << std::asctime(time_local);
       std::cout << std::setw(14) << "world size = " << world_size_ << " [m]\n";
       std::cout << std::setw(14) << "matrix size = " << world_.matrix_size()[0] << "x" << world_.matrix_size()[1] << "x" << world_.matrix_size()[2] << "\n";
       if (seed_) std::cout << std::setw(16) << "seed = 0x" << std::setw(8) << std::setfill('0') << std::hex << std::uppercase << seed_ << std::setfill(' ') << "\n" << std::dec;

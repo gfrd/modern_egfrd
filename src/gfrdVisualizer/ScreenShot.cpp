@@ -85,9 +85,9 @@ void screenshot(int number)
    CLSID pngClsid;
    GetEncoderClsid(L"image/png", &pngClsid);
    
-   TCHAR szPath[MAX_PATH];
-   GetCurrentDirectory(MAX_PATH, szPath);
-   TCHAR szTmp[MAX_PATH];
+   WCHAR szPath[MAX_PATH];
+   GetCurrentDirectoryW(MAX_PATH, szPath);
+   WCHAR szTmp[MAX_PATH];
    wsprintfW(szTmp, L"%s\\screen%05d.png", szPath, number);
    bitmap.Save(szTmp, &pngClsid);
 
