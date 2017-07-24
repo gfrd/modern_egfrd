@@ -36,7 +36,7 @@
  
 3. Configure and build:
    
-   In general 'out-of-source' builds are preferred, so first make a sub-folder
+   In general 'out-of-source' builds are preferred, so first make a sub-folder. Then generate and build a Release configuration.
    ```
    > mkdir build
    > cd build
@@ -55,7 +55,7 @@
 5. Build and execute tests
 
    ```
-   > make TestGreensFunctions TestGFRD tests
+   > make TestGreensFunctions TestGFRD test
    ```
 
 6. Build and execute 3D Visualizer [Optional]
@@ -72,7 +72,7 @@
    > export LD_LIBRARY_PATH=$(pwd)
    > ./gfrdVisualizer
    ```
-   When running press keys f, d, i, s and a for some action.
+   When running press keys f, d, i, s and a for some action, press h for help.
 
    
 
@@ -96,16 +96,16 @@
    > vcpkg install gsl:x64-windows freeglut:x64-windows
    ```
    
-   Setup VCPKG_ROOT environment variable:
+   Setup a VCPKG_ROOT environment variable:
    ```
    > SET VCPKG_ROOT=<your vcpkg path>
    ```
-   or more permanently open 'Advanced System Settings' and set the environment variable here. Then also check that <vcpkg> directory and 'CMake' are in the PATH environment variable.
+   or for a more permanent setting, open 'Advanced System Settings' and set the _VCPKG_ROOT_ environment here. Then also check that '<vcpkg>' directory and 'CMake' are in the PATH environment variable.
    
 
 3. Get source codes:
 
-   You can git clone the repository, either with _git_ or _TortoiseSVN_
+   You can clone the repository, either with _git_ or _TortoiseSVN_
    ```
    > git clone https://github.com/gfrd/modern_egfrd
    > cd modern_egfrd
@@ -149,7 +149,7 @@
    > cd bin/Release
    > gfrdVisualizer
    ```
-   When running press keys f, d, i, s and a for some action.
+   When running press keys f, d, i, s and a for some action, press h for help.
    
 
 
@@ -188,7 +188,7 @@
    Then click 'CMake' from the menubar and choose 'Debug', 'gfrdVisualizer'.
    or use the 'Select Startup Item'-toolbar to choose 'gfrdVisualizer' and click it to start.
    
-   When running press keys f, d, i, s and a for some action.
+   When running press keys f, d, i, s and a for some action, press h for help.
    
 
    

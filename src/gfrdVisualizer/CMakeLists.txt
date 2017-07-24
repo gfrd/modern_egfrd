@@ -23,6 +23,6 @@ endif()
 
 else()
 
-message (WARNING, "OpenGL and/or GLUT not found! build for gfrdVisualizer skipped")
+message (WARNING, "target gfrdVisualizer skipped")
 
 endif()

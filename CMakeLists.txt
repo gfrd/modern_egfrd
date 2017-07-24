@@ -9,7 +9,7 @@ find_package(GSL REQUIRED)
 if (WIN32)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /std:c++latest")
 else (UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
 endif ()
 
 # Specify output folder as 'bin', multi-configuration tools append the configuration name
