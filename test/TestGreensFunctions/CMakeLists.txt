@@ -1,7 +1,8 @@
-file(GLOB headers *.hpp)
-file(GLOB sources *.cpp)
+set (SRC CylindricalBesselGenerator_test.cpp Factorial_test.cpp GreensFunction3D_test.cpp GreensFunction3DAbs_test.cpp GreensFunction3DAbsSym_test.cpp GreensFunction3DRadAbs_test.cpp GreensFunction3DRadInf_test.cpp GslSumLevinU_test.cpp SphericalBesselGenerator_test.cpp tinytest.cpp ../common/tinytest_specific.cpp)
+set (HDR CylindricalBesselGenerator_test.hpp Factorial_test.hpp GreensFunction3D_test.hpp GreensFunction3DAbs_test.hpp GreensFunction3DAbsSym_test.hpp GreensFunction3DRadAbs_test.hpp GreensFunction3DRadInf_test.hpp GslSumLevinU_test.hpp SphericalBesselGenerator_test.hpp ../common/tinytest.h)
 
-add_executable(TestGreensFunctions ${sources} ${headers})
+add_executable(TestGreensFunctions ${SRC} ${HDR})
 
-target_include_directories (TestGreensFunctions PRIVATE ${GSL_INCLUDE_DIRS})
-target_link_libraries(TestGreensFunctions PUBLIC eGFRD GreensFunctions Logger ${GSL_LIBRARIES} ${GSLCBLAS_LIBRARIES})
+target_link_libraries(TestGreensFunctions PRIVATE GreensFunctions)
+
+target_compile_features (TestGreensFunctions PRIVATE cxx_auto_type)

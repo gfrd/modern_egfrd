@@ -1,7 +1,9 @@
-file(GLOB headers *.hpp)
-file(GLOB sources *.cpp)
+set (SRC genBesselTables.cpp)
+set (HDR "")
 
-add_executable(genBesselTables ${sources} ${headers})
+add_executable(genBesselTables ${SRC} ${HDR})
 
-target_include_directories (genBesselTables PRIVATE ${GSL_INCLUDE_DIRS})
-target_link_libraries (genBesselTables PRIVATE ${GSL_LIBRARIES} ${GSLCBLAS_LIBRARIES})
+target_link_libraries (genBesselTables PRIVATE GSL::gsl)
+
+target_compile_features (genBesselTables PRIVATE cxx_alias_templates )
+

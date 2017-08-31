@@ -2,15 +2,18 @@ cmake_minimum_required(VERSION 3.2.0)
 
 project(modern_egfrd CXX)
 
+# The version number.
+set (GFRD_VERSION_MAJOR 2)
+set (GFRD_VERSION_MINOR 1)
+
 # GSL is required for almost all targets
 find_package(GSL REQUIRED)
 
-# Specify ISO C++14 version 
-if (WIN32)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /std:c++latest")
-else (UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
-endif ()
+# Check C++ stdlib features
+include(cmake/CheckFeature.cmake)
+check_make_unique()
+configure_file (cmake/gfrd_compat.hpp.in gfrd_compat.hpp)
+set (GFRD_COMPAT_DIR ${CMAKE_BINARY_DIR})
 
 # Specify output folder as 'bin', multi-configuration tools append the configuration name
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -34,7 +37,7 @@ add_custom_command(
 add_custom_target(tables ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/SphericalBesselTable
                                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CylindricalBesselTable)
 
-# Specify target dependancies
+# Specify target dependencies
 add_dependencies(GreensFunctions Logger tables)
 add_dependencies(eGFRD GreensFunctions Logger)
 add_dependencies(RunGfrd eGFRD)

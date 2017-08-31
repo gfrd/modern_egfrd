@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include "gfrd_compat.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 // common types (prefer c++ using expression above old style typedefs)
@@ -75,7 +76,7 @@ static struct GlobalGfConfig
 
 
 #if defined(_MSC_VER)
-#if defined(GREENSFUNCTIONS_EXPORTS)
+#if defined(GreensFunctions_EXPORTS)
 #define GF_EXPORT __declspec(dllexport)
 #else
 #define GF_EXPORT __declspec(dllimport)

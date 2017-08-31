@@ -10,6 +10,7 @@
 #include <locale>
 #include <functional>
 #include "Logger.hpp"
+#include "gfrd_compat.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -21,9 +22,7 @@
 
 Logger& Logger::get_logger(const char* name)
 {
-   // using lower_case map
-   using loggers_map = std::unordered_map<std::string, std::unique_ptr<Logger>>;
-   static loggers_map logger_table;
+   static std::unordered_map<std::string, std::unique_ptr<Logger>> logger_table;
 
    std::string lcname;
    std::transform(name, name + std::strlen(name), std::back_inserter(lcname), std::bind(std::tolower<char>, std::placeholders::_1, std::locale()));

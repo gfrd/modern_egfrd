@@ -9,6 +9,7 @@
 #include <csignal>
 #include "exceptions.hpp"
 #include "makeString.hpp"
+#include "gfrd_compat.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 // common types (prefer c++ using expression above old style typedefs)
@@ -88,7 +89,7 @@ static struct GlobalGfrdConfig
 // Library export/import definition
 
 #if defined(_MSC_VER)
-#if defined(EGFRD_EXPORTS)
+#if defined(eGFRD_EXPORTS)
 #define GFRD_EXPORT __declspec(dllexport)
 #else
 #define GFRD_EXPORT __declspec(dllimport)

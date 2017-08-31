@@ -48,7 +48,7 @@ public:
 
    SpeciesTypeID get_species_type_id_by_name(const std::string name) const
    {
-      auto i = std::find_if(species_map_.begin(), species_map_.end(), [name](const auto& n) { return n.second.name() == name; });
+      auto i = std::find_if(species_map_.begin(), species_map_.end(), [name](const species_map::value_type& n) { return n.second.name() == name; });
       if (species_map_.end() == i) throw not_found(make_string() << "SpeciesType with name='" << name << "' not found!");
       return i->first;
    }
