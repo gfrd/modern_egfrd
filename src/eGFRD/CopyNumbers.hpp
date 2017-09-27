@@ -174,5 +174,50 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+class ParticlePositions : public CustomAction
+{
+   // Computes the positions of all particles at the interval
+   // Beware of the performance penalty, for particle positions it is required to burst the domains!
+   // Output to std::cout (default) or given ostream.
+
+public:
+   explicit ParticlePositions(const std::unique_ptr<EGFRDSimulator>& sim, double interval = 1e-3) : CustomAction(interval), sim_(sim), log_(Log("ParticlePositions"))
+   {
+      log_.set_stream(std::cout);
+      log_.set_flags(Logger::logflags::None);
+   }
+
+   void do_action(double time) override
+   {
+      print(time);
+   }
+
+   const char* type_name() const override { return "ParticlePositions"; }
+
+   void set_output(std::ostream& stream) const { log_.set_stream(stream); }
+
+private:
+
+   void print(double time) const
+   {
+      sim_->burst_all();
+      auto& world = sim_->world();
+
+      log_.info() << "ParticlePositions T=" << std::scientific << std::setprecision(6) << std::setw(12) << time << " N=" << std::fixed << world.num_particles();
+      log_.info() << std::setw(8) << "PID" << std::setw(8) << "SID" << std::setw(16) << "X" << std::setw(16) << "Y" << std::setw(16) << "Z";
+      
+      for (auto& pip : world.get_particles())
+         log_.info() << std::fixed << std::setw(8) << pip.first() << std::setw(8) << pip.second.sid()() << 
+                        std::scientific << std::setprecision(6) << std::setw(16) << pip.second.position().X() << std::setw(16) << pip.second.position().Y() << std::setw(16) << pip.second.position().Z();
+      log_.info();
+   }
+
+protected:
+   const std::unique_ptr<EGFRDSimulator>& sim_;
+   Logger& log_;
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 
 #endif /* COPYNUMBERS_HPP */

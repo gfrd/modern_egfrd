@@ -11,6 +11,7 @@
 #include "ParticlesSection.hpp"
 #include "ParserExceptions.hpp"
 #include "CopyNumbersSection.hpp"
+#include "ParticlePositionsSection.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -88,6 +89,7 @@ private:
       if (heading == WorldSection::section_name()) { current_ = &worldSection_; return; }
       if (heading == ParticlesSection::section_name()) { current_ = &throwInParticlesSection_; return; }
       if (heading == CopyNumbersSection::section_name()) { current_ = &copyNumbersSection_; return; }
+      if (heading == ParticlePositionSection::section_name()) { current_ = &particlePositionsSection_; return; }
       if (heading == ReactionRuleSection::section_name()) { reactionRuleSections_.emplace_back(); current_ = &reactionRuleSections_[reactionRuleSections_.size() - 1]; return; }
       if (heading == SpeciesTypeSection::section_name()) { speciesTypeSections_.emplace_back(); current_ = &speciesTypeSections_[speciesTypeSections_.size() - 1]; return; }
       THROW_EXCEPTION(illegal_section, "Section '" << heading << "' not recognized!");
@@ -103,6 +105,7 @@ public:
    const std::vector<ReactionRuleSection>& getReactionRuleSections() const { return reactionRuleSections_; }
    const ParticlesSection& getParticlesSection() const { return throwInParticlesSection_; }
    const CopyNumbersSection& getCopyNumbersSection() const { return copyNumbersSection_; }
+   const ParticlePositionSection& getParticlePositionsSection() const { return particlePositionsSection_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -120,6 +123,7 @@ private:
    std::vector<SpeciesTypeSection> speciesTypeSections_;
    std::vector<ReactionRuleSection> reactionRuleSections_;
    CopyNumbersSection copyNumbersSection_;
+   ParticlePositionSection particlePositionsSection_;
 
    SectionBase* current_;
    std::array<std::string, 10> parameters_;
@@ -137,6 +141,7 @@ inline std::ostream& operator<<(std::ostream& stream, const SimulatorSettings& s
    for (auto& item : settings.getReactionRuleSections()) stream << item;
    stream << settings.getParticlesSection();
    stream << settings.getCopyNumbersSection();
+   stream << settings.getParticlePositionsSection();
    stream << std::endl;
    return stream;
 }

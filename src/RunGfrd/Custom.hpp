@@ -95,6 +95,9 @@ protected:
       auto cns = settings_.getCopyNumbersSection();
       if (cns.mode() == CopyNumbersSection::modes::On)
          set_copynumbers_section(cns);
+      auto pps = settings_.getParticlePositionsSection();
+      if (pps.mode() == ParticlePositionSection::modes::On)
+         set_particlepostions_section(pps);
 
       return true;
    }
@@ -106,6 +109,9 @@ protected:
       auto cns = settings_.getCopyNumbersSection();
       if (cns.mode() != CopyNumbersSection::modes::Off)
          set_copynumbers_section(cns);
+      auto pps = settings_.getParticlePositionsSection();
+      if (pps.mode() != ParticlePositionSection::modes::Off)
+         set_particlepostions_section(pps);
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -134,6 +140,17 @@ private:
             cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
             cni_->set_output(cfile_);
          }
+      }
+   }
+
+   void set_particlepostions_section(const ParticlePositionSection& pps)
+   {
+      pp_ = std::make_unique<ParticlePositions>(simulator_, pps.interval());
+      simulator_->add_extrnal_event(0, pp_.get());
+      if (!pps.file().empty())
+      {
+         pfile_.open(pps.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+         pp_->set_output(pfile_);
       }
    }
 
@@ -181,9 +198,10 @@ private:
    SimulatorSettings settings_;
 
    std::fstream cfile_;
+   std::fstream pfile_;
    std::unique_ptr<CopyNumbersInst> cni_;
    std::unique_ptr<CopyNumbersAvg> cna_;
-
+   std::unique_ptr<ParticlePositions> pp_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

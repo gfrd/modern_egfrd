@@ -9,7 +9,7 @@ MaintenanceFile = sim_data.out
 [World]
   Matrix = 8
     Size = 1e-6; m
-	
+
 [SpeciesType]
 Name = A
    r = 1e-9; m
@@ -17,3 +17,8 @@ Name = A
 
 [Particles]
 A = 100
+
+[ParticlePositions]
+    Interval = 1E-1
+    File = positions.dat
+    Mode = On
