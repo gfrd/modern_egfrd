@@ -74,10 +74,12 @@ protected:
 
       for (auto& rule : settings_.getReactionRuleSections())
       {
+         std::string mode;
+         if (rule.mode()!=SectionModeBase::modes::On) mode = rule.mode() == SectionModeBase::modes::Off ? ", Mode = Off" : ", Mode = Run";
          if (!rule.is_bidirectional())
-            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k = " << rule.k() << "\n";
+            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k = " << rule.k() << mode << "\n";
          else
-            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", ka = " << rule.ka() << ", kd = " << rule.kd() << "\n";
+            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k1 = " << rule.k1() << ", k2 = " << rule.k2() << mode << "\n";
       }
 
       for (auto& pair : settings_.getParticlesSection().particles())

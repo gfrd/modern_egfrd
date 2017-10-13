@@ -13,7 +13,7 @@
 
 struct ReactionRuleSection final : SectionModeBase
 {
-   explicit ReactionRuleSection() : rule_(std::string()), k_(-1), ka_(-1), kd_(-1), is_bidirectional_(false) { mode_ = modes::On; }
+   explicit ReactionRuleSection() : rule_(std::string()), k_(-1), k1_(-1), k2_(-1), is_bidirectional_(false) { mode_ = modes::On; }
    ~ReactionRuleSection() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -23,11 +23,11 @@ struct ReactionRuleSection final : SectionModeBase
    const std::string key_rule = "Rule";
    const std::string& rule() const { return rule_; }
    const std::string key_k = "k";
-   const std::string key_ka = "ka";
-   const std::string key_kd = "kd";
+   const std::string key_k1 = "k1";
+   const std::string key_k2 = "k2";
    double k() const { return k_; }
-   double ka() const { return ka_; }
-   double kd() const { return kd_; }
+   double k1() const { return k1_; }
+   double k2() const { return k2_; }
    bool is_bidirectional() const { return is_bidirectional_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -37,8 +37,8 @@ struct ReactionRuleSection final : SectionModeBase
       if (SectionModeBase::set_keypair(key,value)) return true;
       if (key == key_rule) { rule_ = format_check(value); return true; }
       if (key == key_k) { k_ = std::stod(value); return true; }
-      if (key == key_ka) { ka_ = std::stod(value); return true; }
-      if (key == key_kd) { kd_ = std::stod(value); return true; }
+      if (key == key_k1) { k1_ = std::stod(value); return true; }
+      if (key == key_k2) { k2_ = std::stod(value); return true; }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 
@@ -60,19 +60,19 @@ struct ReactionRuleSection final : SectionModeBase
 
       if (is_bidirectional_)
       {
-         THROW_UNLESS_MSG(illegal_section_value, ka_ >= 0 && kd_ >= 0, "Bidirectional rule should specify ka and kd values.");
+         THROW_UNLESS_MSG(illegal_section_value, k1_ >= 0 && k2_ >= 0, "Bidirectional rule should specify k1 and k2 values.");
          THROW_UNLESS_MSG(illegal_section_value, products == 1  , "Bidirectional rule should have one product.");
 
          // associate
          switch (reactants)
          {
-         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], ka_, product)); break;
-         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], ka_, product)); break;
+         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], k1_, product)); break;
+         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], k1_, product)); break;
          default: break;
          }
 
          // dissociate
-         rules.add_reaction_rule( ReactionRule(product[0], kd_, reactant));
+         rules.add_reaction_rule( ReactionRule(product[0], k2_, reactant));
       }
       else
       {
@@ -117,7 +117,7 @@ private:
    // --------------------------------------------------------------------------------------------------------------------------------
 
    std::string rule_;
-   double k_,ka_,kd_;
+   double k_,k1_,k2_;
    bool is_bidirectional_;
    std::vector<std::string> reactants_;
    std::vector<std::string> products_;
@@ -131,8 +131,8 @@ inline std::ostream& operator<<(std::ostream& stream, const ReactionRuleSection&
    stream << rrs.key_rule << " = " << rrs.rule() << std::endl;
    if (rrs.is_bidirectional())
    {
-      stream << rrs.key_ka << " = " << rrs.ka() << std::endl;
-      stream << rrs.key_kd << " = " << rrs.kd() << std::endl;
+      stream << rrs.key_k1 << " = " << rrs.k1() << std::endl;
+      stream << rrs.key_k2 << " = " << rrs.k2() << std::endl;
    }
    else
       stream << rrs.key_k << " = " << rrs.k() << std::endl;

@@ -78,11 +78,11 @@ P = 30
 
 [CopyNumbers]
 Interval = 1e-1
-;File = copy_num.dat
+File = copy_num.dat
 Mode = Run
 Type = Instantaneous
 
 [ReactionRecord]
 Interval = 1e-1
-;File = react_rec.dat
+File = react_rec.dat
 Mode = Run
