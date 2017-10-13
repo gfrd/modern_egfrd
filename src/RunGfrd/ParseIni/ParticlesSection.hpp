@@ -21,9 +21,10 @@ struct ParticlesSection : SectionBase
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   void set_keypair(const std::string& key, const std::string& value) override
+   bool set_keypair(const std::string& key, const std::string& value) override
    {
       particles_.emplace_back(std::make_pair(key, std::stoi(value)));
+      return true;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------

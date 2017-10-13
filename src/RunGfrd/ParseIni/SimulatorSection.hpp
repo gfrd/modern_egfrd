@@ -34,14 +34,14 @@ struct SimulatorSection final : SectionBase
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   void set_keypair(const std::string& key, const std::string& value) override
+   bool set_keypair(const std::string& key, const std::string& value) override
    {
-      if (key == key_seed) { seed_ = std::stoul(value, nullptr, 0); return; }
-      if (key == key_prepare_time) { prepare_time_ = std::stod(value); return; }
-      if (key == key_end_time) { end_time_ = std::stod(value); return; }
-      if (key == key_maintenance_step) { maintenance_step_ = std::stoi(value); return; }
-      if (key == key_maintenance_file) { simstate_file_ = value; return; }
-      if (key == key_show_progress) { show_progress_ = get_bool(value); return; }
+      if (key == key_seed) { seed_ = std::stoul(value, nullptr, 0); return true; }
+      if (key == key_prepare_time) { prepare_time_ = std::stod(value); return true; }
+      if (key == key_end_time) { end_time_ = std::stod(value); return true; }
+      if (key == key_maintenance_step) { maintenance_step_ = std::stoi(value); return true; }
+      if (key == key_maintenance_file) { simstate_file_ = value; return true; }
+      if (key == key_show_progress) { show_progress_ = get_bool(value); return true; }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 

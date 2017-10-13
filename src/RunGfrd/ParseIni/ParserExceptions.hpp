@@ -39,10 +39,10 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class illegal_matrix_size : public parser_exception
+class illegal_size : public parser_exception
 {
 public:
-   explicit illegal_matrix_size(const std::string& msg) : parser_exception(msg) {}
+   explicit illegal_size(const std::string& msg) : parser_exception(msg) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

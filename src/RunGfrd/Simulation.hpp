@@ -209,7 +209,9 @@ protected:
       auto time_local = std::localtime(&time);
       std::cout << std::setw(14) << "time local = " << std::asctime(time_local);
       std::cout << std::setw(14) << "world size = " << world_size_ << " [m]\n";
-      std::cout << std::setw(14) << "matrix size = " << world_.matrix_size()[0] << "x" << world_.matrix_size()[1] << "x" << world_.matrix_size()[2] << "\n";
+      auto ms = world_.matrix_size();
+      std::cout << std::setw(14) << "volume = " << std::setprecision(3) << 1e3 * (world_size_ * world_size_ * ms[1] / ms[0] * world_size_ * ms[2] / ms[0]) << " [L]\n";
+      std::cout << std::setw(14) << "matrix size = " << ms[0] << "x" << ms[1] << "x" << ms[2] << "\n";
       if (seed_) std::cout << std::setw(16) << "seed = 0x" << std::setw(8) << std::setfill('0') << std::hex << std::uppercase << seed_ << std::setfill(' ') << "\n" << std::dec;
       if (prep_time_ > 0.0) std::cout << std::setw(14) << "prep_time = " << prep_time_ << " [s]\n";
       if (end_time_ > 0.0) std::cout << std::setw(14) << "end_time = " << end_time_ << " [s]\n";

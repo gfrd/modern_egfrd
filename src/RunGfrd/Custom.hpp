@@ -74,7 +74,10 @@ protected:
 
       for (auto& rule : settings_.getReactionRuleSections())
       {
-         std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k = " << rule.k() << "\n";
+         if (!rule.is_bidirectional())
+            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", k = " << rule.k() << "\n";
+         else
+            std::cout << std::setw(14) << "rule = " << "'" << rule.rule() << "'" << ", ka = " << rule.ka() << ", kd = " << rule.kd() << "\n";
       }
 
       for (auto& pair : settings_.getParticlesSection().particles())
@@ -86,18 +89,21 @@ protected:
    bool SetupSimulation() override
    {
       set_species_section(settings_.getSpeciesTypeSections());
-      set_reactionrule_section(settings_.getReactionRuleSections());
+      set_reactionrule_section(settings_.getReactionRuleSections(), true);
       
       Simulation::SetupSimulation();
       
       set_throw_particles_section(settings_.getParticlesSection());
 
       auto cns = settings_.getCopyNumbersSection();
-      if (cns.mode() == CopyNumbersSection::modes::On)
+      if (cns.mode() == SectionModeBase::modes::On)
          set_copynumbers_section(cns);
       auto pps = settings_.getParticlePositionsSection();
-      if (pps.mode() == ParticlePositionSection::modes::On)
+      if (pps.mode() == SectionModeBase::modes::On)
          set_particlepostions_section(pps);
+      auto rrs = settings_.getReactionRecordSection();
+      if (rrs.mode() == SectionModeBase::modes::On)
+         set_reactionrecord_section(rrs);
 
       return true;
    }
@@ -106,12 +112,17 @@ protected:
    {
       Simulation::PostPreSimulation();
 
+      set_reactionrule_section(settings_.getReactionRuleSections(), false);
+
       auto cns = settings_.getCopyNumbersSection();
-      if (cns.mode() != CopyNumbersSection::modes::Off)
+      if (cns.mode() != SectionModeBase::modes::Off)
          set_copynumbers_section(cns);
       auto pps = settings_.getParticlePositionsSection();
-      if (pps.mode() != ParticlePositionSection::modes::Off)
+      if (pps.mode() != SectionModeBase::modes::Off)
          set_particlepostions_section(pps);
+      auto rrs = settings_.getReactionRecordSection();
+      if (rrs.mode() != SectionModeBase::modes::Off)
+         set_reactionrecord_section(rrs);
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -154,6 +165,17 @@ private:
       }
    }
 
+   void set_reactionrecord_section(const ReactionRecordSection &rrs)
+   {
+      rrec_ = std::make_unique<reaction_recorder_log>(rules_, model_);
+      simulator_->add_reaction_recorder(rrec_.get());
+      if (!rrs.file().empty())
+      {
+         rfile_.open(rrs.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+         rrec_->set_output(rfile_);
+      }
+   }
+
    void set_simulator_section(const SimulatorSection& section)
    {
       if (section.seed()) rng_.seed(section.seed());
@@ -167,24 +189,29 @@ private:
    void set_species_section(const std::vector<SpeciesTypeSection>& sections)
    {
       for (auto& section : sections)
-      {
-         auto species = section.create_species(model_.get_def_structure_type_id());
-         model_.add_species_type(species);
-      }
+         section.create_species(model_);
    }
 
    void set_world_section(const WorldSection& section)
    {
-      world_size_ = section.world_size();
-      THROW_UNLESS_MSG(illegal_matrix_size, world_.matrix_size()[0] == section.matrix_space(), "invalid matrix space x-size!");
-      THROW_UNLESS_MSG(illegal_matrix_size, world_.matrix_size()[1] == section.matrix_space(), "invalid matrix space y-size!");
-      THROW_UNLESS_MSG(illegal_matrix_size, world_.matrix_size()[2] == section.matrix_space(), "invalid matrix space z-size!");
+      auto wsize = section.world_size();
+      if (wsize == 0) wsize = std::pow(section.volume() * 1e-3, 1./3);
+      else THROW_UNLESS_MSG(illegal_size, section.volume() == 0, "conflicting entry, specify world-size or volume!");
+      world_size_ = wsize;
+      THROW_UNLESS_MSG(illegal_size, world_size_ > 0, "invalid world-size!");
+
+      THROW_UNLESS_MSG(illegal_size, world_.matrix_size()[0] == section.matrix_space(), "invalid matrix space x-size!");
+      THROW_UNLESS_MSG(illegal_size, world_.matrix_size()[1] == section.matrix_space(), "invalid matrix space y-size!");
+      THROW_UNLESS_MSG(illegal_size, world_.matrix_size()[2] == section.matrix_space(), "invalid matrix space z-size!");
    }
 
-   void set_reactionrule_section(const std::vector<ReactionRuleSection>& sections)
+   void set_reactionrule_section(const std::vector<ReactionRuleSection>& sections, bool prerun)
    {
       for (auto& section : sections)
-         rules_.add_reaction_rule(section.create_reaction_rule(model_));
+      {
+         if (prerun && section.mode() == SectionModeBase::modes::On || !prerun && section.mode() == SectionModeBase::modes::Run)
+            section.create_reaction_rule(model_, rules_);
+      }
    }
 
    void set_throw_particles_section(const ParticlesSection& section)
@@ -197,11 +224,11 @@ private:
    std::string settingsfile_;
    SimulatorSettings settings_;
 
-   std::fstream cfile_;
-   std::fstream pfile_;
+   std::fstream cfile_, pfile_, rfile_;
    std::unique_ptr<CopyNumbersInst> cni_;
    std::unique_ptr<CopyNumbersAvg> cna_;
    std::unique_ptr<ParticlePositions> pp_;
+   std::unique_ptr<reaction_recorder_log> rrec_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,88 @@
+; eGFRD mapK simulation
+
+[Simulator]
+Seed = 0x123ABC
+PrepareTime = 0.1                      ; seconds
+EndTime = 300.0                        ; seconds
+MaintenanceStep = 100000	
+MaintenanceFile = sim_data.out
+
+[World]
+Matrix = 8
+Volume = 1e-15                         ; liter
+
+[SpeciesType]
+Name = K, Kp, Kpp, KK-K, KK-Kp, P-Kpp, P-Kp
+r = 2.5e-9                             ; m
+D = 1e-12                              ; m^2*s^-1
+
+[SpeciesType]
+Name = KK, KK*, P, P*
+r = 2.5e-9                             ; m
+D = 1e-12                              ; m^2*s^-1
+
+
+[ReactionRule]                         ; [1a]
+Mode = Run
+Rule = KK + K <=> KK-K
+k1 = 4.4834554091533426e-20            ; k1 in m^3*s^-1
+k2 = 1.35                              ; k2 in s^-1
+
+[ReactionRule]                         ; [1b]
+Rule = KK-K --> KK* + Kp
+k = 1.5                                ; k3 in s^-1
+
+[ReactionRule]                         ; [2a]
+Rule = KK + Kp <=> KK-Kp
+k1 = 9.2990186263921183e-20            ; k4 in m^3*s^-1
+k2 = 1.73                              ; k5 in s^-1
+
+[ReactionRule]                         ; [2b]
+Rule = KK-Kp --> KK* + Kpp
+k = 15.0                               ; k6 in s^-1
+
+[ReactionRule]                         ; [3a]
+Rule = P + Kpp <=> P-Kpp
+k1 = 4.4834554091533426e-20            ; k1 in m^3*s^-1
+k2 = 1.35                              ; k2 in s^-1
+
+[ReactionRule]                         ; [3b]
+Rule = P-Kpp --> P* + Kp
+k = 1.5                                ; k3 in s^-1
+
+[ReactionRule]                         ; [4a]
+Mode = Run
+Rule = P + Kp <=> P-Kp
+k1 = 9.2990186263921183e-20            ; k4 in m^3*s^-1
+k2 = 1.73                              ; k5 in s^-1
+
+[ReactionRule]                         ; [4b]
+Rule = P-Kp --> P* + K
+k = 15.0                               ; k6 in s^-1
+
+[ReactionRule]                         ; [5a]
+Rule = KK* --> KK
+k = 69.3147                            ; k7 in s^-1
+
+[ReactionRule]                         ; [5b]
+Rule = P* --> P
+k = 69.3147                            ; k7 in s^-1
+
+
+[Particles]
+K = 60                                 ; Substrate concentration (total K + Kp + Kpp)
+Kpp = 60;
+KK = 30                                ; Enzyme concentration
+P = 30
+
+
+[CopyNumbers]
+Interval = 1e-1
+;File = copy_num.dat
+Mode = Run
+Type = Instantaneous
+
+[ReactionRecord]
+Interval = 1e-1
+;File = react_rec.dat
+Mode = Run

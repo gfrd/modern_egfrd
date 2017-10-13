@@ -54,7 +54,7 @@ protected:
    {
       world_size_ = std::pow(volume_ * 1e-3, 1.0 / 3.0);
 
-      N_ = static_cast<uint>(convert::particles_in_volume_liter(conS_, volume_));;
+      N_ = static_cast<uint>(convert::particles_in_volume_liter(conS_, volume_));
       N_Kpp = static_cast<uint>(N_ * Nratio_);
       N_K = N_ - N_Kpp;
       N_KK = static_cast<uint>(convert::particles_in_volume_liter(0.5 * conE_, volume_));
@@ -126,24 +126,26 @@ protected:
    void PostPreSimulation() override
    {
       Simulation::PostPreSimulation();
+      auto kk1 = convert::per_nM_per_sec_to_m3_per_sec(k1_);
+      auto kk4 = convert::per_nM_per_sec_to_m3_per_sec(k4_);
 
       //[1]
-      rules_.add_reaction_rule(ReactionRule(sKK, sK, convert::per_nM_per_sec_to_m3_per_sec(k1_), std::vector<SpeciesTypeID>{ sKK_K }));
+      rules_.add_reaction_rule(ReactionRule(sKK, sK, kk1, std::vector<SpeciesTypeID>{ sKK_K }));
       rules_.add_reaction_rule(ReactionRule(sKK_K, k2_, std::vector<SpeciesTypeID>{ sKK, sK }));
       rules_.add_reaction_rule(ReactionRule(sKK_K, k3_, std::vector<SpeciesTypeID>{ sKKi, sKp }));
 
       //[2]
-      rules_.add_reaction_rule(ReactionRule(sKK, sKp, convert::per_nM_per_sec_to_m3_per_sec(k4_), std::vector<SpeciesTypeID>{ sKK_Kp }));
+      rules_.add_reaction_rule(ReactionRule(sKK, sKp, kk4, std::vector<SpeciesTypeID>{ sKK_Kp }));
       rules_.add_reaction_rule(ReactionRule(sKK_Kp, k5_, std::vector<SpeciesTypeID>{ sKK, sKp }));
       rules_.add_reaction_rule(ReactionRule(sKK_Kp, k6_, std::vector<SpeciesTypeID>{ sKKi, sKpp }));
 
       //[3]
-      rules_.add_reaction_rule(ReactionRule(sP, sKpp, convert::per_nM_per_sec_to_m3_per_sec(k1_), std::vector<SpeciesTypeID>{ sP_Kpp }));
+      rules_.add_reaction_rule(ReactionRule(sP, sKpp, kk1, std::vector<SpeciesTypeID>{ sP_Kpp }));
       rules_.add_reaction_rule(ReactionRule(sP_Kpp, k2_, std::vector<SpeciesTypeID>{ sP, sKpp }));
       rules_.add_reaction_rule(ReactionRule(sP_Kpp, k3_, std::vector<SpeciesTypeID>{ sPi, sKp }));
 
       //[4]
-      rules_.add_reaction_rule(ReactionRule(sP, sKp, convert::per_nM_per_sec_to_m3_per_sec(k4_), std::vector<SpeciesTypeID>{ sP_Kp }));
+      rules_.add_reaction_rule(ReactionRule(sP, sKp, kk4, std::vector<SpeciesTypeID>{ sP_Kp }));
       rules_.add_reaction_rule(ReactionRule(sP_Kp, k5_, std::vector<SpeciesTypeID>{  sP, sKp }));
       rules_.add_reaction_rule(ReactionRule(sP_Kp, k6_, std::vector<SpeciesTypeID>{ sPi, sK }));
 
@@ -161,7 +163,7 @@ protected:
       }
 
       // reaction record
-      rrec_ = std::make_unique<ReactionRecorder>(rules_, model_);
+      rrec_ = std::make_unique<reaction_recorder_log>(rules_, model_);
       simulator_->add_reaction_recorder(rrec_.get());
       rfile_.open(rfilename_, std::fstream::in | std::fstream::out | std::fstream::trunc);
       rrec_->set_output(rfile_);
@@ -174,7 +176,7 @@ private:
    // Model const parameters
    const double volume_ = 1E-15;                     // one femtolitre or a cubic micro liter
    const double radius_ = 2.5e-9;                    // particle radius
-   const double conE_ = 100e-9;                      // Enzyme  concentration (total KK + P)
+   const double conE_ = 100e-9;                      // Enzyme concentration (total KK + P)
    const double conS_ = 200e-9;                      // Substrate concentration (total K + Kp + Kpp)
    const double k1_ = 0.027;                         // intrinsic rate in nM^-1.s^-1
    const double k2_ = 1.35;                          // intrinsic rate in s^-1
@@ -198,7 +200,7 @@ private:
    std::unique_ptr<CopyNumbersInst> cn_;
    std::string rfilename_;
    std::fstream rfile_;
-   std::unique_ptr<ReactionRecorder> rrec_;
+   std::unique_ptr<reaction_recorder_log> rrec_;
 
    SpeciesTypeID sK, sKp, sKpp;
    SpeciesTypeID sKK, sKKi;

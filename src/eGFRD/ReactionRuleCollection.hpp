@@ -32,6 +32,16 @@ public:
       auto i(reaction_rules_map_[rr.get_reactants()].insert(std::forward<ReactionRule>(rr)));
       if (!i.second) throw already_exists(make_string() << "ReactionRule already exists: " << (*i.first).get_reactants());
       const_cast<ReactionRule&>(*i.first).set_id(sgen_());
+      if ((*i.first).getK() != 0)
+      {
+         // check if this rule replaces an repulsive (k=0) rule
+         auto& rules = reaction_rules_map_[rr.get_reactants()];
+         for (auto j = rules.begin(); j != rules.end(); )
+         {
+            if ((*j).getK() == 0) j = rules.erase(j);
+            else ++j;
+         }
+      }
       return (*i.first).id();
    }
 

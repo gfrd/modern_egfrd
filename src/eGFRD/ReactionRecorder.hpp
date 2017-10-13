@@ -92,7 +92,7 @@ private:
 
    void print_header()
    {
-      log_.info() << std::setw(c) << std::setfill(' ') << "Rule" << std::setw(c) << "k" << std::setw(2 * c) << "Reactant(s)" << std::setw(2 * c) << "Product(s)";
+      log_.info() << std::setw(c / 2) << std::setfill(' ') << "Rule" << std::setw(2*c) << "k" << std::setw(2 * c) << "Reactant(s)" << std::setw(2 * c) << "Product(s)";
 
       // show rules table
       for (const auto& r : reaction_rules_.get_reaction_rules())
@@ -105,7 +105,7 @@ private:
             if (rule.getK() == 0) continue;  // skip repulsive rules
 
             auto io = log_.info();
-            io << std::setw(c) << static_cast<idtype>(rule.id()) << std::setw(c) << rule.getK();
+            io << std::setw(c / 2) << static_cast<idtype>(rule.id()) << std::setw(2*c)  << std::scientific << std::setprecision(8) << rule.getK();
             std::stringstream tmp1;
             if (ra.size() > 0) tmp1 << model_.get_species_type_by_id(ra.item1()).name();
             if (ra.size() > 1) tmp1 << " + " << model_.get_species_type_by_id(ra.item2()).name();
