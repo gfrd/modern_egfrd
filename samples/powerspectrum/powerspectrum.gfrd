@@ -1,0 +1,42 @@
+; eGFRD power-spectrum simulation
+
+[Simulator]
+           Seed = 0x1234CAFE
+        EndTime = 60.0                 ; sec.
+MaintenanceStep = 100000
+MaintenanceFile = sim_dump.out
+
+[World]
+Matrix = 8
+Size = 1e-6                            ; 1 cubic micro meter
+
+[SpeciesType]
+Name = A
+   r = 5e-9                            ; m
+   D = 0                               ; fixed
+
+[SpeciesType]
+Name = B
+   r = 5e-9                            ; m
+   D = 1e-12                           ; m^2*s^-1
+
+[SpeciesType]
+Name = C
+   r = 1e-8                            ; m
+   D = 0                               ; fixed
+
+[ReactionRule]
+Rule = A + B <=> C
+  ka = 9.16639e-19                     ; m^3*s^-1
+  kd = 220.8                           ; s^-1
+
+[Particles]
+A = 1
+B = 241
+C = 0
+
+[ReactionRecord]
+File = power_rec.dat
+
+[Progress]
+Width = 60

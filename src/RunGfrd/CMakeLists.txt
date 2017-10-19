@@ -1,10 +1,11 @@
-set (SRC RunGfrd.cpp)
-set (HDR Custom.hpp Equilibrium.hpp getoptions.hpp mapK.hpp PowerSpectrum.hpp Resume.hpp Reversible.hpp RunGfrd.hpp Simulation.hpp Simulation3P.hpp ParseIni/CopyNumbersSection.hpp ParseIni/ParserExceptions.hpp ParseIni/ParticlePositionsSection.hpp ParseIni/ParticlesSection.hpp ParseIni/ReactionRecordSection.hpp ParseIni/ReactionRuleSection.hpp ParseIni/SectionBase.hpp ParseIni/SimulatorSection.hpp ParseIni/SimulatorSettings.hpp ParseIni/SpeciesTypeSection.hpp ParseIni/WorldSection.hpp )
+set (SRC RunGfrd.cpp ParseIni/SectionBase.cpp ParseIni/VariablesSection.cpp)
+set (HDR getoptions.hpp SimModel.hpp SimResume.hpp Simulation.hpp ParseIni/CopyNumbersSection.hpp ParseIni/ParserExceptions.hpp ParseIni/ParticlePositionsSection.hpp ParseIni/ParticlesSection.hpp ParseIni/ReactionRecordSection.hpp ParseIni/ReactionRuleSection.hpp ParseIni/SectionBase.hpp ParseIni/SimulatorSection.hpp ParseIni/SimulatorSettings.hpp ParseIni/SpeciesTypeSection.hpp ParseIni/WorldSection.hpp ParseIni/ProgressSection.hpp )
 
 add_executable(RunGfrd ${SRC} ${HDR})
 
 if (WIN32)
-target_compile_definitions(RunGfrd PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(RunGfrd PRIVATE _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS)
+target_compile_options(RunGfrd PRIVATE /bigobj)
 endif()
 
 target_link_libraries(RunGfrd PRIVATE eGFRD)

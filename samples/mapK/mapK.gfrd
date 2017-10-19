@@ -1,79 +1,102 @@
 ; eGFRD mapK simulation
 
+[Variables]
+D = 1E-12                              ; Diffusion constant (all particles) in m^2/s
+Trel = 10E-3                           ; Enzyme reactivation time in seconds
+V = 1e-15                              ; 1 femto liter
+Nratio = 0                             ; Start ratio between K and Kpp
+radius = 2.5e-9                        ; particle radius in meter
+conS = 200e-9                          ; Substrate concentration (total K + Kp + Kpp)
+conE = 100e-9                          ; Enzyme concentration (total KK + P)
+k1_ = 0.027                            ; first cycle intrinsic rate in 1/nM/s
+k4_ = 0.056                            ; second cycle intrinsic rate in 1/nM/s
+k2 = 1.35                              ; first cycle restore intrinsic rate in 1/s
+k3 = 1.5                               ; first cycle advance intrinsic rate in 1/s
+k5 = 1.73                              ; second cycle restore intrinsic rate in 1/s
+k6 = 15.0                              ; second cycle advance intrinsic rate in 1/s
+N = floor(concentration(conS , V))     ; Number of substrate particles (total K + Kp + Kpp)
+N_Kpp = N * Nratio
+N_K = N - N_Kpp
+N_KK = floor(concentration(conE/2, V)) ; Number of Enzyme particles KK
+N_P = floor(concentration(conE/2, V))  ; Number of Enzyme particles P
+k1 = per_nM_per_sec_to_m3_per_sec(k1_) ; first cycle intrinsic rate in m3/s
+k4 = per_nM_per_sec_to_m3_per_sec(k4_) ; second cycle intrinsic rate in m3/s
+k7 = log(2.0) / Trel                   ; Enzyme recovery intrinsic rate in 1/s
+
 [Simulator]
-Seed = 0x123ABC
+Seed = 0xca106637
 PrepareTime = 0.1                      ; seconds
 EndTime = 300.0                        ; seconds
-MaintenanceStep = 100000	
-MaintenanceFile = sim_data.out
+MaintenanceStep = 100000
+MaintenanceFile = sim_state.dat
 
 [World]
 Matrix = 8
-Volume = 1e-15                         ; liter
+Size = (1e-3 * V) ^ (1/3)              ; Liter to cube-length in meter
 
 [SpeciesType]
 Name = K, Kp, Kpp, KK-K, KK-Kp, P-Kpp, P-Kp
-r = 2.5e-9                             ; m
-D = 1e-12                              ; m^2*s^-1
+r = radius
+D = D
 
 [SpeciesType]
 Name = KK, KK*, P, P*
-r = 2.5e-9                             ; m
-D = 1e-12                              ; m^2*s^-1
+r = radius
+D = D
 
 
 [ReactionRule]                         ; [1a]
 Mode = Run
 Rule = KK + K <=> KK-K
-k1 = 4.4834554091533426e-20            ; k1 in m^3*s^-1
-k2 = 1.35                              ; k2 in s^-1
+ka = k1
+kd = k2
 
 [ReactionRule]                         ; [1b]
-Rule = KK-K --> KK* + Kp
-k = 1.5                                ; k3 in s^-1
+Rule = KK-K -> KK* + Kp
+k = k3
 
 [ReactionRule]                         ; [2a]
-Rule = KK + Kp <=> KK-Kp
-k1 = 9.2990186263921183e-20            ; k4 in m^3*s^-1
-k2 = 1.73                              ; k5 in s^-1
+Rule = KK + Kp <-> KK-Kp
+ka = k4
+kd = k5
 
 [ReactionRule]                         ; [2b]
 Rule = KK-Kp --> KK* + Kpp
-k = 15.0                               ; k6 in s^-1
+k = k6
 
 [ReactionRule]                         ; [3a]
-Rule = P + Kpp <=> P-Kpp
-k1 = 4.4834554091533426e-20            ; k1 in m^3*s^-1
-k2 = 1.35                              ; k2 in s^-1
+Rule = P + Kpp <-> P-Kpp
+ka = k1
+kd = k2
 
 [ReactionRule]                         ; [3b]
 Rule = P-Kpp --> P* + Kp
-k = 1.5                                ; k3 in s^-1
+k = k3
 
 [ReactionRule]                         ; [4a]
 Mode = Run
-Rule = P + Kp <=> P-Kp
-k1 = 9.2990186263921183e-20            ; k4 in m^3*s^-1
-k2 = 1.73                              ; k5 in s^-1
+Rule = P + Kp <-> P-Kp
+ka = k4
+kd = k5
 
 [ReactionRule]                         ; [4b]
 Rule = P-Kp --> P* + K
-k = 15.0                               ; k6 in s^-1
+k = k6
 
 [ReactionRule]                         ; [5a]
 Rule = KK* --> KK
-k = 69.3147                            ; k7 in s^-1
+k = k7
 
 [ReactionRule]                         ; [5b]
 Rule = P* --> P
-k = 69.3147                            ; k7 in s^-1
+k = k7
 
 
 [Particles]
-K = 60                                 ; Substrate concentration (total K + Kp + Kpp)
-Kpp = 60;
-KK = 30                                ; Enzyme concentration
-P = 30
+K = N_K
+Kpp = N_Kpp;
+KK = N_KK
+P = N_P
 
 
 [CopyNumbers]
@@ -83,6 +106,6 @@ Mode = Run
 Type = Instantaneous
 
 [ReactionRecord]
-Interval = 1e-1
 File = react_rec.dat
 Mode = Run
+

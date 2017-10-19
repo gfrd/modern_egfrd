@@ -1,0 +1,63 @@
+notes:
+
+
+MODEL FILES:
+
+file should have unix style line terminators, that is a LF, (0x0A or \n) or parser will fail on linux
+last line of model-file should have a LF (or that line is not parsed)
+
+
+speciestype names:
+-> conform regex "[a-zA-Z][\\w\\-*_']*"
+
+variable names:
+-> conform regex "[a-zA-Z][a-zA-Z0-9_]*"
+
+
+expressions: as debribed in exprtk (case sensitive, NO enhanced_features, break_continue, return_statement, rtl_io_file, rtl_vecops, control_structures)
+
+
+declared variables are evaluated and assigned in order of the model file (lines from top to bottom). 
+variables assigned on the command-line (-d argument) take precidence over the model-file.
+
+
+build in functions:  
+
+		// Calculate the number of particles in a volume (in liter or dm^3) with a concentration (in molar or mol/dm3).
+		concentration( mol , volume) -> number of particles
+					
+		// Convert a reaction rate from units 'per nanomolar per second' to units 'meter^3 per second'
+		per_nM_per_sec_to_m3_per_sec(rate) -> rate
+
+		More to follow: ? k_D(), k_a(), k_d(), ...
+		
+build in constants:  
+
+		pi, e, inf, NA, 
+		
+		More to follow: ? kb, ... 
+		
+text variables:
+		
+		declare with $ prefix, 
+		example: 
+			dir = $ '~/data_out/'
+			file = $ dir + 'file.abc'
+		
+		
+		
+Mode flags: 
+	definition
+		On = whole simulaton (pre-run and main-run)
+		Run = main-run only (not in pre-run)
+		Off = Not at all
+
+Default mode for sections (no need to specify)
+	CopyNumbers = Run
+	ParticlePosition = Run
+	Particles = On
+	Progress = On
+	ReactionRecord = Run
+	ReactionRule = On
+		
+		

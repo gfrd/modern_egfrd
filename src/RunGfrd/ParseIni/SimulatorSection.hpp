@@ -10,7 +10,10 @@
 
 struct SimulatorSection final : SectionBase
 {
-   explicit SimulatorSection() : seed_(0), prepare_time_(0.0), end_time_(0.0), maintenance_step_(0), show_progress_(false) { }
+   explicit SimulatorSection() : SectionBase(), seed_(0), maintenance_step_(0)
+   {
+      init_auto_vars( { {key_prepare_time, 0.0}, {key_end_time, 0.0},  } );
+   }
 
    ~SimulatorSection() = default;
 
@@ -23,37 +26,35 @@ struct SimulatorSection final : SectionBase
    const std::string key_end_time = "EndTime";
    const std::string key_maintenance_step = "MaintenanceStep";
    const std::string key_maintenance_file = "MaintenanceFile";
-   const std::string key_show_progress = "ShowProgress";
 
    int seed() const { return seed_; }
-   double prepare_time() const { return prepare_time_; }
-   double end_time() const { return end_time_; }
+   double prepare_time() const { return auto_var_value(key_prepare_time); }
+   double end_time() const { return auto_var_value(key_end_time); }
    size_t maintenance_step() const { return maintenance_step_; }
    std::string maintenance_file() const { return simstate_file_; }
-   bool show_progress() const { return show_progress_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
    bool set_keypair(const std::string& key, const std::string& value) override
    {
-      if (key == key_seed) { seed_ = std::stoul(value, nullptr, 0); return true; }
-      if (key == key_prepare_time) { prepare_time_ = std::stod(value); return true; }
-      if (key == key_end_time) { end_time_ = std::stod(value); return true; }
-      if (key == key_maintenance_step) { maintenance_step_ = std::stoi(value); return true; }
-      if (key == key_maintenance_file) { simstate_file_ = value; return true; }
-      if (key == key_show_progress) { show_progress_ = get_bool(value); return true; }
+      if (SectionBase::set_keypair(key,value)) return true;
+      if (key == key_seed) { seed_ = std::stoul(vars_->evaluate_string_expression(value, key_seed), nullptr, 0); return true; }
+      if (key == key_maintenance_step) { maintenance_step_ = static_cast<uint>(vars_->evaluate_value_expression(value, key_maintenance_step)); return true; }
+      if (key == key_maintenance_file) { simstate_file_ = vars_->evaluate_string_expression(value, key_maintenance_file); return true; }
+      
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
+   void PrintSettings() const override {}
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
 private:
    int seed_;
-   double prepare_time_;
-   double end_time_;
    size_t maintenance_step_;
    std::string simstate_file_;
-   bool show_progress_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +67,6 @@ inline std::ostream& operator<<(std::ostream& stream, const SimulatorSection& ss
    if (ss.end_time()) stream << ss.key_end_time << " = " << ss.end_time() << std::endl;
    if (ss.maintenance_step()) stream << ss.key_maintenance_step << " = " << ss.maintenance_step() << std::endl;
    if (ss.maintenance_step() && !ss.maintenance_file().empty()) stream << ss.key_maintenance_file << " = " << ss.maintenance_file() << std::endl;
-   if (ss.show_progress()) stream << ss.key_show_progress << " = " << ss.show_progress() << std::endl;
    stream << std::endl;
    return stream;
 }

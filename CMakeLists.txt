@@ -5,6 +5,7 @@ project(modern_egfrd CXX)
 # The version number.
 set (GFRD_VERSION_MAJOR 2)
 set (GFRD_VERSION_MINOR 1)
+string(TIMESTAMP GFRD_VERSION_BUILD)
 
 # GSL is required for almost all targets
 find_package(GSL REQUIRED)
@@ -16,8 +17,9 @@ configure_file (cmake/gfrd_compat.hpp.in gfrd_compat.hpp)
 set (GFRD_COMPAT_DIR ${CMAKE_BINARY_DIR})
 
 # Specify output folder as 'bin', multi-configuration tools append the configuration name
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # Add sub-folders for src and test
 add_subdirectory(src)

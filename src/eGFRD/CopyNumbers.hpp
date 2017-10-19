@@ -166,7 +166,7 @@ private:
    }
 
 protected:
-   std::map<SpeciesTypeID, avg_accu> avg_map_;
+   std::unordered_map<SpeciesTypeID, avg_accu> avg_map_;
    const World& world_;
    const ReactionRuleCollection& reaction_rules_;
    Logger& log_;

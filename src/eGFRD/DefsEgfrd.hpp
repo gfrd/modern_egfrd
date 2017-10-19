@@ -120,7 +120,7 @@ struct CompileConfigSimulator
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-static_assert(CompileConfigSimulator::MatrixCellsX >= 3, "MatrixSpace cells should be equal or larger than 3");      // in a cyclic world smaller matrixspace is no optimzation
+static_assert(CompileConfigSimulator::MatrixCellsX >= 3, "MatrixSpace cells should be equal or larger than 3");      // in a cyclic world smaller matrixspace is no optimization
 static_assert(CompileConfigSimulator::MatrixCellsY >= 3, "MatrixSpace cells should be equal or larger than 3");      // because you need to check all 26 neighbor spaces anyway
 static_assert(CompileConfigSimulator::MatrixCellsZ >= 3, "MatrixSpace cells should be equal or larger than 3");      // use power of 2 for best performance
 

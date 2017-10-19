@@ -4,15 +4,17 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include <vector>
+#include "ParserExceptions.hpp"
+#include "VariablesSection.hpp"
 #include "SimulatorSection.hpp"
 #include "WorldSection.hpp"
 #include "SpeciesTypeSection.hpp"
 #include "ReactionRuleSection.hpp"
 #include "ParticlesSection.hpp"
-#include "ParserExceptions.hpp"
 #include "CopyNumbersSection.hpp"
 #include "ParticlePositionsSection.hpp"
 #include "ReactionRecordSection.hpp"
+#include "ProgressSection.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -27,58 +29,72 @@ public:
    void create_section_heading(const std::string line)
    {
       std::smatch match;
-      bool is_match = std::regex_search(line, match, regex_pattern_);
+      bool is_match = std::regex_search(line, match, regex_section_);
       THROW_UNLESS_MSG(illegal_section, is_match, line);
 
       auto heading = match[1].str();
       create_section(heading);
+      current_->set_vars(&variablesSection_);
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
    bool is_section_heading(const std::string& line) const
    {
-      return std::regex_match(line, regex_pattern_);
+      return std::regex_match(line, regex_section_);
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
    void add_keypair(const std::string& line) const
    {
-      keypair_from_line(line);
+      if (line.empty()) return;
+      
+      auto key = std::string();
+      auto value = std::string();
+      bool is_match = get_name_value(line, key, value);
+      if (is_match)
+      {
+         THROW_UNLESS_MSG(illegal_section_key, current_, "Key without section: " << line)
+         current_->set_keypair(key, value);
+      }
+      else
+      {
+         std::smatch match;
+         auto regex = std::regex("^\\s*([\\w<>\\$\\(\\)\\^\\']+[^;]*).*");
+         bool is_match = std::regex_match(line, match, regex);
+         THROW_UNLESS_MSG(illegal_section_value, !is_match, "Invalid line encountered: " << line)
+      }
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   void add_variable(const std::string& line)
+   {
+      auto key = std::string();
+      auto value = std::string();
+      bool is_match = get_name_value(line, key, value);
+      if (is_match) variablesSection_.add_variable(key, value, true);
+      else THROW_EXCEPTION(illegal_argument, "Unexpected assignment in '" << line << "'.")
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
 private:
 
-   void keypair_from_line(const std::string& line) const
-   {
-      auto key = std::string();
-      auto value = std::string();
-      bool is_match = get_name_value(line, key, value);
-
-      if (is_match && current_ != nullptr) current_->set_keypair(key, check_parameter(value));
-   }
-
-   std::string check_parameter(std::string value) const
-   {
-      std::smatch match;
-      auto regex = std::regex("<param(\\d)>");
-      bool is_match = std::regex_search(value, match, regex);
-      if (!is_match) return value;
-      auto index = match[1].str();
-      int p = std::stoi(index);
-      return parameters_[p];
-   }
-
    bool get_name_value(const std::string& line, std::string& name, std::string& value) const
    {
       std::smatch match;
-      auto regex = std::regex("^\\s*(\\w+)\\s*=\\s*([\\w<>]+[^;]*).*");
+      auto regex = std::regex("^\\s*(\\w+)\\s*=\\s*([\\w<>\\$\\(\\)\\^\\']+[^;]*).*");
       bool is_match = std::regex_search(line, match, regex);
       name = match[1].str();
       value = match[2].str();
+
+      auto iend = value.rbegin();
+      size_t c = 0;
+      while (iend != value.rend() && (*iend == ' ' || *iend == '\t'))  ++c,++iend;
+
+      value = value.substr(0, value.length() - c);
       return is_match;
    }
 
@@ -86,14 +102,19 @@ private:
 
    void create_section(const std::string& heading)
    {
+      if (heading == VariablesSection::section_name()) { current_ = &variablesSection_; return; }
       if (heading == SimulatorSection::section_name()) { current_ = &simulatorSection_; return; }
       if (heading == WorldSection::section_name()) { current_ = &worldSection_; return; }
-      if (heading == ParticlesSection::section_name()) { current_ = &throwInParticlesSection_; return; }
-      if (heading == CopyNumbersSection::section_name()) { current_ = &copyNumbersSection_; return; }
-      if (heading == ParticlePositionSection::section_name()) { current_ = &particlePositionsSection_; return; }
-      if (heading == ReactionRecordSection::section_name()) { current_ = &reactionRecordSection_; return; }
-      if (heading == ReactionRuleSection::section_name()) { reactionRuleSections_.emplace_back(); current_ = &reactionRuleSections_[reactionRuleSections_.size() - 1]; return; }
-      if (heading == SpeciesTypeSection::section_name()) { speciesTypeSections_.emplace_back(); current_ = &speciesTypeSections_[speciesTypeSections_.size() - 1]; return; }
+      if (heading == ParticlesSection::section_name()) { particlesSections_.emplace_back(); current_ = &(*particlesSections_.rbegin()); return; }
+      
+      if (heading == CopyNumbersSection::section_name()) { if (copyNumbersSection_.get() == nullptr) copyNumbersSection_ = std::make_unique<CopyNumbersSection>(); current_ = copyNumbersSection_.get(); return; }
+      if (heading == ParticlePositionSection::section_name()) { if (particlePositionsSection_.get() == nullptr) particlePositionsSection_ = std::make_unique<ParticlePositionSection>(); current_ = particlePositionsSection_.get(); return; }
+      if (heading == ReactionRecordSection::section_name()) { if (reactionRecordSection_.get() == nullptr) reactionRecordSection_ = std::make_unique<ReactionRecordSection>(); current_ = reactionRecordSection_.get(); return; }
+      if (heading == ProgressSection::section_name()) { if (progressSection_.get() == nullptr) progressSection_ = std::make_unique<ProgressSection>(); current_ = progressSection_.get(); return; }
+      
+      if (heading == ReactionRuleSection::section_name()) { reactionRuleSections_.emplace_back(); current_ = &(*reactionRuleSections_.rbegin()); return; }
+      if (heading == SpeciesTypeSection::section_name()) { speciesTypeSections_.emplace_back(); current_ = &(*speciesTypeSections_.rbegin()); return; }
+      
       THROW_EXCEPTION(illegal_section, "Section '" << heading << "' not recognized!");
    }
 
@@ -101,49 +122,47 @@ private:
 
 public:
 
+   VariablesSection& getVariablesSection() { return variablesSection_; }
+   const VariablesSection& getVariablesSection() const { return variablesSection_; }
    const SimulatorSection& getSimulatorSection() const { return simulatorSection_; }
    const WorldSection& getWorldSection() const { return worldSection_; }
    const std::vector<SpeciesTypeSection>& getSpeciesTypeSections() const { return speciesTypeSections_; }
    const std::vector<ReactionRuleSection>& getReactionRuleSections() const { return reactionRuleSections_; }
-   const ParticlesSection& getParticlesSection() const { return throwInParticlesSection_; }
-   const CopyNumbersSection& getCopyNumbersSection() const { return copyNumbersSection_; }
-   const ParticlePositionSection& getParticlePositionsSection() const { return particlePositionsSection_; }
-   const ReactionRecordSection& getReactionRecordSection() const { return reactionRecordSection_; }
-
-   // --------------------------------------------------------------------------------------------------------------------------------
-
-   size_t parameter_size() const { return parameters_.size(); }
-   void set_parameter(size_t i, std::string value) { parameters_[i] = value; }
-   const std::string& get_parameter(size_t i) { return parameters_[i]; }
+   const std::vector<ParticlesSection>& getParticlesSections() const { return particlesSections_; }
+   const CopyNumbersSection* getCopyNumbersSection() const { return copyNumbersSection_.get(); }
+   const ParticlePositionSection* getParticlePositionsSection() const { return particlePositionsSection_.get(); }
+   const ReactionRecordSection* getReactionRecordSection() const { return reactionRecordSection_.get(); }
+   const ProgressSection* getProgressSection() const { return progressSection_.get(); }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
 private:
 
+   VariablesSection variablesSection_;
    SimulatorSection simulatorSection_;
    WorldSection worldSection_;
-   ParticlesSection throwInParticlesSection_;
+   std::vector<ParticlesSection> particlesSections_;
    std::vector<SpeciesTypeSection> speciesTypeSections_;
    std::vector<ReactionRuleSection> reactionRuleSections_;
-   CopyNumbersSection copyNumbersSection_;
-   ParticlePositionSection particlePositionsSection_;
-   ReactionRecordSection reactionRecordSection_;
+   std::unique_ptr<CopyNumbersSection> copyNumbersSection_;
+   std::unique_ptr<ParticlePositionSection> particlePositionsSection_;
+   std::unique_ptr<ReactionRecordSection> reactionRecordSection_;
+   std::unique_ptr<ProgressSection> progressSection_;
 
    SectionBase* current_;
-   std::array<std::string, 10> parameters_;
-
-   const std::regex regex_pattern_ = std::regex("^\\[(\\w+)\\](.*)");
+   const std::regex regex_section_ = std::regex("^\\s*\\[\\s*(\\w+)\\s*\\](.*)");
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
 inline std::ostream& operator<<(std::ostream& stream, const SimulatorSettings& settings)
 {
+   stream << settings.getVariablesSection();
    stream << settings.getSimulatorSection();
    stream << settings.getWorldSection();
    for (auto& item : settings.getSpeciesTypeSections()) stream << item;
    for (auto& item : settings.getReactionRuleSections()) stream << item;
-   stream << settings.getParticlesSection();
+   for (auto& item : settings.getParticlesSections()) stream << item;
    stream << settings.getCopyNumbersSection();
    stream << settings.getParticlePositionsSection();
    stream << settings.getReactionRecordSection();

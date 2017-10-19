@@ -4,6 +4,7 @@
     {
       "name": "x64-Release",
       "generator": "Visual Studio 15 2017 Win64",
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "configurationType": "Release",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-m -v:minimal",
@@ -18,6 +19,7 @@
     {
       "name": "x64-Debug",
       "generator": "Visual Studio 15 2017 Win64",
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "configurationType": "Debug",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-m -v:minimal",

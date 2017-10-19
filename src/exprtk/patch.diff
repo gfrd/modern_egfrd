@@ -1,0 +1,35 @@
+--- D:/Users/Seynen/Solutions/BiochemicalNetworks/eGFRD/2_modern_egfrd/src/exprtk/exprtk_org.hpp	Sat Jan 01 00:00:00 2000
++++ D:/Users/Seynen/Solutions/BiochemicalNetworks/eGFRD/2_modern_egfrd/src/exprtk/exprtk.hpp	Tue Oct 17 08:22:06 2017
+@@ -254,6 +254,23 @@
+          return s[s.size() - 1];
+       }
+ 
++      inline std::string to_str(std::size_t i)
++      {
++         if (0 == i)
++            return std::string("0");
++
++         std::string result;
++
++         for ( ; i; i /= 10)
++         {
++            result += '0' + char(i % 10);
++         }
++
++         std::reverse(result.begin(), result.end());
++
++         return result;
++      }
++
+       inline std::string to_str(int i)
+       {
+          if (0 == i)
+@@ -17727,7 +17744,7 @@
+          return details::is_true(value());
+       }
+ 
+-      inline void register_symbol_table(symbol_table<T>& st)
++      inline void register_symbol_table(const symbol_table<T>& st)
+       {
+          symbol_table_list_.push_back(st);
+       }

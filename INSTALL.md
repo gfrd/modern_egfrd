@@ -49,7 +49,7 @@
    ```
    > cd bin
    > export LD_LIBRARY_PATH=$(pwd)
-   > ./RunGfrd Equilibrium -ka 1e-19 -kd 2e-2 -p 100 -e 200
+   > ./RunGfrd ../../samples/simple/simple.gfrd
    ```
 
 5. Build and execute tests
@@ -131,7 +131,7 @@
 
    ```
    > cd bin\Release
-   > RunGfrd Equilibrium -ka 1e-19 -kd 2e-2 -p 100 -e 200
+   > RunGfrd.exe ..\..\..\samples\simple\simple.gfrd
    ```
 
 6. Build and execute tests
@@ -168,10 +168,10 @@
 5. Execute the sample:   
    
    To run the sample, the command line arguments  need to be specified. To do this click 'CMake' from the menubar and choose 'Debug and Launch Settings' for 'RunGfrd'.
-   In the 'launch.vs.json' file add the following  line under name:
+   In the 'launch.vs.json' file add a comma and the following line after "name":
    
    ```
-   "args": [ "Equilibrium -ka 1e-19 -kd 2e-2 -p 100 -e 200" ]
+   "args": ["${workspaceRoot}\\samples\\simple\\simple.gfrd"]
    ```
  
    Then click 'CMake' from the menubar and choose 'Debug', 'RunGfrd'.

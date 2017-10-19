@@ -94,7 +94,8 @@ private:
    {
       log_.info() << std::setw(c / 2) << std::setfill(' ') << "Rule" << std::setw(2*c) << "k" << std::setw(2 * c) << "Reactant(s)" << std::setw(2 * c) << "Product(s)";
 
-      // show rules table
+      // build rules table
+      std::map<ReactionRuleID, std::string> table;
       for (const auto& r : reaction_rules_.get_reaction_rules())
       {
          const ReactionRule::reactants& ra = r.first;
@@ -104,7 +105,7 @@ private:
          {
             if (rule.getK() == 0) continue;  // skip repulsive rules
 
-            auto io = log_.info();
+            std::stringstream io;
             io << std::setw(c / 2) << static_cast<idtype>(rule.id()) << std::setw(2*c)  << std::scientific << std::setprecision(8) << rule.getK();
             std::stringstream tmp1;
             if (ra.size() > 0) tmp1 << model_.get_species_type_by_id(ra.item1()).name();
@@ -116,8 +117,13 @@ private:
             if (products.size() > 0) tmp2 << model_.get_species_type_by_id(products[0]).name();
             if (products.size() > 1) tmp2 << " + " << model_.get_species_type_by_id(products[1]).name();
             io << std::setw(2 * c) << tmp2.str();
+            table.emplace(rule.id(), io.str());
          }
       }
+
+      // show rules in order of id
+      for (auto& line : table)
+         log_.info() << line.second;
 
       // show header
       first_ = false;

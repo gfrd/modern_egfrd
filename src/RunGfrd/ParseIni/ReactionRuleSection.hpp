@@ -3,17 +3,22 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-#include <array>
 #include "ReactionRule.hpp"
 #include "ParserExceptions.hpp"
 #include "Model.hpp"
 #include "SectionBase.hpp"
+#include <iomanip>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
 struct ReactionRuleSection final : SectionModeBase
 {
-   explicit ReactionRuleSection() : rule_(std::string()), k_(-1), k1_(-1), k2_(-1), is_bidirectional_(false) { mode_ = modes::On; }
+   explicit ReactionRuleSection() : SectionModeBase(), rule_(std::string()), is_bidirectional_(false), is_bimolecular_(false)
+   {
+      mode_ = modes::On;
+      init_auto_vars( { { key_k, -1}, { key_k1, -1}, { key_k2, -1}, { key_ka, -1}, { key_kd, -1} } );
+   }
+
    ~ReactionRuleSection() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -25,10 +30,16 @@ struct ReactionRuleSection final : SectionModeBase
    const std::string key_k = "k";
    const std::string key_k1 = "k1";
    const std::string key_k2 = "k2";
-   double k() const { return k_; }
-   double k1() const { return k1_; }
-   double k2() const { return k2_; }
+   const std::string key_ka = "ka";
+   const std::string key_kd = "kd";
+   double k() const { return auto_var_value(key_k); }
+   double k1() const { return auto_var_value(key_k1); }
+   double k2() const { return auto_var_value(key_k2); }
+   double ka() const { return auto_var_value(key_ka); }
+   double kd() const { return auto_var_value(key_kd); }
    bool is_bidirectional() const { return is_bidirectional_; }
+   bool is_bimolecular() const { return is_bimolecular_; }
+
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -36,9 +47,6 @@ struct ReactionRuleSection final : SectionModeBase
    {
       if (SectionModeBase::set_keypair(key,value)) return true;
       if (key == key_rule) { rule_ = format_check(value); return true; }
-      if (key == key_k) { k_ = std::stod(value); return true; }
-      if (key == key_k1) { k1_ = std::stod(value); return true; }
-      if (key == key_k2) { k2_ = std::stod(value); return true; }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 
@@ -60,30 +68,51 @@ struct ReactionRuleSection final : SectionModeBase
 
       if (is_bidirectional_)
       {
-         THROW_UNLESS_MSG(illegal_section_value, k1_ >= 0 && k2_ >= 0, "Bidirectional rule should specify k1 and k2 values.");
+         double rk1 = is_bimolecular() ? ka() : k1();
+         double rk2 = is_bimolecular() ? kd() : k2();
+
+         THROW_UNLESS_MSG(illegal_section_value, rk1 >= 0 && rk2 >= 0, "Bidirectional " << (is_bimolecular() ? "bi-" : "mono-") << "molecular rule should specify " << (is_bimolecular() ? "ka and kd" : "k1 and k2") << " values.");
          THROW_UNLESS_MSG(illegal_section_value, products == 1  , "Bidirectional rule should have one product.");
 
          // associate
          switch (reactants)
          {
-         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], k1_, product)); break;
-         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], k1_, product)); break;
+         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], rk1, product)); break;
+         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], rk1, product)); break;
          default: break;
          }
 
          // dissociate
-         rules.add_reaction_rule( ReactionRule(product[0], k2_, reactant));
+         rules.add_reaction_rule( ReactionRule(product[0], rk2, reactant));
       }
       else
       {
-         THROW_UNLESS_MSG(illegal_section_value, k_ >= 0, "Rule should specify a value for k.");
+         double rk = k();
+         THROW_UNLESS_MSG(illegal_section_value, rk >= 0, "Rule should specify a value for k.");
          switch (reactants)
          {
-         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], k_, product)); break;
-         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], k_, product)); break;
+         case 1: rules.add_reaction_rule( ReactionRule(reactant[0], rk, product)); break;
+         case 2: rules.add_reaction_rule( ReactionRule(reactant[0], reactant[1], rk, product)); break;
          default: break;
          }
       }
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   void PrintSettings() const override
+   {
+      std::string mode;
+      if (mode_ != modes::On) mode = mode_ == modes::Off ? ", Mode = Off" : ", Mode = Run";
+      const std::string unit = is_bimolecular_ ? " [m^3*s^-1]" : " [s^-1]";
+
+      if (!is_bidirectional_)
+         std::cout << std::setw(14) << "rule = " << "'" << rule() << "'" << ", k = " << k() << unit << mode << "\n";
+      else
+         if (!is_bimolecular_)
+            std::cout << std::setw(14) << "rule = " << "'" << rule() << "'" << ", k1 = " << k1() << " [s^-1], k2 = " << k2() << " [s^-1]" << mode << "\n";
+         else 
+            std::cout << std::setw(14) << "rule = " << "'" << rule() << "'" << ", ka = " << ka() << " [m^3*s^-1], kd = " << kd() << " [s^-1]" << mode << "\n";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -101,13 +130,11 @@ private:
       for (auto i = begin; i != end; ++i) 
       {
          std::string name = i->str();
-         if (name == "+") { ss << " + "; continue; }
+         if (name == "+") { ss << " + "; is_bimolecular_ = true; continue; }
          if (name.find("<") != std::string::npos) { is_bidirectional_ = has_arrow = true; ss << " <=> "; continue;}
          if (name.find(">") != std::string::npos) { has_arrow = true; ss << " -> "; continue;}
          
-         std::smatch match;
-         auto regex2 = std::regex("[a-zA-Z][\\w\\-*_']*");
-         if (!std::regex_match(name, match, regex2)) THROW_EXCEPTION(illegal_section_value, "SpeciesTypeName '" << name << "'not valid");
+         if (!is_valid_speciestype_name(name)) THROW_EXCEPTION(illegal_section_value, "SpeciesTypeName '" << name << "'not valid");
          if (has_arrow) products_.emplace_back(name); else reactants_.emplace_back(name);
          ss << name;
       }
@@ -117,8 +144,7 @@ private:
    // --------------------------------------------------------------------------------------------------------------------------------
 
    std::string rule_;
-   double k_,k1_,k2_;
-   bool is_bidirectional_;
+   bool is_bidirectional_, is_bimolecular_;
    std::vector<std::string> reactants_;
    std::vector<std::string> products_;
 };
@@ -128,6 +154,7 @@ private:
 inline std::ostream& operator<<(std::ostream& stream, const ReactionRuleSection& rrs)
 {
    stream << "[" << rrs.section_name() << "]" << std::endl;
+   if (rrs.mode() != SectionModeBase::modes::On) stream << rrs.key_mode << " = " << (rrs.mode() == SectionModeBase::modes::Run ? "Run" : rrs.mode() == SectionModeBase::modes::On ? "On" : "Off") << std::endl;
    stream << rrs.key_rule << " = " << rrs.rule() << std::endl;
    if (rrs.is_bidirectional())
    {

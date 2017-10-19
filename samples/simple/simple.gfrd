@@ -1,14 +1,7 @@
 ; eGFRD simple simulation
 
-[Simulator]
-           Seed = 0x123ABC
-        EndTime = 300.0; sec.
-MaintenanceStep = 10000
-MaintenanceFile = sim_data.out
-
 [World]
-  Matrix = 8
-    Size = 1e-6; m
+Size = 1e-6; m
 
 [SpeciesType]
 Name = A
@@ -19,6 +12,6 @@ Name = A
 A = 100
 
 [ParticlePositions]
-    Interval = 1E-1
+    Interval = 1e-3; sec
     File = positions.dat
-    Mode = On
+

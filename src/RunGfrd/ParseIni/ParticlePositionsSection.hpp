@@ -10,7 +10,7 @@
 
 struct ParticlePositionSection final : SectionModeBase
 {
-   explicit ParticlePositionSection() : interval_(1E-3) { }
+   explicit ParticlePositionSection() : SectionModeBase() { mode_ = modes::Run; init_auto_vars({ {key_interval, 1E-3 }}); }
 
    ~ParticlePositionSection() = default;
 
@@ -22,7 +22,7 @@ struct ParticlePositionSection final : SectionModeBase
    const std::string key_interval = "Interval";
    const std::string key_file = "File";
 
-   double interval() const { return interval_; }
+   double interval() const { return auto_var_value(key_interval); }
    std::string file() const { return file_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -30,15 +30,23 @@ struct ParticlePositionSection final : SectionModeBase
    bool set_keypair(const std::string& key, const std::string& value) override
    {
       if (SectionModeBase::set_keypair(key, value)) return true;
-      if (key == key_interval) { interval_ = std::stod(value); return true; }
-      if (key == key_file) { file_ = value; return true; }
+      if (key == key_file) { file_ = vars_->evaluate_string_expression(value, key_file); return true; }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
+   void PrintSettings() const override
+   {
+      std::string mode;
+      if (mode_ != modes::Run) mode = mode_ == modes::Off ? ", Mode = Off" : ", Mode = On";
+      std::cout  << std::setw(14) << "pos_record = " << "'" << (file_.empty() ? "stdout" : file_) << "'" << ", Interval = " << interval()  << " [s]"  << mode << "\n";
+      std::cout << "\n";
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
 private:
-   double interval_;
    std::string file_;
 };
 

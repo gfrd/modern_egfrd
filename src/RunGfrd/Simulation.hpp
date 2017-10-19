@@ -38,7 +38,7 @@ public:
    //
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   explicit Simulation() : world_size_(1e-7), prep_time_(0.0), end_time_(0.0), seed_(0), show_progress_(false), maintenance_step_(10000), simstate_file_(), failed_(false), abort_(nullptr) { }
+   explicit Simulation() : world_size_(1e-7), prep_time_(0.0), end_time_(0.0), seed_(0), maintenance_step_(10000), simstate_file_(), failed_(false), abort_(nullptr) { }
 
    virtual ~Simulation() { }
 
@@ -47,6 +47,7 @@ public:
    virtual std::string name() const { return "Simulation"; }
    double end_time() const { return end_time_; }
    double prepare_time() const { return prep_time_; }
+
    double time() const { return simulator_ ? simulator_->time() : 0.0; }
    size_t num_steps() const { return simulator_ ? simulator_->num_steps() : 0; }
    void set_abort(volatile bool& abort) { abort_ = &abort; }
@@ -54,40 +55,21 @@ public:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual bool HandleCommandArguments(size_t& i, const getoptions& args)
+   virtual int HandleCommandArguments(size_t& i, const getoptions& args)
    {
-      if (!args.isparam(i)) return true; // expect a parameter
-      if (args.option(i) == "ws" && args.isvalue(i + 1)) world_size_ = args.value(++i);
-      else if (args.option(i) == "e" && args.isvalue(i + 1)) end_time_ = args.value(++i);
-      else if (args.option(i) == "p" && args.isvalue(i + 1)) prep_time_ = args.value(++i);
-      else if (args.option(i) == "s" && args.isvalue(i + 1)) seed_ = std::stoul(args.option(++i), nullptr, 0); // auto detect, hex/oct/dec
-      else if (args.option(i) == "m" && args.isvalue(i + 1)) maintenance_step_ = args.number(++i);
-      else if (args.option(i) == "ms" && args.isvalue(i + 1)) simstate_file_ = args.option(++i);
-      else if (args.option(i) == "sp0") show_progress_ = false;
-      else if (args.option(i) == "sp1") show_progress_ = true;
-      else return true;
-      return false;
+      return static_cast<int>(i);  // unknown argument
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual void print_usage()
-   {
-      std::cout << "      -ws x.xx         World Size (cube side length in meter)\n";
-      std::cout << "      -p x.xx          Prepare Time (equalize simulation for x.xx seconds)\n";
-      std::cout << "      -e x.xx          End Time (stop simulation after seconds)\n";
-      std::cout << "      -s nnnn          Random number seed (auto detect decimal/octal/hex value)\n";
-      std::cout << "      -m n             Run maintenance every N simulation steps\n";
-      std::cout << "      -ms filename     Store simulator state at maintenance step\n";
-      std::cout << "      -sp0/-sp1        Show Progress Bar (0=off [default], 1=on) DO specify an end_time!\n";
-   }
+   virtual void print_usage() { }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
    // Starts the EGFRD simulation (split into setup-phase, preparation run and main simulation run).
    void Run()
    {
-      Log("RunGfrd").info() << "Setup " << name() << " simulation";
+      Log("RunGfrd").info() << name() << " simulation";
 
       try
       {
@@ -146,8 +128,8 @@ protected:
                if (failed_) break;
             }
 
-            simulator_->step();
-            SimStep(prerun);
+            if (!simulator_->step()) break;
+            //SimStep(prerun);
          }
       }
       catch (std::runtime_error ex)
@@ -188,10 +170,10 @@ protected:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual void SimStep(bool prerun)
-   {
-      UNUSED(prerun);
-   }
+   //virtual void SimStep(bool prerun)
+   //{
+      //UNUSED(prerun);
+   //}
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -204,19 +186,14 @@ protected:
 
    virtual void PrintSettings()
    {
-      auto now = std::chrono::system_clock::now();
-      auto time = std::chrono::system_clock::to_time_t(now);
-      auto time_local = std::localtime(&time);
-      std::cout << std::setw(14) << "time local = " << std::asctime(time_local);
       std::cout << std::setw(14) << "world size = " << world_size_ << " [m]\n";
       auto ms = world_.matrix_size();
-      std::cout << std::setw(14) << "volume = " << std::setprecision(3) << 1e3 * (world_size_ * world_size_ * ms[1] / ms[0] * world_size_ * ms[2] / ms[0]) << " [L]\n";
       std::cout << std::setw(14) << "matrix size = " << ms[0] << "x" << ms[1] << "x" << ms[2] << "\n";
       if (seed_) std::cout << std::setw(16) << "seed = 0x" << std::setw(8) << std::setfill('0') << std::hex << std::uppercase << seed_ << std::setfill(' ') << "\n" << std::dec;
       if (prep_time_ > 0.0) std::cout << std::setw(14) << "prep_time = " << prep_time_ << " [s]\n";
       if (end_time_ > 0.0) std::cout << std::setw(14) << "end_time = " << end_time_ << " [s]\n";
       if (maintenance_step_ > 0) std::cout << std::setw(14) << "maintenance = " << maintenance_step_ << "\n";
-      if (!simstate_file_.empty()) std::cout << std::setw(14) << "simstatefile = " << simstate_file_ << "\n";
+      if (!simstate_file_.empty()) std::cout << std::setw(14) << "statefile = " << simstate_file_ << "\n";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -229,32 +206,16 @@ protected:
 
       simulator_ = std::make_unique<EGFRDSimulator>(world_, rules_, rng_);
 
-      if (show_progress_ && (end_time_ > 0 || prep_time_ > 0))
-      {
-         progress_ = std::make_unique<Progress>(Progress(prep_time_ > 0 ? prep_time_ : end_time_, 80));
-         simulator_->add_extrnal_event(0, progress_.get());
-      }
-
       return true;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual void PostPreSimulation()
-   {
-      // Need to redo the progressbar (or other external events) since simulator is reset after pre-simulation phase.
-      if (show_progress_ && end_time_ > 0)
-      {
-         progress_ = std::make_unique<Progress>(Progress(end_time_, 80));
-         simulator_->add_extrnal_event(0, progress_.get());
-      }
-   }
+   virtual void PostPreSimulation() { }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual void PostSimulation()
-   {
-   }
+   virtual void PostSimulation() { }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -262,15 +223,15 @@ protected:
    double prep_time_;                            // The simulation prepare time (zero for no preparation run);
    double end_time_;                             // The simulation end time
    int seed_;                                    // Set seed of the random number generator (if non-zero)
-   bool show_progress_;                          // The progress indicator in console is enabled when set to true
    Model model_;                                 // The model contains the species and structures
    World world_;                                 // The world contains all structures and particles
    ReactionRuleCollection rules_;                // The reaction rules between the structures and particles
    RandomNumberGenerator rng_;                   // The random number generator
    std::unique_ptr<EGFRDSimulator> simulator_;   // The EGFRD simulator
-   std::unique_ptr<Progress> progress_;          // progress bar indicator
    size_t maintenance_step_;                      // run internal maintenance cycle every n sim steps
    std::string simstate_file_;                    // filename to store simulator state (in maintenance step)
+   
+private:
    bool failed_;                                  // simulation failed (check or exception)
    volatile bool* abort_;                         // Ctrl-C abort of simulation loop
 

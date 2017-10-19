@@ -5,21 +5,61 @@
 
 #include <regex>
 #include <string>
+#include <functional>
+#include <unordered_map>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+struct VariablesSection;
+
 struct SectionBase
 {
-   explicit SectionBase() {}
+   explicit SectionBase() : vars_(nullptr) { }
    virtual ~SectionBase() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   virtual bool set_keypair(const std::string& key, const std::string& value) = 0;
+   virtual bool set_keypair(const std::string& key, const std::string& value);
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   void set_vars(VariablesSection *vars) { vars_ = vars; }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   void init_auto_vars(std::initializer_list<std::pair<std::string, double>> keys)
+   {
+      for (auto& kvp : keys)
+         auto_values_[kvp.first] = kvp.second;
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   double auto_var_value(const std::string& name) const { return auto_values_.at(name); }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   virtual void PrintSettings() const = 0;
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
 protected:
+
+   bool is_valid_speciestype_name(const std::string& name) const
+   {
+      const std::regex regex(regex_speciestype_name_);
+      std::smatch match;
+      return std::regex_match(name, match, regex);
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   bool is_valid_variable_name(const std::string& name) const
+   {
+      const std::regex regex(regex_variable_name_);
+      std::smatch match;
+      return std::regex_match(name, match, regex);
+   }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -32,12 +72,24 @@ protected:
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
+
+   VariablesSection* vars_;
+
+private:
+
+   std::unordered_map<std::string, double> auto_values_;
+
+   const std::string regex_speciestype_name_ = "[a-zA-Z][\\w\\-*_']*";
+   const std::string regex_variable_name_ = "[a-zA-Z][a-zA-Z0-9_]*";
+
+   // --------------------------------------------------------------------------------------------------------------------------------
 };
 
 
 struct SectionModeBase : SectionBase
 {
-   explicit SectionModeBase() : mode_(modes::Off)  {}
+   explicit SectionModeBase() : SectionBase(), mode_(modes::Off)    {    }
+
    virtual ~SectionModeBase() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -53,6 +105,7 @@ struct SectionModeBase : SectionBase
 
    bool set_keypair(const std::string& key, const std::string& value) override
    {
+      if (SectionBase::set_keypair(key, value)) return true;
       if (key == key_mode) { mode_ = get_mode(value); return true; }
       return false;
    }
