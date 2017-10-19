@@ -102,10 +102,8 @@ P = N_P
 [CopyNumbers]
 Interval = 1e-1
 File = copy_num.dat
-Mode = Run
 Type = Instantaneous
 
 [ReactionRecord]
 File = react_rec.dat
-Mode = Run
 

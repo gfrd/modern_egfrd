@@ -1,17 +1,15 @@
-notes:
+note on gfrd model files:
 
-
-MODEL FILES:
-
-file should have unix style line terminators, that is a LF, (0x0A or \n) or parser will fail on linux
-last line of model-file should have a LF (or that line is not parsed)
+known issules:
+	file should have unix style line terminators, that is a LF, (0x0A or \n) or parser will fail on linux
+	last line of model-file should have a LF (or that line is not parsed)
 
 
 speciestype names:
--> conform regex "[a-zA-Z][\\w\\-*_']*"
+	conform regex "[a-zA-Z][\\w\\-*_']*"
 
 variable names:
--> conform regex "[a-zA-Z][a-zA-Z0-9_]*"
+	conform regex "[a-zA-Z][a-zA-Z0-9_]*"
 
 
 expressions: as debribed in exprtk (case sensitive, NO enhanced_features, break_continue, return_statement, rtl_io_file, rtl_vecops, control_structures)
@@ -52,12 +50,10 @@ Mode flags:
 		Run = main-run only (not in pre-run)
 		Off = Not at all
 
-Default mode for sections (no need to specify)
-	CopyNumbers = Run
-	ParticlePosition = Run
-	Particles = On
-	Progress = On
-	ReactionRecord = Run
-	ReactionRule = On
-		
-		
+	Default mode for sections (no need to specify)
+		CopyNumbers = Run
+		ParticlePosition = Run
+		Particles = On
+		Progress = On
+		ReactionRecord = Run
+		ReactionRule = On

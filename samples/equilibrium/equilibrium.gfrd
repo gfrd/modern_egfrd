@@ -22,8 +22,8 @@ Nc_th = (S - sqrt(S*S - 4*Na_*Nb_)) / 2
 
 [Simulator]
            Seed = 0x1234CAFE           ; init pseudo-random with seed
-    PrepareTime = 100                  ; sec.
-        EndTime = 200                  ; sec.
+    PrepareTime = 100                  ; seconds
+        EndTime = 200                  ; seconds
 MaintenanceStep = 100000               ; check simulator internal consistency every N steps
 MaintenanceFile = sim_dump.out         ; dump full simulator state to file at maintenance cycle
 
@@ -48,10 +48,7 @@ B = Nb
 C = Nc
 
 [CopyNumbers]
-Interval = 1E-1                        ; output every interval seconds
-	Type = Average
-	;File = equi_new.dat
+Interval = 1e-1                        ; output every interval seconds
+    Type = Average
+   ;File = equi_new.dat
 
-[Progress]
-Mode = Off                             ; set to On to display the progress-bar
-Column = 120
