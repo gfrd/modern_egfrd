@@ -1,19 +1,22 @@
-#ifndef SIMRESUME_HPP
-#define SIMRESUME_HPP
+#ifndef SIMCUSTOM_HPP
+#define SIMCUSTOM_HPP
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class SimResume : public Simulation
+class SimCustom : public Simulation
 {
 public:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   explicit SimResume(const std::string& filename) noexcept : file_(filename) {}
+   explicit SimCustom() noexcept
+   {
+      world_size_ = 1e-7;
+   }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::string name() const override { return "Resume"; }
+   std::string name() const override { return "Custom"; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -22,7 +25,6 @@ public:
       if (args.isparam(i) && args.option(i) == "m" && args.isvalue_NP(i + 1)) maintenance_step_ = std::stoi(args.option(++i));
       else if (args.isparam(i) && args.option(i) == "mf" && args.isvalue_F(i + 1)) simstate_file_ = args.option(++i);
       else if (args.isparam(i) && args.option(i) == "e" && args.isvalue_D(i + 1)) end_time_ = std::stod(args.option(++i));
-      else if (args.isparam(i) && args.option(i) == "s" && args.isvalue_NH(i + 1))  seed_ = std::stoul(args.option(++i), nullptr, 0); // auto detect, hex/oct/dec
       else return Simulation::HandleCommandArguments(i, args);
       return -1;
    }
@@ -31,11 +33,10 @@ public:
 
    void print_usage() override
    {
-      std::cout << "  RunGfrd -r,--resume <path-to-simstate> [ options ]" << std::endl;
-      std::cout << "        [-h,-?,--help  ]      Print command line usage information" << std::endl;
+      std::cout << "  RunGfrd -c,--custom [ options ]" << std::endl;
+      std::cout << "        [-h,-?,--help]        Print command line usage information" << std::endl;
       std::cout << "        [-m N]                Maintenance every N steps\n";
       std::cout << "        [-mf file]            Maintenance output file\n";
-      std::cout << "        [-s seed]             Initial seed for Random number generator\n";
       std::cout << "        [-e time]             End simulation after model time in seconds\n";
    }
 
@@ -49,7 +50,6 @@ protected:
       auto time = std::chrono::system_clock::to_time_t(now);
       auto time_local = std::localtime(&time);
       std::cout << std::setw(14) << "time local = " << std::asctime(time_local);
-      std::cout << std::setw(14) << "resume file = " << file_ << "\n";
 
       std::cout << "\n";
       
@@ -62,15 +62,23 @@ protected:
 
    bool SetupSimulation() override
    {
+      // Construct your simulation model here
+      s1 = model_.add_species_type(SpeciesType("A", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+      s2 = model_.add_species_type(SpeciesType("B", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+      s3 = model_.add_species_type(SpeciesType("C", model_.get_def_structure_type_id(), 1e-12, 1e-9));
+
+      // Create the world and simulator
       Simulation::SetupSimulation();
-      Persistence::callback_fn cb(nullptr); // TODO get lamda in here that maps CustomActions to members
 
-      Persistence p;
-      if (!p.retreive(file_, cb)) { Log("RunGfrd").fatal() << "Failed to load resume file!"; return false; }
-      p.retreive_egfrd(*simulator_);
+      // Add particles (three layers)
+      world_.throwInParticles(s1, 24, rng_, false, Vector3(0, 0, 0), Vector3(world_size_, world_size_/3, world_size_) );
+      world_.throwInParticles(s2, 24, rng_, false, Vector3(0, world_size_/3, 0), Vector3(world_size_, 2*world_size_/3, world_size_));
+      world_.throwInParticles(s3, 24, rng_, false, Vector3(0, 2*world_size_/3, 0), Vector3(world_size_, world_size_, world_size_));
 
-      // check after load!
-      if (!maintenance()) { Log("RunGfrd").fatal() << "Maintenance check failed!"; return false; }
+      // Add some rules
+      rules_.add_reaction_rule(ReactionRule(s1, 24, std::vector < SpeciesTypeID > {s2}));
+      rules_.add_reaction_rule(ReactionRule(s2, 24, std::vector < SpeciesTypeID > {s3}));
+      rules_.add_reaction_rule(ReactionRule(s3, 24, std::vector < SpeciesTypeID > {s1}));
 
       return true;
    }
@@ -78,7 +86,7 @@ protected:
    // --------------------------------------------------------------------------------------------------------------------------------
 
 private:
-   std::string file_;
+   SpeciesTypeID s1,s2,s3;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

@@ -51,7 +51,7 @@ uint     cfgShellColors[] = { 0x0A050F0 , 0x0F0F000 , 0x000F000 , 0x0F00000 };  
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, bool showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
+void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
 {
    const World& w = s.world();
    drawMatrix(w.cell_size(), w.matrix_size());
@@ -60,7 +60,7 @@ void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, bool showp
    auto v = cam.calculate(Vector3::uy).normal();
    glEnable(GL_LIGHTING);
    for (auto p : w.get_particles())
-      drawParticle(p, ParticleID(selParticle), showpid, v);
+      drawParticle(p, ParticleID(selParticle), showpid, v, &s.world());
 
    drawAllStructures(w.get_structures(), cam, selStructure);
 
@@ -88,7 +88,7 @@ void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, bool showp
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, bool showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
+void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
 {
    drawMatrix(w.cell_size(), w.matrix_size());
    drawBox(Box(w.world_size() / 2, w.world_size() / 2));
@@ -97,7 +97,7 @@ void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, bool showpid
    auto v = cam.calculate(Vector3::uy).normal();
    glEnable(GL_LIGHTING);
    for (auto p : w.get_particles())
-      drawParticle(p, ParticleID(selParticle), showpid, v);
+      drawParticle(p, ParticleID(selParticle), showpid, v, nullptr);
 
    drawAllStructures(w.get_structures(), cam, selStructure);
 
@@ -209,7 +209,7 @@ void drawMatrix(double cs, std::array<uint, 3> ms)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void drawParticle(const Particle::particle_id_pair& pip, ParticleID selParticle, bool showID, const Vector3& v)
+void drawParticle(const Particle::particle_id_pair& pip, ParticleID selParticle, int showID, const Vector3& v, const World* world)
 {
    glEnable(GL_LIGHTING);
 
@@ -226,7 +226,14 @@ void drawParticle(const Particle::particle_id_pair& pip, ParticleID selParticle,
    auto x1 = pip.second.position() + 1.05 * pip.second.radius() * v;
    glDisable(GL_LIGHTING);
    glRasterPos3d(x1.X(), x1.Y(), x1.Z());
-   glutBitmapString(GLUT_BITMAP_8_BY_13, reinterpret_cast<const unsigned char*>(static_cast<std::string>(make_string() << static_cast<idtype>(pip.first)).c_str()));
+   
+   if (showID == 1)
+      glutBitmapString(GLUT_BITMAP_8_BY_13, reinterpret_cast<const unsigned char*>(static_cast<std::string>(make_string() << static_cast<idtype>(pip.first)).c_str()));
+   else
+   {
+      auto &name = world ? world->get_species(pip.second.sid()).name() : make_string() << static_cast<idtype>(pip.second.sid());
+      glutBitmapString(GLUT_BITMAP_8_BY_13, reinterpret_cast<const unsigned char*>(name.c_str()));
+   }
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------

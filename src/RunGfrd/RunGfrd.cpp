@@ -7,6 +7,7 @@
 #include "Simulation.hpp"
 #include "SimResume.hpp"
 #include "SimModel.hpp"
+#include "SimCustom.hpp"
 #include "gfrd_compat.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -33,8 +34,12 @@ void print_usage()
 {
    std::cout << "  1) RunGfrd <path-to-model> [ options ]" << std::endl;
    std::cout << "  2) RunGfrd -r,--resume <path-to-simstate> [ options ]" << std::endl;
-   std::cout << "        [-h,-?,--help  ]      Print command line usage information" << std::endl;
-   std::cout << "        [-v,--version  ]      Print version/build information" << std::endl;
+   std::cout << "  3) RunGfrd -c,--custom [ options ]" << std::endl;
+   std::cout << "        [-h,-?,--help]        Print command line usage information" << std::endl;
+   std::cout << "        [-v,--version]        Print version/build information" << std::endl  << std::endl;
+   std::cout << "1) Start simulation described in model-file." << std::endl;
+   std::cout << "2) Resume a simulation from state-file." << std::endl;
+   std::cout << "3) Start simulation based on user-code in class SimCustom" << std::endl;
    std::cout << std::endl << std::endl;
 }
 
@@ -76,12 +81,19 @@ int main(int argc, char** argv)
 
             if (args.option(i) == "r" || args.option(i) == "-resume")
             { 
-               if (args.isvalue(i + 1)) 
+               if (args.isvalue_F(i + 1))
                {
                   sim = std::make_unique<SimResume>(args.option(++i));     // path-to-sim-state
                   continue; 
                }
             }
+
+            if (args.option(i) == "c" || args.option(i) == "-custom")
+            {
+               sim = std::make_unique<SimCustom>();            // user-code simulation
+               continue;
+            }
+
         }
 
         if (args.option(i) == "h" || args.option(i) == "?" || args.option(i) == "-help")
@@ -106,7 +118,7 @@ int main(int argc, char** argv)
             std::cout << "ERROR: Unknown or invalid argument: " << (args.isparam(arg_err) ? "-" : "") << args.option(arg_err) << std::endl;
          else 
             std::cout << "ERROR: Please specify your intentions." << std::endl;
-         std::cout << "use -h argument to print usage information." << std::endl;
+         std::cout << "use --help argument to print usage information." << std::endl;
          return 1;
       }
    }

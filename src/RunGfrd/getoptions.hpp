@@ -6,8 +6,9 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#include "genericIterator.hpp"
 #include <iostream>
+#include <regex>
+#include "genericIterator.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -64,12 +65,26 @@ public:
    size_t size() const { return options_.size(); }
    bool isparam(size_t i) const { return i >= 0 && i < size() ? options_[i].first : false; }
    bool isvalue(size_t i) const { return i >= 0 && i < size() ? !options_[i].first : false; }
-   
+
+   bool isvalue_NH(size_t i) const { return (i >= 0 && i < size() ? !options_[i].first : false) && ismatch(i, "(0[xX])?[0-9a-fA-F]+"); }     // may be hex
+   bool isvalue_NP(size_t i) const { return (i >= 0 && i < size() ? !options_[i].first : false) && ismatch(i, "[+]?[\\d]+"); }     // positive
+   bool isvalue_N(size_t i) const { return (i >= 0 && i < size() ? !options_[i].first : false) && ismatch(i, "[+\\-]?[\\d]+"); }    // integer number
+   bool isvalue_F(size_t i) const { return (i >= 0 && i < size() ? !options_[i].first : false) && ismatch(i, "[^<>\"|?*%]+"); }         // file/path (no < > " | ? * %)
+   bool isvalue_D(size_t i) const { return (i >= 0 && i < size() ? !options_[i].first : false) && ismatch(i, "[+\\-]?\\d*(?:\\.\\d*)?(?:[eE][+\\-]?\\d+)?"); }    // scientific number
+
    std::string option(size_t i) const { return i >= 0 && i < size() ? options_[i].second : ""; }
    double value(size_t i) const { return i >= 0 && i < size() ? std::stod(options_[i].second) : 0.0; }
    int number(size_t i) const { return i >= 0 && i < size() ? std::stoi(options_[i].second) : 0; }
 
 private:
+
+   bool ismatch(size_t i, std::string pattern) const
+   {
+      const std::regex regex(pattern);
+      std::smatch match;
+      return std::regex_match(options_[i].second, match, regex);
+   }
+
    OptionsVector options_;
 };
 

@@ -27,7 +27,7 @@ static CameraControllerAnimated cam;
 static EGFRDSimulator* sptr;
 bool drawShells = false;
 bool drawOrig = true;
-bool drawPid = false;
+int drawPid = 0;
 bool autoSim = false;
 bool autoCheck = false;
 bool showHelp = false;
@@ -38,9 +38,9 @@ std::string statefile;
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::string> help = { "ESC = exit" , "H = show help", "F = full screen", "S = show shells", "D = demo rotate", "P = screenshot", "O = draw origin" ,"I = particle ID" ,
+std::vector<std::string> help = { "ESC = exit" , "H = show help", "F = full screen", "S = show shells", "D = demo rotate", "P = screenshot", "O = draw origin" ,"I = particle ID/SID" ,
                                    ". = sim step", "/ = check sim", "A = auto", "B = burst all",  "</> = select structure",
-                                   "+/- = select particle", "g = goto particle", "0 = deselect particle", "C = center word", };
+                                   "+/- = select particle", "g = goto particle", "0 = deselect particle", "C = center world", };
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
       case 'd': case 'D': cam.set_demo(!cam.demo()); break;
       case 'p': case 'P': screenshot(static_cast<int>(sptr ? sptr->num_steps() : extSim.num_steps())); break;
       case 'o': case 'O': drawOrig = !drawOrig; glutPostRedisplay(); break;
-      case 'i': case 'I': drawPid = !drawPid; glutPostRedisplay(); break;
+      case 'i': case 'I': drawPid++; if (drawPid==3) drawPid = 0; glutPostRedisplay(); break;
 
       case '.': if (sptr) sptr->step(); else extSim.readSimFile(extSim.get_filename()); glutPostRedisplay(); break;
       case '/': if (sptr) check_sim(); break;
@@ -538,7 +538,7 @@ int main(int argc, char** argv)
       switch (2)      // select demo init
       {
       default:
-      case 0:        // Init GFRD (with PlanarSurfaces, not funcctional yet)
+      case 0:        // Init GFRD (with PlanarSurfaces, not functional yet)
       {
          Model m;
          auto sPlane = m.add_structure_type(StructureType("plane"));
