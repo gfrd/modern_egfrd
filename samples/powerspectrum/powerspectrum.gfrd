@@ -2,7 +2,7 @@
 
 [Simulator]
            Seed = 0x1234CAFE
-        EndTime = 60.0                 ; sec.
+        EndTime = 600.0                ; sec.
 MaintenanceStep = 100000
 MaintenanceFile = sim_dump.out
 

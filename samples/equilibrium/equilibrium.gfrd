@@ -8,28 +8,21 @@
 V  = 40e-18                            ; 40 femto liter = 40 atto m^3
 ka = 1e-19                             ; association constant in m^3*s^-1
 kd = 2e-2                              ; dissociation constant in s^-1
-Na = 100                               ; number of particles A and B
-Nb = Na
-Nc = 0                                 ; initial number of C particles
+N = 100                                ; number of particles A and B
 
 ; Calculate the analytic average number of C particles in equilibrium
 kD = kd / ka
-Na_ = Na + Nc
-Nb_ = Na + Nc
-Nc_th = (Na_+Nb_+kD*V - sqrt( (Na_+Nb_+kD*V)^2 - 4*Na_*Nb_)) / 2
+Nc_th = (2*N+kD*V - sqrt( (2*N+kD*V)^2 - 4*N*N)) / 2
 
 
 [Simulator]
-           Seed = 0x1234CAFE           ; init pseudo-random with seed
-    PrepareTime = 100                  ; seconds
-        EndTime = 200                  ; seconds
 MaintenanceStep = 100000               ; check simulator internal consistency every N steps
 MaintenanceFile = sim_dump.out         ; dump full simulator state to file at maintenance cycle
 
 
 [World]
 Matrix = 8
-Size = V ^ (1/3)                       ; volume in m^3 to cube-length in meter
+Size = V^(1/3)                         ; volume in m^3 to cube-length in meter
 
 [SpeciesType]
 Name = A B C
@@ -42,12 +35,10 @@ Rule = A + B <=> C                     ; bidirectional bimolecular reaction rule
   kd = kd
 
 [Particles]
-A = Na
-B = Nb
-C = Nc
+A = N                                  ; insert A & B particles no C particles
+B = N
+C = 0
 
 [CopyNumbers]
-Interval = 1e-1                        ; output every interval seconds
+Interval = 1                           ; output particle count every second
     Type = Average
-   ;File = equi_new.dat
-
