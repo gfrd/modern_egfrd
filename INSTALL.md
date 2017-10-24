@@ -1,7 +1,7 @@
 
 ### Prerequisites
 
-1. an ISO standard C++14 compiler, like GNU GCC v5.0* or Microsoft Visual C++ 2017*
+1. an ISO standard C++11 compiler, like GNU GCC v5.0* or Microsoft Visual C++ 2017*
 2. CMake v3.2* 
 3. GNU Scientific Library (GSL) 1.16*
 4. [optional] FreeGlut3 for visualization
@@ -48,7 +48,6 @@
 
    ```
    > cd bin
-   > export LD_LIBRARY_PATH=$(pwd)
    > ./RunGfrd ../../samples/simple/simple.gfrd
    ```
 
@@ -69,7 +68,6 @@
    ```
    > make gfrdVisualizer
    > cd bin
-   > export LD_LIBRARY_PATH=$(pwd)
    > ./gfrdVisualizer
    ```
    When running press keys f, d, i, s and a for some action, press h for help.
