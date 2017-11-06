@@ -81,7 +81,7 @@ static struct GlobalGfrdConfig
                                                    // dynamically determined by the new BD scheme.It will prevent the algorithm
                                                    // to calculate ridiculously small timesteps, but will break detail balance.
                                                    // Take care : This is for testing only!Keep this at a negative value for normal sims!
-
+   const uint ThrowInRetryCount = 50;                // When randomly inserting particles, stop after N failed placements per particle (due to overlap or out-of-bounds error)
 
 } GfrdCfg;
 

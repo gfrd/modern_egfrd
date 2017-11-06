@@ -26,6 +26,43 @@ namespace functions
    {
       return convert::per_nM_per_sec_to_m3_per_sec(rate);
    }
+
+   template <typename T>
+   struct format : public exprtk::igeneric_function<T>
+   {
+      typedef exprtk::igeneric_function<T> igenfunct_t;
+      typedef typename igenfunct_t::generic_type generic_t;
+      typedef typename igenfunct_t::parameter_list_t parameter_list_t;
+      typedef typename generic_t::scalar_view scalar_t;
+      typedef typename generic_t::string_view string_t;
+
+      format() : exprtk::igeneric_function<T>("T|ST*", igenfunct_t::e_rtrn_string) {}
+
+      T operator()(const size_t& ps_index, std::string& result, parameter_list_t parameters) override
+      {
+         result.clear();
+         size_t idx = 0;
+
+         std::string format = ps_index == 0 ? "%lf" : exprtk::to_str(string_t(parameters[idx++]));
+         std::vector<T> values;
+         for (; idx < parameters.size(); ++idx)
+            values.emplace_back( (scalar_t(parameters[idx]))());
+
+         char buffer[256];
+         switch (idx)
+         {
+            case 1: case 2: std::snprintf(buffer, sizeof buffer, format.c_str(), values[0]); break;
+            case 3: std::snprintf(buffer, sizeof buffer, format.c_str(), values[0], values[1]); break;
+            case 4: std::snprintf(buffer, sizeof buffer, format.c_str(), values[0], values[1], values[2]); break;
+            default: case 5: std::snprintf(buffer, sizeof buffer, format.c_str(), values[0], values[1], values[2], values[3]); break;
+         }
+         result = buffer;
+
+         return T(0);
+      }
+   };
+
+   format<double> format_;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -41,6 +78,7 @@ VariablesSection::VariablesSection() : SectionBase()
 
    table_->add_function("concentration", functions::concentration);
    table_->add_function("per_nM_per_sec_to_m3_per_sec", functions::per_nM_per_sec_to_m3_per_sec);
+   table_->add_function("fmt",functions::format_);
    table_->add_stringvar("dummy", dummy_, false);
 }
 
@@ -56,7 +94,7 @@ double VariablesSection::evaluate_value_expression(std::string expression, std::
 {
    exprtk::expression<double> expr;
    expr.register_symbol_table(*table_.get());
-      
+
    exprtk::parser<double> parser;
    parser.settings().disable_all_control_structures();
 
@@ -74,7 +112,7 @@ std::string VariablesSection::evaluate_string_expression(std::string expression,
    {
       exprtk::expression<double> expr;
       expr.register_symbol_table(*table_.get());
-      
+
       exprtk::parser<double> parser;
       parser.settings().disable_all_control_structures();
 
