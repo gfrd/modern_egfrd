@@ -16,6 +16,7 @@
 #include "StructureType.hpp"
 #include "StructureID.hpp"
 #include "SpeciesType.hpp"
+#include "Logger.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -520,6 +521,7 @@ public:
          if (!correct) throw illegal_argument(make_string() << "bounding box is invalid, should be inside world (0 <= b <= ws) and (bound1 < bound2).");
       }
 
+      bool warn = false;
       uint retrycount = GfrdCfg.ThrowInRetryCount;
       while (numOfParticles)
       {
@@ -545,12 +547,13 @@ public:
          }
          else
          {
-            //if (particle_overlaps)  log.info("particle rejected. Too close to particle.");
-            //if (surface_overlaps)   log.info("particle rejected. Too close to surface.");
-            //if (out_of_bounds)      log.info("particle rejected. Out of bounding box.");
-            
             retrycount--;
             THROW_UNLESS_MSG(no_space, retrycount > 0, "Add particle failed after " << GfrdCfg.ThrowInRetryCount << " attempts (overlaps or out-of-bounds) " << sid)
+            if (!warn && retrycount < 4*GfrdCfg.ThrowInRetryCount/5)
+            {
+               Log("World").warn() << "Particle placement for " << sid << " may take some time due to restricted available space...";
+               warn = true;
+            }
          }
       }
    }

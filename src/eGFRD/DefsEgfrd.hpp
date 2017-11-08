@@ -74,14 +74,14 @@ static struct GlobalGfrdConfig
    const double MULTI_SHELL_FACTOR = std::sqrt(3);
    const double TIME_TOLERANCE = 1e-10;
 
-   const double DEFAULT_STEPSIZE_FACTOR = 0.05;        // The maximum step size in the newBD algorithm is determined as DSSF * sigma_min.
+   const double DEFAULT_STEPSIZE_FACTOR = 0.05;    // The maximum step size in the newBD algorithm is determined as DSSF * sigma_min.
                                                    // Make sure that DEFAULT_STEP_SIZE_FACTOR < MULTI_SHELL_FACTOR, or else the
                                                    // reaction volume sticks out of the multi.
-   const double BD_DT_HARDCORE_MIN = 1e-9;         // This is to define a hardcore lower bound for the timestep that will be
+   const double BD_DT_HARDCORE_MIN = -1e-9;        // This is to define a hardcore lower bound for the timestep that will be
                                                    // dynamically determined by the new BD scheme.It will prevent the algorithm
                                                    // to calculate ridiculously small timesteps, but will break detail balance.
                                                    // Take care : This is for testing only!Keep this at a negative value for normal sims!
-   const uint ThrowInRetryCount = 50;                // When randomly inserting particles, stop after N failed placements per particle (due to overlap or out-of-bounds error)
+   const uint ThrowInRetryCount = 500000;          // When randomly inserting particles, stop after N failed placements per particle (due to overlap or out-of-bounds error)
 
 } GfrdCfg;
 
