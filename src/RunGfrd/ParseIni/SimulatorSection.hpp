@@ -38,10 +38,9 @@ struct SimulatorSection final : SectionBase
    bool set_keypair(const std::string& key, const std::string& value) override
    {
       if (SectionBase::set_keypair(key,value)) return true;
-      if (key == key_seed) { seed_ = std::stoul(vars_->evaluate_string_expression(value, key_seed), nullptr, 0); return true; }
+      if (key == key_seed) { seed_ = parse_seed(value); return true; }
       if (key == key_maintenance_step) { maintenance_step_ = static_cast<uint>(vars_->evaluate_value_expression(value, key_maintenance_step)); return true; }
       if (key == key_maintenance_file) { simstate_file_ = vars_->evaluate_string_expression(value, key_maintenance_file); return true; }
-      
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 
@@ -52,6 +51,24 @@ struct SimulatorSection final : SectionBase
    // --------------------------------------------------------------------------------------------------------------------------------
 
 private:
+   
+   int parse_seed(const std::string& value) const
+   {
+      // if parameter is a string-expression, evaluate it and convert to integer (with stroul for hex or decimal format)
+      if (*value.begin() == '$')
+      {
+         const auto eval = vars_->evaluate_string_expression(value, key_seed);
+         try { return std::stoul(eval, nullptr, 0); }
+         catch (std::runtime_error) { THROW_EXCEPTION(illegal_section_key, "Value for key '" << key_seed << "' not valid. Failed to parse " << eval << " to integer."); }
+      }
+      
+      // or parameter is a value-expression, evaluate it and convert to integer (just floor the value)
+      const auto eval = vars_->evaluate_value_expression(value, key_seed);
+      return static_cast<int>(std::floor(eval));
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
    int seed_;
    size_t maintenance_step_;
    std::string simstate_file_;

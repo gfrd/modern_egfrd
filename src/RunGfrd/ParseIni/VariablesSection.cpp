@@ -11,6 +11,7 @@
 #include "../../exprtk/exprtk.hpp"           // <-- only include it here (it's huge and takes long to compile)
 #include "../../eGFRD/DefsEgfrd.hpp"
 #include "convert.hpp"
+#include <regex>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -98,7 +99,7 @@ double VariablesSection::evaluate_value_expression(std::string expression, std::
    exprtk::parser<double> parser;
    parser.settings().disable_all_control_structures();
 
-   if (!parser.compile(expression, expr))
+   if (!parser.compile(replace_hex_to_dec(expression), expr))
       THROW_EXCEPTION(illegal_section_value, "ParseError: " << parser.error() << " in '" << name << " = " << expression << "'\n");
 
    return expr.value();
@@ -167,3 +168,30 @@ void VariablesSection::add_string_variable(const std::string name, const std::st
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+std::string VariablesSection::replace_hex_to_dec(const std::string& expression) const
+{
+   // The exprtk does not support hexadecimal values, so we just replace any 0xNNN notation with its decimal equivalent
+   const std::regex regex("0[xX][\\da-fA-F]+");
+   
+   size_t pos = 0;
+   std::stringstream expr2;
+   for (auto i = std::sregex_iterator(expression.begin(), expression.end(), regex); i != std::sregex_iterator(); ++i )
+   {
+      std::smatch m = *i;
+      if (static_cast<size_t>(m.position()) > pos)
+      {
+         expr2 << expression.substr(pos, m.position() - pos);
+         pos = m.position();
+      }
+      expr2 << std::stoul(m.str(), nullptr, 16);
+      pos += m.str().length();
+   }
+
+   if (pos == 0) return expression;
+
+   if (pos < expression.length())
+      expr2 << expression.substr(pos, expression.length() - pos);
+   return expr2.str();
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------

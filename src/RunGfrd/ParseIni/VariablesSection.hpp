@@ -79,12 +79,6 @@ struct VariablesSection final : SectionBase
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   void add_value_variable(const std::string name, const std::string expression, bool force);
-
-   void add_string_variable(const std::string name, const std::string expression, bool force);
-
-   // --------------------------------------------------------------------------------------------------------------------------------
-
    void PrintSettings() const override
    {
       for (auto& var : value_vars_)
@@ -93,6 +87,14 @@ struct VariablesSection final : SectionBase
          std::cout << std::setw(11) << var.name << " = " << var.expr << " => " << var.value << "\n";
       if (!value_vars_.empty() || !string_vars_.empty()) std::cout << "\n";
    }
+
+private:
+
+   std::string replace_hex_to_dec(const std::string&  expression) const;
+
+   void add_value_variable(const std::string name, const std::string expression, bool force);
+
+   void add_string_variable(const std::string name, const std::string expression, bool force);
 
    // --------------------------------------------------------------------------------------------------------------------------------
 

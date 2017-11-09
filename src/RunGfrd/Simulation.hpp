@@ -7,6 +7,7 @@
 #include <EGFRDSimulator.hpp>
 #include <Progress.hpp>
 #include <Persistence.hpp>
+#include <iomanip>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -85,11 +86,11 @@ public:
       }
 
       auto begin = std::chrono::high_resolution_clock::now();
-      if (prep_time_ > 0)
+      if (NotFailedOrAborted() && prep_time_ > 0)
       {
          Log("RunGfrd").info() << "Start of pre-simulation";
          LoopSimulatorUntil(prep_time_, true);
-         if (!failed_ && (abort_ ? !*abort_ : true))
+         if (NotFailedOrAborted())
          {
             auto now = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::duration<float>>(now - begin).count();
@@ -99,7 +100,7 @@ public:
          }
       }
 
-      if (!failed_ && (abort_ ? !*abort_ : true))
+      if (NotFailedOrAborted())
       {
          begin = std::chrono::high_resolution_clock::now();
          Log("RunGfrd").info() << "Start of simulation";
@@ -116,11 +117,15 @@ public:
 
 protected:
 
+   bool NotFailedOrAborted() const { return !failed_ && (abort_ ? !*abort_ : true); }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
    void LoopSimulatorUntil(double time, bool prerun = false)
    {
       try
       {
-         while (!failed_ && (abort_ ? !*abort_ : true) && (time > 0.0 ? simulator_->time() < time : true))
+         while (NotFailedOrAborted() && (time > 0.0 ? simulator_->time() < time : true))
          {
             if (maintenance_step_ != 0 && num_steps() % maintenance_step_ == 0)
             {
