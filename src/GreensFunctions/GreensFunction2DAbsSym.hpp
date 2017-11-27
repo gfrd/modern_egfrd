@@ -1,5 +1,4 @@
-#ifndef GREENSFUNCTION2DABSSYM_HPP
-#define GREENSFUNCTION2DABSSYM_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -13,9 +12,9 @@ public:
 
    GreensFunction2DAbsSym(double D, double a) : GreensFunction(D), a_(a) {}
 
-   virtual std::string dump() const override;
+   std::string dump() const override;
 
-   virtual const char* type_name() const override { return "GreensFunction2DAbsSym"; }
+   const char* type_name() const override { return "GreensFunction2DAbsSym"; }
 
    double geta() const { return a_; }
 
@@ -48,10 +47,7 @@ private:
 
    static double p_r_F(double r, const p_r_params* params);
 
-private:
    const double a_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // GREENSFUNCTION2DABSSYM_HPP

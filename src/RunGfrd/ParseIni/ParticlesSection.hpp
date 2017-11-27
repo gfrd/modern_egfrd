@@ -1,5 +1,4 @@
-#ifndef THROWINPARTICLES_SECTION_HPP
-#define THROWINPARTICLES_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,5 +68,3 @@ inline std::ostream& operator<<(std::ostream& stream, const ParticlesSection& ps
    stream << std::endl;
    return stream;
 }
-
-#endif

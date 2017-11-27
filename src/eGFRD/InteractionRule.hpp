@@ -1,5 +1,4 @@
-#ifndef INTERACTION_RULE_HPP
-#define INTERACTION_RULE_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -81,5 +80,3 @@ inline std::ostream& operator<<(std::ostream& stream, const InteractionRule& rr)
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* INTERACTION_RULE_HPP */

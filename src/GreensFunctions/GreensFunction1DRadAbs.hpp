@@ -1,5 +1,4 @@
-#ifndef GREENSFUNCTION1DRADABS_HPP
-#define GREENSFUNCTION1DRADABS_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -17,9 +16,9 @@ public:
       calculate_n_roots(1);
    }
 
-   virtual std::string dump() const override;
+   std::string dump() const override;
 
-   virtual const char* type_name() const override { return "GreensFunction1DRadAbs"; }
+   const char* type_name() const override { return "GreensFunction1DRadAbs"; }
 
    double geta() const { return a_; }
 
@@ -155,7 +154,6 @@ private:
       return table[i];
    }
 
-private:
    const double v_;         // The diffusion constant and drift velocity
    const double k_;         // The reaction constant
    const double r0_;
@@ -168,5 +166,3 @@ private:
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // GREENSFUNCTION1DRADABS_HPP

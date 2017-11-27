@@ -1,5 +1,4 @@
-#ifndef PARTICLE_ID_HPP
-#define PARTICLE_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, const ParticleID id)
 {
    stream << "PID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* PARTICLE_ID_HPP */

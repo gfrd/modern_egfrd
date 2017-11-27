@@ -1,5 +1,4 @@
-#ifndef PROGRESS_SECTION_HPP
-#define PROGRESS_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -57,5 +56,3 @@ inline std::ostream& operator<<(std::ostream& stream, const ProgressSection& ps)
    stream << std::endl;
    return stream;
 }
-
-#endif

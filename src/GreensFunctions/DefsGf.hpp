@@ -1,5 +1,4 @@
-#ifndef DEFSGF_HPP 
-#define DEFSGF_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 // common includes (limit to those that are really handy)
@@ -85,7 +84,4 @@ static struct GlobalGfConfig
 #define GF_EXPORT
 #endif
 
-
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // DEFSGF_HPP

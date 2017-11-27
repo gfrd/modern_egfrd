@@ -1,5 +1,4 @@
-#ifndef PARTICLEPOSITIONS_SECTION_HPP
-#define PARTICLEPOSITIONS_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -61,5 +60,3 @@ inline std::ostream& operator<<(std::ostream& stream, const ParticlePositionSect
    stream << std::endl;
    return stream;
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SIMULATORSETTINGS_HPP
-#define SIMULATORSETTINGS_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -184,5 +183,3 @@ inline std::istream& operator>>(std::istream& stream, SimulatorSettings& setting
    }
    return stream;
 }
-
-#endif

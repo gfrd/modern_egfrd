@@ -1,5 +1,4 @@
-#ifndef SHELL_ID_HPP
-#define SHELL_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+}
 
 inline std::ostream& operator<<(std::ostream& stream, const ShellID id)
 {
    stream << "ShellID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* SHELL_ID_HPP */

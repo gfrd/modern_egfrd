@@ -1,5 +1,4 @@
-#ifndef JSS_BITMASK_HPP
-#define JSS_BITMASK_HPP
+#pragma once
 
 // (C) Copyright 2015 Just Software Solutions Ltd (Boost Software License)
 
@@ -68,5 +67,3 @@ operator^=(E& lhs, E rhs) {
       static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
    return lhs;
 }
-
-#endif

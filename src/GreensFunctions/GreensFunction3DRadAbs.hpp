@@ -1,5 +1,4 @@
-#ifndef GREENSFUNCTION3DRADABS_HPP
-#define GREENSFUNCTION3DRADABS_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,8 +45,6 @@ private:
 
    double ip_theta(double theta, double r, double t) const;
 
-private:
-
    double f_alpha0_aux(double alpha) const;
    double f_alpha(double alpha, int n) const;
    double f_alpha_aux(double alpha, int n) const;
@@ -88,5 +85,3 @@ private:
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // GREENSFUNCTION3DRADABS_HPP

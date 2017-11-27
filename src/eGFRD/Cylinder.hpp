@@ -1,5 +1,4 @@
-#ifndef CYLINDER_HPP
-#define CYLINDER_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -143,5 +142,3 @@ namespace std {
       }
    };
 } // namespace std
-
-#endif /* CYLINDER_HPP */

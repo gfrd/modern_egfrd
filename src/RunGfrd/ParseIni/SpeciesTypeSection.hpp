@@ -1,5 +1,4 @@
-#ifndef PARTICLE_SECTION_HPP
-#define PARTICLE_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -105,5 +104,3 @@ inline std::ostream& operator<<(std::ostream& stream, const SpeciesTypeSection& 
    stream << std::endl;
    return stream;
 }
-
-#endif

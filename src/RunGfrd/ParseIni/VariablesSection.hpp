@@ -1,5 +1,4 @@
-#ifndef VARIABLES_SECTION_HPP
-#define VARIABLES_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -118,5 +117,3 @@ inline std::ostream& operator<<(std::ostream& stream, const VariablesSection& vs
    stream << std::endl;
    return stream;
 }
-
-#endif

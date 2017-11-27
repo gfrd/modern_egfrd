@@ -1,5 +1,4 @@
-#ifndef REACTIONRULE_SECTION_HPP
-#define REACTIONRULE_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -166,5 +165,3 @@ inline std::ostream& operator<<(std::ostream& stream, const ReactionRuleSection&
    stream << std::endl;
    return stream;
 }
-
-#endif

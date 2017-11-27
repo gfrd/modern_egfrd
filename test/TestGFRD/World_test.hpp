@@ -1,8 +1,3 @@
-#ifndef WORLD_TEST_HPP
-#define WORLD_TEST_HPP
-
+#pragma once
 #include "../common/tinytest.h"
-
 TINYTEST_DECLARE_SUITE(World);
-
-#endif

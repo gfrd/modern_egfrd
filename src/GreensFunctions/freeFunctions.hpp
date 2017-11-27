@@ -1,5 +1,4 @@
-#ifndef FREE_FUNTIONS_HPP
-#define FREE_FUNTIONS_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -90,5 +89,3 @@ double GF_EXPORT I_bd_r_1D(double r, double sigma, double t, double D, double v)
 double GF_EXPORT drawR_gbd_1D(double rnd, double sigma, double t, double D, double v);
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* FREE_FUNTIONS_HPP */

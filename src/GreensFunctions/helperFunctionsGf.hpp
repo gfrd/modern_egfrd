@@ -1,5 +1,4 @@
-#ifndef HELPERFUNCTIONSGF_HPP
-#define HELPERFUNCTIONSGF_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -24,20 +23,21 @@ bool file_exists(const std::string& name);
 
 // Template class to map Lambda functions to GSL function pointers
 // Uses params as this pointer, so no params avail to functions
-template< typename TLambda>
+template<typename TLambda>
 class gsl_lambda : public gsl_function
 {
 public:
-   gsl_lambda(const TLambda& func) : _func(func)
+   gsl_lambda(const TLambda& func) : func_(func)
    {
       function = &gsl_lambda::invoke;
       params = this;
    }
+
 private:
-   const TLambda& _func;
+   const TLambda& func_;
    static double invoke(double x, void *params)
    {
-      return static_cast<gsl_lambda*>(params)->_func(x);
+      return static_cast<gsl_lambda*>(params)->func_(x);
    }
 };
 
@@ -73,6 +73,3 @@ extern "C"
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-
-#endif   // HELPERFUNCTIONSGF_HPP

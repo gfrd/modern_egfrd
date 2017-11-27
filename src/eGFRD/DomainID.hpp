@@ -1,6 +1,4 @@
-#ifndef DOMAIN_ID_HPP
-#define DOMAIN_ID_HPP
-
+#pragma once
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include <ostream>
@@ -26,14 +24,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, DomainID id)
 {
    stream << "DID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* DOMAIN_ID_HPP */

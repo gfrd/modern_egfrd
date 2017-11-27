@@ -1,5 +1,4 @@
-#ifndef COPYNUMBERS_SECTION_HPP
-#define COPYNUMBERS_SECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -81,5 +80,3 @@ inline std::ostream& operator<<(std::ostream& stream, const CopyNumbersSection& 
    stream << std::endl;
    return stream;
 }
-
-#endif

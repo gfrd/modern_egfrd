@@ -1,5 +1,4 @@
-#ifndef DYNAMICPRIORITYQUEUE_HPP
-#define DYNAMICPRIORITYQUEUE_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -349,5 +348,3 @@ bool DynamicPriorityQueue<TID, TItem>::check_heap() const
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // DYNAMICPRIORITYQUEUE_HPP

@@ -1,5 +1,4 @@
-#ifndef DEFSEGRFD_HPP
-#define DEFSEGRFD_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 // common includes (limit to those that are really handy)
@@ -129,6 +128,3 @@ static_assert(CompileConfigSimulator::MatrixCellsZ >= 3, "MatrixSpace cells shou
 class Persistence;
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-
-#endif // DEFSEGRFD_HPP

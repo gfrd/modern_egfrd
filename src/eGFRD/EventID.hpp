@@ -1,5 +1,4 @@
-#ifndef EVENT_ID_HPP
-#define EVENT_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, const EventID id)
 {
    stream << "EventID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* EVENT_ID_HPP */

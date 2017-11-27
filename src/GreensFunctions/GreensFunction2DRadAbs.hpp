@@ -1,5 +1,4 @@
-#ifndef GREENSFUNCTION2DRADABS_HPP
-#define GREENSFUNCTION2DRADABS_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -35,13 +34,13 @@ public:
 
    GreensFunction2DRadAbs(double D, double kf, double r0, double sigma, double a);
 
-   virtual std::string dump() const override;
-
-   virtual const char* type_name() const override { return "GreensFunction2DRadAbs"; }
-
-   virtual double drawR(double rnd, double t) const override;
-
-   virtual double drawTheta(double rnd, double r, double t) const override;
+   std::string dump() const override;
+   
+   const char* type_name() const override { return "GreensFunction2DRadAbs"; }
+   
+   double drawR(double rnd, double t) const override;
+   
+   double drawTheta(double rnd, double r, double t) const override;
 
    double geth() const { return h_; }
 
@@ -189,5 +188,3 @@ private:
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif // GREENSFUNCTION2DRADABS_HPP

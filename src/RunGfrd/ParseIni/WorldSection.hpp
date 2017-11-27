@@ -1,5 +1,4 @@
-#ifndef WORLDSECTION_HPP
-#define WORLDSECTION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,5 +51,3 @@ inline std::ostream& operator<<(std::ostream& stream, const WorldSection& ws)
    stream << std::endl;
    return stream;
 }
-
-#endif

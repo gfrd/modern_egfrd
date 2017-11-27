@@ -1,5 +1,4 @@
-#ifndef BD_PROPAGATOR_HPP
-#define BD_PROPAGATOR_HPP
+#pragma once
 
 #include "randomNumberGenerator.hpp"
 #include "ReactionRuleCollection.hpp"
@@ -421,5 +420,3 @@ protected:
    // --------------------------------------------------------------------------------------------------------------------------------
 
 };
-
-#endif /*_BD_PROPAGATOR_HPP */

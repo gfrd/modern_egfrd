@@ -1,5 +1,4 @@
-#ifndef SIMULATION_HPP
-#define SIMULATION_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -239,9 +238,4 @@ protected:
 private:
    bool failed_;                                  // simulation failed (check or exception)
    volatile bool* abort_;                         // Ctrl-C abort of simulation loop
-
-   // --------------------------------------------------------------------------------------------------------------------------------
-
 };
-
-#endif /* SIMULATION_HPP */

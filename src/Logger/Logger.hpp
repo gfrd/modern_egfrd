@@ -1,5 +1,4 @@
-#ifndef LOGGER_HPP
-#define LOGGER_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,5 +132,3 @@ inline static Logger& Log(const char* name) { return Logger::get_logger(name); }
 template<> struct enable_bitmask_operators<Logger::logflags> { static const bool enable = true; };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* LOGGER_HPP */

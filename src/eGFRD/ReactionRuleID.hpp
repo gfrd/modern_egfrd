@@ -1,5 +1,4 @@
-#ifndef NETWORK_RULE_ID_HPP
-#define NETWORK_RULE_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, const ReactionRuleID id)
 {
    stream << "RRID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* NETWORK_RULE_ID_HPP */

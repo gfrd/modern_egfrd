@@ -1,10 +1,8 @@
-#ifndef GFRD_RENDERER_HPP
-#define GFRD_RENDERER_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include <World.hpp>
-#include <Logger.hpp>
 #include <EGFRDSimulator.hpp>
 #include "CameraController.hpp"
 
@@ -37,5 +35,3 @@ void glxWireCylinder(double radius, double length, int sides);
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-
-#endif // GFRD_RENDERER_HPP

@@ -1,8 +1,3 @@
-#ifndef TEST_SIMPLE_HPP
-#define TEST_SIMPLE_HPP
-
+#pragma once
 #include "../common/tinytest.h"
-
 TINYTEST_DECLARE_SUITE(SampleSimple);
-
-#endif

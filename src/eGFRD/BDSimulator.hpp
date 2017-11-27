@@ -1,5 +1,4 @@
-#ifndef BD_SIMULATOR_HPP
-#define BD_SIMULATOR_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -165,5 +164,3 @@ protected:
    double reaction_length_;
    double reaction_length_factor_;
 };
-
-#endif

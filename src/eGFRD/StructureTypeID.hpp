@@ -1,5 +1,4 @@
-#ifndef STRUCTURE_TYPE_ID_HPP
-#define STRUCTURE_TYPE_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, const StructureTypeID id)
 {
    stream << "StructureTypeID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* STRUCTURE_TYPE_ID_HPP */

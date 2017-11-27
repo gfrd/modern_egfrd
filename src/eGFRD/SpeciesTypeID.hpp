@@ -1,5 +1,4 @@
-#ifndef SPECIES_TYPE_ID_HPP
-#define SPECIES_TYPE_ID_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,14 +25,12 @@ namespace std
          return hash<idtype>()(id());
       }
    };
-}; // namespace std
+} // namespace std
 
 inline std::ostream& operator<<(std::ostream& stream, const SpeciesTypeID id)
 {
    stream << "SpeciesTypeID(" << id() << ")";
    return stream;
-};
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* SPECIES_TYPE_ID_HPP */

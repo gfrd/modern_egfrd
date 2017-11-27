@@ -1,5 +1,4 @@
-#ifndef STRUCTURE_CONTAINER_HPP
-#define STRUCTURE_CONTAINER_HPP
+#pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -415,6 +414,3 @@ inline std::pair<Vector3, StructureID> cyclic_transpose(const std::pair<Vector3,
 }
 */
 // --------------------------------------------------------------------------------------------------------------------------------
-
-#endif /* STRUCTURE_CONTAINER_HPP */
-
