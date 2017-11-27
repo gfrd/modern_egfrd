@@ -334,26 +334,26 @@ private:
 
       switch (domain->multiplicity())
       {
-         case 1: // SINGLE
+         case Domain::Multiplicity::SINGLE:
          {
             auto pse = dynamic_cast<Single*>(domain.get());
             THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
             process_single_event(*pse, ignore);
          } break;
 
-         case 2: // PAIR
+         case Domain::Multiplicity::PAIR:
          {
             auto ppe = dynamic_cast<Pair*>(domain.get());
             THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
             process_pair_event(*ppe, ignore);
          } break;
 
-         case 3:// MULTI
+         case Domain::Multiplicity::MULTI:
          { 
             auto pme = dynamic_cast<Multi*>(domain.get());
             THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
             process_multi_event(*pme, ignore);
-         }
+         } break;
 
          default:
          THROW_EXCEPTION(illegal_state, "Unknown event");
