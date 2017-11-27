@@ -332,32 +332,30 @@ private:
       auto& domain = domains_[did];
       std::vector<DomainID> ignore;
 
-      // do dispatcher thing here (type_info)
+      switch (domain->multiplicity())
       {
-         // SINGLE
-         auto pse = dynamic_cast<Single*>(domain.get());
-         if (pse != nullptr)
+         case 1: // SINGLE
          {
+            auto pse = dynamic_cast<Single*>(domain.get());
+            THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
             process_single_event(*pse, ignore);
-            return;
-         }
+         } break;
 
-         // PAIR
-         auto ppe = dynamic_cast<Pair*>(domain.get());
-         if (ppe != nullptr)
+         case 2: // PAIR
          {
+            auto ppe = dynamic_cast<Pair*>(domain.get());
+            THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
             process_pair_event(*ppe, ignore);
-            return;
-         }
+         } break;
 
-         // MULTI
-         auto pme = dynamic_cast<Multi*>(domain.get());
-         if (pme != nullptr)
-         {
+         case 3:// MULTI
+         { 
+            auto pme = dynamic_cast<Multi*>(domain.get());
+            THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
             process_multi_event(*pme, ignore);
-            return;
          }
 
+         default:
          THROW_EXCEPTION(illegal_state, "Unknown event");
       }
    }

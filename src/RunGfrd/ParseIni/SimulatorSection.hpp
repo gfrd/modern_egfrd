@@ -27,7 +27,7 @@ struct SimulatorSection final : SectionBase
    const std::string key_maintenance_step = "MaintenanceStep";
    const std::string key_maintenance_file = "MaintenanceFile";
 
-   int seed() const { return seed_; }
+   uint seed() const { return seed_; }
    double prepare_time() const { return auto_var_value(key_prepare_time); }
    double end_time() const { return auto_var_value(key_end_time); }
    size_t maintenance_step() const { return maintenance_step_; }
@@ -52,7 +52,7 @@ struct SimulatorSection final : SectionBase
 
 private:
    
-   int parse_seed(const std::string& value) const
+   uint parse_seed(const std::string& value) const
    {
       // if parameter is a string-expression, evaluate it and convert to integer (with stroul for hex or decimal format)
       if (*value.begin() == '$')
@@ -64,12 +64,12 @@ private:
       
       // or parameter is a value-expression, evaluate it and convert to integer (just floor the value)
       const auto eval = vars_->evaluate_value_expression(value, key_seed);
-      return static_cast<int>(std::floor(eval));
+      return static_cast<uint>(std::floor(eval));
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   int seed_;
+   uint seed_;
    size_t maintenance_step_;
    std::string simstate_file_;
 };
