@@ -24,7 +24,26 @@ int GreensFunction3DRadAbs_drawTime()
 
    t = gf.drawTime(1 - 1e-16);
    TINYTEST_FAIL(t <= 0.0 || t >= INFINITY);
-   TINYTEST_ALMOST_EQUALS(1.1574074017561311e-05, t);
+   TINYTEST_ALMOST_EQUAL(1.1574074017561311e-05, t, 1E-8);
+
+   return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+int GreensFunction3DRadAbs_drawTime_Aratz()
+{
+   double D = 1e-12;
+   double kf = 10.0;
+   double r0 = 3.6e-09;
+   double sigma = 2.0e-09;
+   double a = 3.7802592907e-08;
+
+   auto gf = GreensFunction3DRadAbs(D, kf, r0, sigma, a);
+
+   double t = gf.drawTime(0.33756);
+   TINYTEST_FAIL(t <= 0.0 || t >= INFINITY);
+   TINYTEST_ALMOST_EQUALS(0.00013373535249445136, t);
 
    return 1;
 }
@@ -560,6 +579,7 @@ int GreensFunction3DRadAbs_ip_theta_squeezed()
 
 TINYTEST_START_SUITE(GreensFunction3DRadAbs);
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_drawTime);
+TINYTEST_ADD_TEST(GreensFunction3DRadAbs_drawTime_Aratz);
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_drawTime_a_equal_sigma);
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_drawTime_a_near_sigma);
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_drawTime_r0_equal_a);

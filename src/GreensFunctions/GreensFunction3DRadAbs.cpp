@@ -96,15 +96,16 @@ double GreensFunction3DRadAbs::f_alpha0_aux(double alpha) const
 double GreensFunction3DRadAbs::alpha0_i(int i) const
 {
    THROW_UNLESS(std::invalid_argument, i >= 0);
+   const double e = std::numeric_limits<double>::epsilon();
 
    double target = i * M_PI + M_PI_2;
    auto f = [target, this](double alpha) { return f_alpha0_aux(alpha) - target; };
    gsl_lambda<decltype(f)> F(f);
 
-   // We know the range of the solution from - Pi/2 <= atan <= Pi/2.
+   // We know the range of the solution from -Pi/2 <= atan <= Pi/2.
    double interval = M_PI / (a_ - sigma_);
-   double low = i * interval + std::numeric_limits<double>::epsilon();
-   double high = (i + 1) * interval;
+   double low = i * interval + e;
+   double high = (i + 1 + 20 * e) * interval;
 
    root_fsolver_wrapper solver;
    solver.set(&F, low, high);
