@@ -39,17 +39,28 @@ namespace gi
 
    /// template wrapper class for iterators holding type E, independent of container/implementation
    template<typename TContainer, typename E, typename TSelector>
-   class Itr2 : public std::iterator<std::forward_iterator_tag, typename std::remove_cv<E>::type, std::ptrdiff_t, E*, E&>
+   class Itr2
    {
    public:
-      Itr2(typename TContainer::iterator i, const TSelector sel) : citr_(i), sel_(sel) { }
+      Itr2(typename TContainer::iterator i, const TSelector sel) : citr_(std::move(i)), sel_(sel) { }
+      Itr2(const Itr2& o) = default;
+      Itr2(Itr2&& o) noexcept = default;
+      ~Itr2() = default;
+      Itr2& operator=(Itr2 const& o) { citr_ = o.citr_; return *this; }
+      Itr2& operator=(Itr2&& o) = default;
 
       void operator++() { ++citr_; }
       E& operator*() const { return sel_(*citr_); }
-      Itr2& operator=(Itr2& o) { citr_ = o.citr_; return *this; }
-
       bool operator==(const Itr2& o) const { return (citr_ == o.citr_); }
       bool operator!=(const Itr2& o) const { return !(*this == o); }
+
+      // std::iterator_traits
+      using ValueType = typename std::remove_cv<E>::type;
+      typedef std::forward_iterator_tag          iterator_category;
+      typedef ValueType                          value_type;
+      typedef std::ptrdiff_t                     difference_type;
+      typedef ValueType*                         pointer;
+      typedef ValueType&                         reference;
 
    private:
       typename TContainer::iterator citr_;
@@ -59,12 +70,10 @@ namespace gi
    // --------------------------------------------------------------------------------------------------------------------------------
 
    // helper class that holds begin and end iterators of a container (using known implementation/container, which is faster)
-   //template<typename TContainer, typename E = std::remove_cv_t<typename TContainer::value_type>, typename TSelector = Select<E>>
    template<typename TContainer, typename E = typename TContainer::value_type, typename TSelector = Select<E>>
    class iteratorRange
    {
    public:
-
       iteratorRange(const TContainer& c) : begin_(std::begin(const_cast<TContainer&>(c)), TSelector()), end_(std::end(const_cast<TContainer&>(c)), TSelector()) { }
 
       Itr2<TContainer, E, TSelector> begin() const { return begin_; }
@@ -88,10 +97,15 @@ namespace agi
    {
    public:
       ItrBase() = default;
+      ItrBase(const ItrBase& o) = default;
+      ItrBase(const ItrBase&& o) = delete;
       virtual ~ItrBase() = default;
+      ItrBase& operator=(const ItrBase& o) = default;
+      ItrBase& operator=(ItrBase&& o) = delete;
+
       virtual void operator++() {}
-      virtual E& operator*() const = 0; // { return E(); }
-      virtual ItrBase* clone() const = 0; // { return new ItrBase(*this); }
+      virtual E& operator*() const = 0;
+      virtual ItrBase* clone() const = 0;
       bool operator==(const ItrBase& o) const { return typeid(*this) == typeid(o) && equal(o); }
 
    protected:
@@ -102,24 +116,30 @@ namespace agi
 
    /// dynamic generic wrapper class for iterators holding type E, independent of container/implementation
    template<typename E>
-   class Itr : public std::iterator<std::forward_iterator_tag, typename std::remove_cv<E>::type, std::ptrdiff_t, E*, E&>
+   class Itr
    {
    public:
       Itr() : itr_(nullptr) {}
       explicit Itr(ItrBase<E>* impl) : itr_(impl) {}
-
-      ~Itr() { delete itr_; }
       Itr(const Itr& o) : itr_(o.itr_->clone()) {}
-      Itr& operator=(const Itr& o)
-      {
-         if (itr_ != o.itr_) { delete itr_; itr_ = o.itr_->clone(); }
-         return *this;
-      }
+      Itr(Itr&& o) noexcept = default;
+      ~Itr() { delete itr_; }
+      Itr& operator=(const Itr& o) { if (itr_ != o.itr_) { delete itr_; itr_ = o.itr_->clone(); } return *this; }
+      Itr& operator=(Itr&& o) = default;
 
       Itr& operator++() { ++(*itr_); return *this; }
       E& operator*() const { return *(*itr_); }
       bool operator==(const Itr& o) const { return (itr_ == o.itr_) || (*itr_ == *o.itr_); }
       bool operator!=(const Itr& o) const { return !(*this == o); }
+
+      // std::iterator_traits
+      using ValueType = typename std::remove_cv<E>::type;
+      typedef std::forward_iterator_tag          iterator_category;
+      typedef ValueType                          value_type;
+      typedef std::ptrdiff_t                     difference_type;
+      typedef ValueType*                         pointer;
+      typedef ValueType&                         reference;
+
    private:
       ItrBase<E>* itr_;
    };
@@ -131,16 +151,19 @@ namespace agi
    class ItrAll : public ItrBase<E>
    {
    public:
-      ItrAll(const TContainer& c, typename TContainer::iterator i, const TSelector sel = TSelector()) : ItrBase<E>(), c_(c), citr_(i), sel_(sel) { }
-      virtual void operator++() override { ++citr_; }
-      virtual E& operator*() const override { return sel_(*citr_); }
-      virtual ItrBase<E>* clone() const override { return new ItrAll(*this); }
+      ItrAll(const TContainer& c, typename TContainer::iterator i, const TSelector sel = TSelector()) : ItrBase<E>(), c_(c), citr_(std::move(i)), sel_(sel) { }
+      
+      void operator++() override { ++citr_; }
+      E& operator*() const override { return sel_(*citr_); }
+      ItrBase<E>* clone() const override { return new ItrAll(*this); }
+   
    protected:
-      virtual bool equal(const ItrBase<E>& o) const override
+      bool equal(const ItrBase<E>& o) const override
       {
          const ItrAll& o2 = static_cast<const ItrAll&>(o);
          return &c_ == &o2.c_ && citr_ == o2.citr_;
       }
+
    private:
       const TContainer& c_;
       typename TContainer::iterator citr_;
