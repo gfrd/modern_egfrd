@@ -70,7 +70,7 @@ double GreensFunction1DAbsAbs::p_survival_table(double t, DoubleVector& psurvTab
 
    uint maxi = guess_maxi(t);
    if (maxi >= GfCfg.MAX_TERMS())
-      _log.warn() << "drawT: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+      _log.warn() << "drawT: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    if (psurvTable.size() < maxi)
       createPsurvTable(maxi, psurvTable);
@@ -356,7 +356,7 @@ double GreensFunction1DAbsAbs::drawTime(double rnd) const
       {
          if (std::fabs(low) <= t_guess * 1.0e-6 || std::fabs(value - value_prev) < GfCfg.EPSILON*tscale_)
          {
-            _log.warn() << type_name() << ": couldn't adjust low. F(" << std::setprecision(16) << low << ")=" << value << ", " << dump();
+            _log.warn() << type_name() << ": couldn't adjust low. F(" << std::scientific << std::setprecision(16) << low << ")=" << value << ", " << dump();
             return low;
          }
 
@@ -403,7 +403,7 @@ double GreensFunction1DAbsAbs::p_int_r_table(double r, double t, DoubleVector& t
       create_p_int_r_Table(t, maxi, table);
 
    if (maxi >= GfCfg.MAX_TERMS())
-      _log.warn() << "p_int_r_table: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+      _log.warn() << "p_int_r_table: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    double p = funcSum(std::bind(&GreensFunction1DAbsAbs::p_int_r_i, this, std::placeholders::_1, r, t, table), GfCfg.MAX_TERMS());
    return prefac * p;

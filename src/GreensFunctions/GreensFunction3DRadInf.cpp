@@ -279,7 +279,7 @@ DoubleVector GreensFunction3DRadInf::makeRnTable(double r, double t) const
 
       if (n >= MAX_ORDER)
       {
-         _log.info() << "Rn didn't converge, t=" << std::setprecision(16) << t << ", r=" << r;
+         _log.info() << "Rn didn't converge, t=" << std::scientific << std::setprecision(16) << t << ", r=" << r;
          break;
       }
 
@@ -317,7 +317,7 @@ double GreensFunction3DRadInf::drawTheta(double rnd, double r, double t) const
 std::string GreensFunction3DRadInf::dump() const
 {
    std::ostringstream ss;
-   ss << std::setprecision(16) << "D=" << D_ << ", kf=" << kf_ << ", r0=" << r0_ << ", sigma=" << sigma_;
+   ss << std::scientific << std::setprecision(16) << "D=" << D_ << ", kf=" << kf_ << ", r0=" << r0_ << ", sigma=" << sigma_;
    return ss.str();
 }
 

@@ -112,7 +112,7 @@ double funcSum(std::function<double(uint i)> f, uint max_i, double tolerance)
       gsl_sum_levin_utrunc_workspace* workspace = gsl_sum_levin_utrunc_alloc(i);
       gsl_sum_levin_utrunc_accel(&table[0], table.size(), workspace, &sum, &error);
       if (std::fabs(error) >= std::fabs(sum * tolerance * 10))
-         Log("funcSum").error() << "series acceleration failed! sum: " << std::setprecision(16) << sum << ", error: " << std::fabs(error) << " (rel error: " << std::fabs(error / sum) << "), terms_used: " << workspace->terms_used << "/" << table.size() << ", plain_sum=" << workspace->sum_plain;
+         Log("funcSum").error() << "series acceleration failed! sum: " << std::scientific << std::setprecision(16) << sum << ", error: " << std::fabs(error) << " (rel error: " << std::fabs(error / sum) << "), terms_used: " << workspace->terms_used << "/" << table.size() << ", plain_sum=" << workspace->sum_plain;
       gsl_sum_levin_utrunc_free(workspace);
    }
    return sum;

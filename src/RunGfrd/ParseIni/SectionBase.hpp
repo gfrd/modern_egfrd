@@ -66,8 +66,7 @@ protected:
    {
       std::string lcvalue;
       std::transform(value.begin(), value.end(), std::back_inserter(lcvalue), std::bind(std::tolower<char>, std::placeholders::_1, std::locale()));
-      if (lcvalue == "true" || lcvalue == "yes" || lcvalue == "1") return true;
-      return false;
+      return lcvalue == "true" || lcvalue == "yes" || lcvalue == "1";
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -87,7 +86,7 @@ private:
 
 struct SectionModeBase : SectionBase
 {
-   explicit SectionModeBase() : SectionBase(), mode_(modes::Off)    {    }
+   explicit SectionModeBase() : mode_(modes::Off) { }
 
    virtual ~SectionModeBase() = default;
 

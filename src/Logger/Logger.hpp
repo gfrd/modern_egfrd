@@ -38,7 +38,7 @@ public:
    // constructors (no default, need name)
    Logger() = delete;
    explicit Logger(std::string name, loglevel level = loglevel::Info, std::ostream& stream = std::clog) noexcept :
-   name_(name), level_(level), stream_(&stream), prefix_(nullptr), postfix_("\n"), flags_(logflags::All) {}
+      name_(name), level_(level), stream_(&stream), prefix_(nullptr), postfix_("\n"), flags_(logflags::All) {}
 
    // setters
    void set_level(loglevel level) { level_ = level; }

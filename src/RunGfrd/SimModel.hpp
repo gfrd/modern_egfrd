@@ -20,7 +20,7 @@ public:
    std::string name() const override { return "Model"; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
-   
+
    int HandleCommandArguments(size_t& i, const getoptions& args) override
    {
       if (args.isparam(i) && args.option(i) == "d" && args.isvalue(i + 1)) settings_.add_variable(args.option(++i));
@@ -132,7 +132,7 @@ protected:
       auto cns = settings_.getCopyNumbersSection();
       if (cns != nullptr && test_mode_setup(true, cns->mode())) set_copynumbers_section(*cns);
       auto pps = settings_.getParticlePositionsSection();
-      if (pps!= nullptr && test_mode_setup(true, pps->mode())) set_particlepostions_section(*pps);
+      if (pps != nullptr && test_mode_setup(true, pps->mode())) set_particlepostions_section(*pps);
       auto rrs = settings_.getReactionRecordSection();
       if (rrs != nullptr && test_mode_setup(true, rrs->mode())) set_reactionrecord_section(*rrs);
       auto ps = settings_.getProgressSection();
@@ -150,13 +150,13 @@ protected:
       add_particles_section(false);
 
       auto cns = settings_.getCopyNumbersSection();
-      if (cns != nullptr && test_mode_setup(false, cns->mode())) set_copynumbers_section(*cns);
+      if (cns != nullptr && test_mode_setup(false, cns->mode(), true)) set_copynumbers_section(*cns);
       auto pps = settings_.getParticlePositionsSection();
-      if (pps != nullptr && test_mode_setup(false, pps->mode())) set_particlepostions_section(*pps);
+      if (pps != nullptr && test_mode_setup(false, pps->mode(), true)) set_particlepostions_section(*pps);
       auto rrs = settings_.getReactionRecordSection();
-      if (rrs != nullptr && test_mode_setup(false, rrs->mode())) set_reactionrecord_section(*rrs);
+      if (rrs != nullptr && test_mode_setup(false, rrs->mode(), true)) set_reactionrecord_section(*rrs);
       auto ps = settings_.getProgressSection();
-      if (ps != nullptr && test_mode_setup(false, ps->mode(),true)) set_progress_section(false, ps->column_width());
+      if (ps != nullptr && test_mode_setup(false, ps->mode(), true)) set_progress_section(false, ps->column_width());
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -167,11 +167,11 @@ private:
    {
       switch (mode)
       {
-         case SectionModeBase::modes::Off: return false;
-         case SectionModeBase::modes::On: return first || both;
-         case SectionModeBase::modes::Run: return prepare_time() == 0 || !first;
+      case SectionModeBase::modes::Off: return false;
+      case SectionModeBase::modes::On: return first || both;
+      case SectionModeBase::modes::Run: return prepare_time() == 0 || !first;
       }
-      THROW_EXCEPTION(illegal_state,"unknown mode");
+      THROW_EXCEPTION(illegal_state, "unknown mode");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -185,7 +185,7 @@ private:
          simulator_->add_reaction_recorder(cna_.get());
          if (!cns.file().empty())
          {
-            cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+            if (!cfile_.is_open()) cfile_.open(cns.file(), std::fstream::out | std::fstream::trunc);
             cna_->set_output(cfile_);
          }
       }
@@ -195,7 +195,7 @@ private:
          simulator_->add_extrnal_event(0, cni_.get());
          if (!cns.file().empty())
          {
-            cfile_.open(cns.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+            if (!cfile_.is_open()) cfile_.open(cns.file(), std::fstream::out | std::fstream::trunc);
             cni_->set_output(cfile_);
          }
       }
@@ -207,7 +207,7 @@ private:
       simulator_->add_extrnal_event(0, pp_.get());
       if (!pps.file().empty())
       {
-         pfile_.open(pps.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+         if (!pfile_.is_open()) pfile_.open(pps.file(), std::fstream::out | std::fstream::trunc);
          pp_->set_output(pfile_);
       }
    }
@@ -218,7 +218,7 @@ private:
       simulator_->add_reaction_recorder(rrec_.get());
       if (!rrs.file().empty())
       {
-         rfile_.open(rrs.file(), std::fstream::in | std::fstream::out | std::fstream::trunc);
+         if (!rfile_.is_open()) rfile_.open(rrs.file(), std::fstream::out | std::fstream::trunc);
          rrec_->set_output(rfile_);
       }
    }

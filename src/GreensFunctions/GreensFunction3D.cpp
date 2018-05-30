@@ -88,7 +88,7 @@ double GreensFunction3D::drawTheta(double rnd, double r, double t) const
 std::string GreensFunction3D::dump() const
 {
    std::ostringstream ss;
-   ss << std::setprecision(16) << "D=" << D_;
+   ss << std::scientific << std::setprecision(16) << "D=" << D_;
    return ss.str();
 }
 

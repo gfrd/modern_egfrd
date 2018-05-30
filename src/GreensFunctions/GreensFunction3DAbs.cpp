@@ -112,7 +112,7 @@ void GreensFunction3DAbs::makep_nTable(DoubleVector& p_nTable, double r, double 
    for (uint n = 1;;)
    {
       double pn = p_n(n, r, t) * factor;
-      if (!std::isfinite(pn)) { _log.error() << "makep_nTable: invalid value: " << std::setprecision(16) << pn << " (n=" << n << ")"; break; }
+      if (!std::isfinite(pn)) { _log.error() << "makep_nTable: invalid value: " << std::scientific << std::setprecision(16) << pn << " (n=" << n << ")"; break; }
       p_nTable.emplace_back(pn);
 
       double p_n_abs = std::fabs(pn);
@@ -242,7 +242,7 @@ void GreensFunction3DAbs::makedp_nTable(DoubleVector& p_nTable, double t) const
    for (uint n = 1;;)
    {
       double p_n = dp_n(n, t) * factor;
-      if (!std::isfinite(p_n)) { _log.error() << "makedp_nTable: invalid value: " << std::setprecision(16) << p_n << " (n=" << n << ")"; break; }
+      if (!std::isfinite(p_n)) { _log.error() << "makedp_nTable: invalid value: " << std::scientific << std::setprecision(16) << p_n << " (n=" << n << ")"; break; }
       p_nTable.emplace_back(p_n);
 
       double p_n_abs = std::fabs(p_n);
@@ -307,7 +307,7 @@ double GreensFunction3DAbs::drawTime(double rnd) const
    while (GSL_FN_EVAL(&F, high) < 0.0)
    {
       high *= 10;
-      _log.info() << "drawTime: adjusting high: " << std::setprecision(16) << high;
+      _log.info() << "drawTime: adjusting high: " << std::scientific << std::setprecision(16) << high;
       if (std::fabs(high) >= 1e10)
       {
          std::stringstream msg;
@@ -321,7 +321,7 @@ double GreensFunction3DAbs::drawTime(double rnd) const
    {
       low *= .1;
       double low_value_new = GSL_FN_EVAL(&F, low);
-      _log.info() << "drawTime: adjusting low: " << std::setprecision(16) << low << ", F=" << low_value_new;
+      _log.info() << "drawTime: adjusting low: " << std::scientific << std::setprecision(16) << low << ", F=" << low_value_new;
       if (std::fabs(low) <= MIN_T || std::fabs(low_value - low_value_new) < GfCfg.TOLERANCE)
       {
          _log.warn() << "drawTime: couldn't adjust low. F(" << low << ")=" << low_value_new << ", " << dump();
@@ -359,7 +359,7 @@ double GreensFunction3DAbs::drawR(double rnd, double t) const
    double highvalue = GSL_FN_EVAL(&F, high);
    if (highvalue < 0.0)
    {
-      _log.info() << "drawR: high value < 0.0 (" << std::setprecision(16) << highvalue << "). returning a (" << a_ << ")";
+      _log.info() << "drawR: high value < 0.0 (" << std::scientific << std::setprecision(16) << highvalue << "). returning a (" << a_ << ")";
       return a_;
    }
 
@@ -404,7 +404,7 @@ double GreensFunction3DAbs::drawTheta(double rnd, double r, double t) const
 std::string GreensFunction3DAbs::dump() const
 {
    std::ostringstream ss;
-   ss << std::setprecision(16) << "D=" << D_ << ", r0=" << r0_ << ", a=" << a_;
+   ss << std::scientific << std::setprecision(16) << "D=" << D_ << ", r0=" << r0_ << ", a=" << a_;
    return ss.str();
 }
 

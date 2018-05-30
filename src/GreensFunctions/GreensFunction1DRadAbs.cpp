@@ -201,7 +201,7 @@ double GreensFunction1DRadAbs::p_survival_table(double t, DoubleVector& psurvTab
    const uint maxi(guess_maxi(t));
 
    if (maxi >= GfCfg.MAX_TERMS())
-      _log.warn() << "drawT: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+      _log.warn() << "drawT: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    if (psurvTable.size() < maxi)
    {
@@ -549,7 +549,7 @@ double GreensFunction1DRadAbs::p_int_r_table(double r, double t, DoubleVector& t
    const double prefac(2.0*exp(vexpo));
 
    if (maxi >= GfCfg.MAX_TERMS())
-      _log.warn() << "p_int_r_table: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+      _log.warn() << "p_int_r_table: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    if (table.size() < maxi)
    {

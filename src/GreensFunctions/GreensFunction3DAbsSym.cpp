@@ -219,7 +219,7 @@ double GreensFunction3DAbsSym::drawR(double rnd, double t) const
 std::string GreensFunction3DAbsSym::dump() const
 {
    std::ostringstream ss;
-   ss << std::setprecision(16) << "D=" << D_ << ", a=" << a_;
+   ss << std::scientific << std::setprecision(16) << "D=" << D_ << ", a=" << a_;
    return ss.str();
 }
 

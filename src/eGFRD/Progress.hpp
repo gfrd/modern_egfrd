@@ -14,6 +14,7 @@ public:
    {
       log_.set_stream(std::clog);
       log_.set_flags(Logger::logflags::Name | Logger::logflags::Separator);
+      log_.set_postfix("\r");
    }
 
    void do_action(double time) override
@@ -26,13 +27,13 @@ public:
 private:
    void print_progress(double time) const
    {
-      double progress = time / end_time_;
-      int progressi = static_cast<int>(std::round(length_ * progress));
+      const double progress = time / end_time_;
+      const auto stars = static_cast<int>(std::round(length_ * progress));
       std::stringstream line;
       line << "[";
-      for (int i = 0; i < progressi; i++) line << "*";
-      for (int i = progressi; i < length_; i++) line << ".";
-      line << "] " << std::fixed << std::setprecision(1) << progress*100.0 << " %%";
+      for (int i = 0; i < stars; i++) line << "*";
+      for (int i = stars; i < length_; i++) line << ".";
+      line << "] " << std::fixed << std::setprecision(1) << progress * 100.0 << " %";
       log_.info() << line.str();
    }
 

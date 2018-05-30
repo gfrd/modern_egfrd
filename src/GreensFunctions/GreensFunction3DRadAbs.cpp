@@ -369,7 +369,7 @@ void GreensFunction3DRadAbs::updateAlphaTable(uint n, double t) const
    uint end = offset + MAX_ALPHA_SEQ;
    for (uint i = offset + 1; ; ++i)
    {
-      if (i >= end) { _log.info() << "alphaTable (" << n << "): didn't converge. t=" << std::setprecision(16) << t << ", " << dump().c_str(); break; }
+      if (i >= end) { _log.info() << "alphaTable (" << n << "): didn't converge. t=" << std::scientific << std::setprecision(16) << t << ", " << dump().c_str(); break; }
 
       double alphai = alpha_i(i, n, solver);
       alphaTable_n.emplace_back(alphai);
@@ -860,7 +860,7 @@ double GreensFunction3DRadAbs::drawTheta(double rnd, double r, double t) const
 std::string GreensFunction3DRadAbs::dump() const
 {
    std::ostringstream ss;
-   ss << std::setprecision(16) << "D=" << D_ << ", kf=" << kf_ << ", r0=" << r0_ << ", sigma=" << sigma_ << ", a=" << a_;
+   ss << std::scientific << std::setprecision(16) << "D=" << D_ << ", kf=" << kf_ << ", r0=" << r0_ << ", sigma=" << sigma_ << ", a=" << a_;
    return ss.str();
 }
 

@@ -137,7 +137,7 @@ DoublePair GreensFunction1DAbsSinkAbs::get_lower_and_upper()
    /* f_lower must have correct sign. */
    if (f_lower * parity_op > 0)
    {
-      _log.warn() << "f(lower) has wrong sign at root# " << (rootList_size() + 1) << ", for h=" << std::setprecision(16) << luparams.h << ", Lm/L=" << luparams.Lm_L;
+      _log.warn() << "f(lower) has wrong sign at root# " << (rootList_size() + 1) << ", for h=" << std::scientific << std::setprecision(16) << luparams.h << ", Lm/L=" << luparams.Lm_L;
       _log.warn() << "f_low( " << lower << " )=" << f_lower << " , f_high(" << upper << ")=" << f_upper;
    }
 
@@ -261,7 +261,7 @@ double GreensFunction1DAbsSinkAbs::p_survival_table(double t, DoubleVector& psur
    const uint maxi(guess_maxi(t));
 
    if (maxi == GfCfg.MAX_TERMS())
-      _log.info() << "drawT: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+      _log.info() << "drawT: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    if (psurvTable.size() < maxi)
    {
@@ -501,7 +501,7 @@ GreensFunction::EventKind GreensFunction1DAbsSinkAbs::drawEventType(double rnd, 
    /* Already fill rootList with needed roots. */
    const uint maxi(guess_maxi(t));
 
-   if (maxi == GfCfg.MAX_TERMS()) _log.info() << "drawEventType: maxi was cut to MAX_TERMS for t=" << std::setprecision(16) << t;
+   if (maxi == GfCfg.MAX_TERMS()) _log.info() << "drawEventType: maxi was cut to MAX_TERMS for t=" << std::scientific << std::setprecision(16) << t;
 
    calculate_n_roots(maxi);
    rnd *= flux_tot(t);
