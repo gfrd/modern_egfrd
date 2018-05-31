@@ -204,7 +204,7 @@ inline Vector3 operator*(double lhs, const Vector3& rhs)
 
 inline std::ostream& operator<<(std::ostream& stream, const Vector3& v)
 {
-   stream << std::scientific << std::setprecision(12) << "(" << v.X() << ", " << v.Y() << ", " << v.Z() << ")";
+   stream << std::defaultfloat << std::setprecision(12) << "(" << v.X() << ", " << v.Y() << ", " << v.Z() << ")";
    return stream;
 }
 
