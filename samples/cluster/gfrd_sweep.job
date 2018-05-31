@@ -1,0 +1,59 @@
+#!/bin/bash
+# gfrd parameter sweep
+# submit with: qsub -l nodes=compute-0-x gfrd_sweep.job
+
+job=equil
+#PBS -lnodes=1 -lwalltime=168:00:00
+#PBS -N gfrd_$job
+#PBS -m abe
+#PBS -M m.seynen@amolf.nl
+
+source load_stopos
+
+echo Job $job started on `date`
+ncores=`sara-get-num-cores`
+memsize=`sara-get-mem-size`
+cpuinfo=`cat /proc/cpuinfo | grep 'model name' | head -n 1 | sed 's/\(.*\):\(.*\)/\2/'`
+echo Host $HOSTNAME
+echo CPU $cpuinfo 
+echo Cores $ncores 
+echo Memory $memsize GB.
+
+export PATH=$PATH:~/modern_egfrd/build/bin/
+export STOPOS_POOL=pool_$job
+outdir=$HOME/output_$job
+mkdir -p $outdir
+for ((i=1; i<=ncores; i++)) ; do
+(
+  while true ; do
+    stopos next -m
+    if [ "$STOPOS_RC" != "OK" ] ; then
+      break
+    fi
+    if [ "$STOPOS_COMMITTED" -gt 3 ] ; then
+      stopos remove
+      continue
+    fi
+    
+    a=( $STOPOS_VALUE )
+    C=${a[0]}
+    seed=${a[1]}
+
+    outfile=`mktemp`
+    errfile=`mktemp`
+    sfile=`mktemp`
+    cnfile=`mktemp`
+
+    echo Run key $STOPOS_KEY
+    RunGfrd equilibrium.gfrd -d C=$C -d seed=$seed -d cnfile=\$\'$cnfile\' -d sfile=\$\'$sfile\' > $outfile 2> $errfile
+
+    mv $outfile $outdir/$job_$STOPOS_KEY.out
+    mv $errfile $outdir/$job_$STOPOS_KEY.err
+    mv $sfile $outdir/$job_$STOPOS_KEY.bin
+    mv $cnfile $outdir/$job_$STOPOS_KEY.cn
+    stopos remove
+  done
+) &
+done
+wait
+echo Job ended on `date`

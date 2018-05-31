@@ -39,19 +39,6 @@ int testVector3Create()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-int testVector3Print()
-{
-   auto v1 = Vector3(10, -20, 30);
-
-   std::stringstream sstream;
-   sstream << v1;
-   TINYTEST_STR_EQUAL_MSG("(10, -20, 30)", sstream.str().c_str(), "print");
-
-   return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 int testVector3Normalize()
 {
    auto v1 = Vector3(10, -20, 30);
@@ -80,7 +67,6 @@ int testVector3Random()
 
 TINYTEST_START_SUITE(Vector3);
 TINYTEST_ADD_TEST(testVector3Create);
-TINYTEST_ADD_TEST(testVector3Print);
 TINYTEST_ADD_TEST(testVector3Normalize);
 TINYTEST_ADD_TEST(testVector3Random);
 TINYTEST_END_SUITE();

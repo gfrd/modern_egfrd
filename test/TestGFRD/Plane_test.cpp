@@ -165,20 +165,6 @@ int testPlaneRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-/* Tests the Plane print to stream function. */
-int testPlanePrint()
-{
-    Plane b1;
-
-    std::stringstream sstream;
-    sstream << b1;
-    TINYTEST_STR_EQUAL("Plane{P=(0, 0, 0), HE=(0.5, 0.5), U=x(1, 0, 0),y(0, 1, 0),z(0, 0, 1)}", sstream.str().c_str());
-
-    return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Plane);
 TINYTEST_ADD_TEST(testPlaneCreate);
 TINYTEST_ADD_TEST(testPlaneDof);
@@ -189,7 +175,6 @@ TINYTEST_ADD_TEST(testPlaneProject_point_on_surface);
 TINYTEST_ADD_TEST(testPlaneDistance);
 TINYTEST_ADD_TEST(testPlaneDeflect);
 TINYTEST_ADD_TEST(testPlaneRandom_position);
-TINYTEST_ADD_TEST(testPlanePrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------

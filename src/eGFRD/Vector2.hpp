@@ -168,7 +168,7 @@ inline Vector2 operator*(double lhs, const Vector2& rhs)
 
 inline std::ostream& operator<<(std::ostream& stream, const Vector2& v)
 {
-   stream << std::defaultfloat << std::setprecision(12) << "(" << v.X() << ", " << v.Y() << ")";
+   stream << std::scientific << std::setprecision(12) << "(" << v.X() << ", " << v.Y() << ")";
    return stream;
 }
 

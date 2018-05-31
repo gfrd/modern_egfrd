@@ -1,0 +1,6 @@
+#!/bin/bash
+export STOPOS_POOL=pool_$1
+stopos purge
+stopos create
+stopos add ~/paramset
+stopos status

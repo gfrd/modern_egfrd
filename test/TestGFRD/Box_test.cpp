@@ -167,20 +167,6 @@ int testBoxRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-/* Tests the Box print to stream function. */
-int testBoxPrint()
-{
-   Box b1;
-
-   std::stringstream sstream;
-   sstream << b1;
-   TINYTEST_STR_EQUAL("Box{P=(0, 0, 0), HE=(0.5, 0.5, 0.5), U=x(1, 0, 0),y(0, 1, 0),z(0, 0, 1)}", sstream.str().c_str());
-
-   return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Box);
 TINYTEST_ADD_TEST(testBoxCreate);
 TINYTEST_ADD_TEST(testBoxDof);
@@ -191,7 +177,6 @@ TINYTEST_ADD_TEST(testBoxProject_point_on_surface);
 TINYTEST_ADD_TEST(testBoxDistance);
 TINYTEST_ADD_TEST(testBoxDeflect);
 TINYTEST_ADD_TEST(testBoxRandom_position);
-TINYTEST_ADD_TEST(testBoxPrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------

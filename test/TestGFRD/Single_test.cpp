@@ -66,27 +66,10 @@ int testSingleMembers()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-int testSinglePrint()
-{
-   //auto domain_id = DomainID(256);
-   //auto pair_shell = std::make_pair(ShellID(512), Shell(domain_id, Sphere(Vector3(1, 2, 3), 10)));
-   //auto pair_particle(std::make_pair(ParticleID(1024), Particle(SpeciesTypeID(2056), Sphere(Vector3(10, 9, 8), 10), StructureID(4112), 0.01)));
-   //auto analytical_single = Single(domain_id, pair_particle, pair_shell);
-
-   //std::stringstream sstream;
-   //sstream << analytical_single;
-   //TINYTEST_STR_EQUAL_MSG("Single{(DID(256),PID(1024)),dt=0}", sstream.str().c_str(), "print");
-
-   return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Single);
 TINYTEST_ADD_TEST(testSingleCreate);
 TINYTEST_ADD_TEST(testSingleRandomPosition);
 TINYTEST_ADD_TEST(testSingleMembers);
-TINYTEST_ADD_TEST(testSinglePrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------

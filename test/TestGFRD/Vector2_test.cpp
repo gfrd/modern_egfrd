@@ -24,19 +24,6 @@ int testVector2Create()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-int testVector2Print()
-{
-    auto v1 = Vector2(10, -20);
-
-    std::stringstream sstream;
-    sstream << v1;
-    TINYTEST_STR_EQUAL_MSG("(10, -20)", sstream.str().c_str(), "print");
-
-    return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 int testVector2Normalize()
 {
     auto v1 = Vector2(10, -20);
@@ -63,7 +50,6 @@ int testVector2Random()
 
 TINYTEST_START_SUITE(Vector2);
 TINYTEST_ADD_TEST(testVector2Create);
-TINYTEST_ADD_TEST(testVector2Print);
 TINYTEST_ADD_TEST(testVector2Normalize);
 TINYTEST_ADD_TEST(testVector2Random);
 TINYTEST_END_SUITE();

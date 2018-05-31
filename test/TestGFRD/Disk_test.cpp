@@ -148,19 +148,6 @@ int testDiskRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-/* Tests the Disk's print to stream function. */
-int testDiskPrint()
-{
-    Disk d1;
-
-    std::stringstream sstream;
-    sstream << d1;
-    TINYTEST_STR_EQUAL("Disk{P=(0, 0, 0), R=0, U=z(0, 0, 1)}", sstream.str().c_str());
-    return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Disk);
 TINYTEST_ADD_TEST(testDiskCreate);
 TINYTEST_ADD_TEST(testDiskDof);
@@ -171,7 +158,6 @@ TINYTEST_ADD_TEST(testDiskProject_point_on_surface);
 TINYTEST_ADD_TEST(testDiskDistance);
 TINYTEST_ADD_TEST(testDiskDeflect);
 TINYTEST_ADD_TEST(testDiskRandom_position);
-TINYTEST_ADD_TEST(testDiskPrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------

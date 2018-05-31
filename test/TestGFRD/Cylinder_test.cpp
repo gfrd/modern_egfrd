@@ -153,19 +153,6 @@ int testCylinderRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-/* Tests the Cylinder's print to stream function. */
-int testCylinderPrint()
-{
-    auto d1 = Cylinder();
-
-    std::stringstream sstream;
-    sstream << d1;
-    TINYTEST_STR_EQUAL("Cylinder{P=(0, 0, 0), R=1, HL=0.5, U=z(0, 0, 1)}", sstream.str().c_str());
-    return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Cylinder);
 TINYTEST_ADD_TEST(testCylinderCreate);
 TINYTEST_ADD_TEST(testCylinderDof);
@@ -176,7 +163,6 @@ TINYTEST_ADD_TEST(testCylinderProject_point_on_surface);
 TINYTEST_ADD_TEST(testCylinderDistance);
 TINYTEST_ADD_TEST(testCylinderDeflect);
 TINYTEST_ADD_TEST(testCylinderRandom_position);
-TINYTEST_ADD_TEST(testCylinderPrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------

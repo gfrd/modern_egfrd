@@ -148,19 +148,6 @@ int testSphereRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-/* Tests the Sphere's print to stream function. */
-int testSpherePrint()
-{
-    Sphere s1;
-
-    std::stringstream sstream;
-    sstream << s1;
-    TINYTEST_STR_EQUAL("Sphere{P=(0, 0, 0), R=0}", sstream.str().c_str());
-    return 1;
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
 TINYTEST_START_SUITE(Sphere);
 TINYTEST_ADD_TEST(testSphereCreate);
 TINYTEST_ADD_TEST(testSphereDof);
@@ -171,7 +158,6 @@ TINYTEST_ADD_TEST(testSphereProject_point_on_surface);
 TINYTEST_ADD_TEST(testSphereDistance);
 TINYTEST_ADD_TEST(testSphereDeflect);
 TINYTEST_ADD_TEST(testSphereRandom_position);
-TINYTEST_ADD_TEST(testSpherePrint);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------
