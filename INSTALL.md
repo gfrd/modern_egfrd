@@ -80,7 +80,7 @@
 
 
 
-1. Get [Visual Studio Community 2017](https://www.visualstudio.com/)
+1. Get a [Visual Studio IDE 2017](https://www.visualstudio.com/)
 
    Run the installer and select "Desktop development with C++" and under 'Individual Components' check 'Visual C++ tools for CMake'.
 
@@ -98,7 +98,7 @@
    ```
    > SET VCPKG_ROOT=<your vcpkg path>
    ```
-   or for a more permanent setting, open 'Advanced System Settings' and set the _VCPKG_ROOT_ environment here. Then also check that '<vcpkg>' directory and 'CMake' are in the PATH environment variable.
+   or for a more permanent setting, open 'Advanced System Settings' and set the _VCPKG_ROOT_ environment here. Then also check that 'vcpkg' directory and 'CMake' are in the PATH environment variable.
    
 
 3. Get source codes:
