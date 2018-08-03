@@ -80,9 +80,9 @@
 
 
 
-1. Get a [Visual Studio IDE 2017](https://www.visualstudio.com/)
+1. Get a [Visual Studio IDE 2017](https://www.visualstudio.com/) (any flavor)
 
-   Run the installer and select "Desktop development with C++" and under 'Individual Components' check 'Visual C++ tools for CMake'.
+   Run the installer and select "Desktop development with C++" and under 'Individual Components' check 'Visual C++ tools for CMake' and 'Git for Windows'.
 
    
 2. Get the dependencies:

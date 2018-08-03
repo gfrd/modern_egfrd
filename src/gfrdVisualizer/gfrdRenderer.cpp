@@ -47,11 +47,11 @@ uint     cfgSelectedShellColor = 0x0F0E0D0;
 uint     cfgSelectedStructureColor = 0x0D0E0F0;
 uint     cfgSelectedParticleColor = 0x0D4AF37;
 
-uint     cfgShellColors[] = { 0x0A050F0 , 0x0F0F000 , 0x000F000 , 0x0F00000 };    // INIT(violet), SINGLE(yellow), PAIR(green), MULTI(red)
+uint     cfgShellColors[] = { 0x0A050F0 , 0x0F0F000 , 0x000F000 , 0x0F00000, 0x0D4AF37 };    // INIT(violet), SINGLE(yellow), PAIR(green), MULTI(red), SELECTED(gold)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
+void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpid, bool drawShells, StructureTypeID selStructure, ParticleID selParticle, DomainID selDomain, std::array<uint, 3>& domain_type_count)
 {
    const World& w = s.world();
    drawMatrix(w.cell_size(), w.matrix_size());
@@ -60,29 +60,30 @@ void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpi
    auto v = cam.calculate(Vector3::uy).normal();
    glEnable(GL_LIGHTING);
    for (auto p : w.get_particles())
-      drawParticle(p, ParticleID(selParticle), showpid, v, &s.world());
+      drawParticle(p, selParticle, showpid, v, &s.world());
 
    drawAllStructures(w.get_structures(), cam, selStructure);
 
    if (!drawShells) return;
 
-   std::vector<std::pair<std::reference_wrapper<const Shell>,uint>> shells;
+   std::vector<std::pair<std::reference_wrapper<const Shell>, uint>> shells;
    for (auto& domain : s.get_domains())
    {
-      domain_type_count[static_cast<int>(domain.second->multiplicity())-1]++;
-      if (domain.second.get()->num_shells() == 1)
+      domain_type_count[static_cast<int>(domain.second->multiplicity()) - 1]++;
+      if (domain.second->num_shells() == 1)
       {
-          uint clrCode = domain.second.get()->get_shell().second.get().code() == Shell::Code::INIT ? 0 : static_cast<int>(domain.second->multiplicity());
-          shells.emplace_back(std::make_pair(domain.second.get()->get_shell().second, clrCode));
+         uint clrCode = selDomain == domain.first ? 4 : domain.second->get_shell().second.get().code() == Shell::Code::INIT ? 0 : static_cast<int>(domain.second->multiplicity());
+         shells.emplace_back(std::make_pair(domain.second->get_shell().second, clrCode));
       }
       else
       {
-         for (const auto& sis : domain.second.get()->get_shell_list())
-            shells.emplace_back(std::make_pair(sis.second, 3u));
+         uint clrCode = selDomain == domain.first ? 4u : 3u;
+         for (const auto& sis : domain.second->get_shell_list())
+            shells.emplace_back(std::make_pair(sis.second, clrCode));
       }
    }
 
-   auto u = cam.calculate(Vector3::ux).normal();
+   const auto u = cam.calculate(Vector3::ux).normal();
    drawAllShells(shells, u);
 }
 
@@ -99,11 +100,11 @@ void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid,
    for (auto p : w.get_particles())
       drawParticle(p, ParticleID(selParticle), showpid, v, nullptr);
 
-   drawAllStructures(w.get_structures(), cam, selStructure);
+   drawAllStructures(w.get_structures(), cam, StructureTypeID(selStructure));
 
    if (!drawShells) return;
 
-   std::vector<std::pair<std::reference_wrapper<const Shell>,uint>> shells;
+   std::vector<std::pair<std::reference_wrapper<const Shell>, uint>> shells;
    DomainID did;
    for (const auto& sp : w.get_domains())
    {
@@ -118,7 +119,7 @@ void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid,
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void drawAllStructures(StructureContainer::structures_range s, const CameraController& cam, uint selStructure)
+void drawAllStructures(StructureContainer::structures_range s, const CameraController& cam, StructureTypeID selStructure)
 {
    UNUSED(cam);
    for (auto st : s)
@@ -127,16 +128,16 @@ void drawAllStructures(StructureContainer::structures_range s, const CameraContr
       if (box != nullptr) drawBox(box->shape());
 
       auto *plane = dynamic_cast<PlanarSurface*>(st.get());
-      if (plane != nullptr) drawPlane(plane->shape(), plane->sid(), plane->sid() == StructureTypeID(selStructure));
+      if (plane != nullptr) drawPlane(plane->shape(), plane->sid(), plane->sid() == selStructure);
 
       auto *disk = dynamic_cast<DiskSurface *>(st.get());
-      if (disk != nullptr) drawDisk(disk->shape(), disk->sid(), disk->sid() == StructureTypeID(selStructure));
+      if (disk != nullptr) drawDisk(disk->shape(), disk->sid(), disk->sid() == selStructure);
 
       auto *sphere = dynamic_cast<SphericalSurface *>(st.get());
-      if (sphere != nullptr) drawSphere(sphere->shape(), sphere->sid(), sphere->sid() == StructureTypeID(selStructure));
+      if (sphere != nullptr) drawSphere(sphere->shape(), sphere->sid(), sphere->sid() == selStructure);
 
       auto *cyl = dynamic_cast<CylindricalSurface*>(st.get());
-      if (cyl != nullptr) drawCylinder(cyl->shape(), cyl->sid(), cyl->sid() == StructureTypeID(selStructure));
+      if (cyl != nullptr) drawCylinder(cyl->shape(), cyl->sid(), cyl->sid() == selStructure);
    }
 }
 
@@ -226,7 +227,7 @@ void drawParticle(const Particle::particle_id_pair& pip, ParticleID selParticle,
    auto x1 = pip.second.position() + 1.05 * pip.second.radius() * v;
    glDisable(GL_LIGHTING);
    glRasterPos3d(x1.X(), x1.Y(), x1.Z());
-   
+
    if (showID == 1)
       glutBitmapString(GLUT_BITMAP_8_BY_13, reinterpret_cast<const unsigned char*>(static_cast<std::string>(make_string() << static_cast<idtype>(pip.first)).c_str()));
    else

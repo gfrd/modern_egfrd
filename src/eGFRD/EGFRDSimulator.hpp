@@ -43,6 +43,10 @@ public:
 
    gi::iteratorRange<domain_map> get_domains() const { return gi::iteratorRange<domain_map>(domains_); }
 
+   bool has_domain(DomainID did) const {return domains_.find(did) != domains_.end(); }
+
+   const Domain& get_domain(DomainID did) { auto& domain = domains_[did]; return *domain; }
+
    // --------------------------------------------------------------------------------------------------------------------------------
 
    GFRD_EXPORT void dump(std::string filename, bool append = false) const;
@@ -229,10 +233,6 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   const Domain& get_domain(DomainID did) { auto& domain = domains_[did]; return *domain; }
-
-   // --------------------------------------------------------------------------------------------------------------------------------
-
    void pre_run_check() const
    {
       // check overlaping (or touching) particles at start (user input error)
@@ -258,7 +258,7 @@ private:
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
-   
+
    void initialize()
    {
       shellmat_.initialize(world_.cell_size());
@@ -334,28 +334,28 @@ private:
 
       switch (domain->multiplicity())
       {
-         case Domain::Multiplicity::SINGLE:
-         {
-            auto pse = dynamic_cast<Single*>(domain.get());
-            THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
+      case Domain::Multiplicity::SINGLE:
+      {
+         auto pse = dynamic_cast<Single*>(domain.get());
+         THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
             process_single_event(*pse, ignore);
-         } break;
+      } break;
 
-         case Domain::Multiplicity::PAIR:
-         {
-            auto ppe = dynamic_cast<Pair*>(domain.get());
-            THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
+      case Domain::Multiplicity::PAIR:
+      {
+         auto ppe = dynamic_cast<Pair*>(domain.get());
+         THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
             process_pair_event(*ppe, ignore);
-         } break;
+      } break;
 
-         case Domain::Multiplicity::MULTI:
-         { 
-            auto pme = dynamic_cast<Multi*>(domain.get());
-            THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
+      case Domain::Multiplicity::MULTI:
+      {
+         auto pme = dynamic_cast<Multi*>(domain.get());
+         THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
             process_multi_event(*pme, ignore);
-         } break;
+      } break;
 
-         default:
+      default:
          THROW_EXCEPTION(illegal_state, "Unknown event");
       }
    }

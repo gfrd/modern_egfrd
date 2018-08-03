@@ -31,8 +31,9 @@ int drawPid = 0;
 bool autoSim = false;
 bool autoCheck = false;
 bool showHelp = false;
-uint selParticle = 0;
-uint selStructure = 0;
+idtype selParticle = 0;
+idtype selDomain = 0;
+idtype selStructure = 0;
 uint selSection = 0;
 std::string statefile;
 
@@ -40,7 +41,7 @@ std::string statefile;
 
 std::vector<std::string> help = { "ESC = exit" , "H = show help", "F = full screen", "S = show shells", "D = demo rotate", "P = screenshot", "O = draw origin" ,"I = particle ID/SID" ,
                                    ". = sim step", "/ = check sim", "A = auto", "B = burst all",  "</> = select structure",
-                                   "+/- = select particle", "g = goto particle", "0 = deselect particle", "C = center world", };
+                                   "+/- = select particle", "g = goto particle", "0 = deselect all", "[/] = select domain", "j = goto domain", "C = center world", };
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
       case 'd': case 'D': cam.set_demo(!cam.demo()); break;
       case 'p': case 'P': screenshot(static_cast<int>(sptr ? sptr->num_steps() : extSim.num_steps())); break;
       case 'o': case 'O': drawOrig = !drawOrig; glutPostRedisplay(); break;
-      case 'i': case 'I': drawPid++; if (drawPid==3) drawPid = 0; glutPostRedisplay(); break;
+      case 'i': case 'I': drawPid++; if (drawPid == 3) drawPid = 0; glutPostRedisplay(); break;
 
       case '.': if (sptr) sptr->step(); else extSim.readSimFile(extSim.get_filename()); glutPostRedisplay(); break;
       case '/': if (sptr) check_sim(); break;
@@ -99,7 +100,12 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
       case '+': selParticle++; glutPostRedisplay(); break;
       case '-': if (selParticle > 0) { selParticle--; glutPostRedisplay(); } break;
       case 'g': case 'G': std::cout << "Enter ParticleID: ";  std::cin >> selParticle; if (selParticle > 0) { glutPostRedisplay(); } break;
-      case '0': selParticle = 0; glutPostRedisplay(); break;
+
+      case ']': selDomain++; glutPostRedisplay(); break;
+      case '[': if (selDomain > 0) { selDomain--; glutPostRedisplay(); } break;
+      case 'j': case 'J': std::cout << "Enter DomainID: ";  std::cin >> selDomain; if (selDomain > 0) { glutPostRedisplay(); } break;
+
+      case '0': selParticle = 0; selDomain = 0;  glutPostRedisplay(); break;
       case 'c': case 'C': selParticle = 0;
          if (sptr)
          {
@@ -281,6 +287,8 @@ void handleDisplay(void)
 
       // follow particle
       bool selParExists = false;
+      bool selDomExists = false;
+
       if (selParticle > 0)
       {
          auto selPid = ParticleID(selParticle);
@@ -304,6 +312,26 @@ void handleDisplay(void)
             }
          }
       }
+      else
+         if (selDomain > 0)
+         {
+            auto selD = DomainID(selDomain);
+            if (sptr != nullptr && sptr->has_domain(selD))
+            {
+               auto& d = sptr->get_domain(selD);
+               Vector3 look(0, 0, 0);
+               if (d.multiplicity() == Domain::Multiplicity::MULTI)
+               {
+                  for (auto &s : d.get_shell_list())
+                     look += s.second.get().position();
+                  look /= d.num_shells();
+               }
+               else
+                  look = d.get_shell().second.get().position();
+               cam.lookTo(side * look);
+               selDomExists = true;
+            }
+         }
 
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
@@ -314,7 +342,7 @@ void handleDisplay(void)
 
       std::array<uint, 3> domain_type_count{ 0,0,0 };
       if (sptr != nullptr)
-         RenderGFRD(*sptr, cam, drawPid, drawShells, selStructure, selParticle, domain_type_count);
+         RenderGFRD(*sptr, cam, drawPid, drawShells, StructureTypeID(selStructure), ParticleID(selParticle), DomainID(selDomain), domain_type_count);
       else
          RenderGFRDExtern(extSim, cam, drawPid, drawShells, selStructure, selParticle, domain_type_count);
 
@@ -348,6 +376,14 @@ void handleDisplay(void)
             y -= 18;
             glRasterPos2i(2, y - glutBitmapHeight(GLUT_BITMAP_9_BY_15) + viewport[3]);
             std::string msg2 = make_string() << "sel PID: " << selParticle << (selParExists ? "." : "!");
+            glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>(msg2.c_str()));
+         }
+
+         if (selDomain > 0)
+         {
+            y -= 18;
+            glRasterPos2i(2, y - glutBitmapHeight(GLUT_BITMAP_9_BY_15) + viewport[3]);
+            std::string msg2 = make_string() << "sel DID: " << selDomain << (selDomExists ? "." : "!");
             glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>(msg2.c_str()));
          }
 
@@ -593,7 +629,7 @@ int main(int argc, char** argv)
          {
             double f = static_cast<double>(i) / (sequence.size() - 1);
             Vector3 posY = Vector3(ws.X() / 2, f * ws.Y(), ws.Z() / 2);
-            double phi = f*turns * 2 * M_PI;
+            double phi = f * turns * 2 * M_PI;
             double arclength = std::sqrt(std::pow(M_PI * 2 * length*turns, 2) + std::pow(ws.Y(), 2)) / (2 * (sequence.size() - 1));
             Vector3 strand = length * Vector3(std::cos(phi), 0, std::sin(phi));
             Vector3 vz = Vector3::transformVector(Vector3::ux, Matrix4::createRotationY(phi));
