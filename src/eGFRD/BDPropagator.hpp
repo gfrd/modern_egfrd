@@ -153,26 +153,23 @@ private:
       int retry_count = max_retry_count_;
       while (retry_count--)
       {
-         // TODO structure->get_pos_sid_pair_pair not implemented
          pos_sid_pair_pair posAB_pair = reactant_structure->get_pos_sid_pair_pair(*reactant_structure, reactant_pos, species1, species2, reaction_length_, rng_);
 
          auto p1pip = world_.apply_boundary(posAB_pair.first);
          auto p2pip = world_.apply_boundary(posAB_pair.second);
 
          // check for particle overlap with product 1.
-         Sphere new_shape1(posAB_pair.first.first, species1.radius());
+         Sphere new_shape1(p1pip.first, species1.radius());
          if (world_.test_particle_overlap(new_shape1, pip.first)) continue;
 
          // check for particle overlap with product 2.
-         Sphere new_shape2(posAB_pair.second.first, species2.radius());
+         Sphere new_shape2(p2pip.first, species2.radius());
          if (world_.test_particle_overlap(new_shape2, pip.first)) continue;
 
          posAB_pair = make_pair_move(species1, species2, p1pip, p2pip, pip.first);
 
-         if (!vc_.check_move(new_shape1, pip.first))
-            return false;
-         if (!vc_.check_move(new_shape2, pip.first))
-            return false;
+         if (!vc_.check_move(new_shape1, pip.first)) continue;
+         if (!vc_.check_move(new_shape2, pip.first)) continue;
 
          // no checking of movement to other structure types!!!
          // no checking whether particle has overlapping surface!!!
