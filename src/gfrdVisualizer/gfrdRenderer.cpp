@@ -89,7 +89,7 @@ void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpi
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count)
+void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid, bool drawShells, idtype selStructure, idtype selParticle, std::array<uint, 3>& domain_type_count)
 {
    drawMatrix(w.cell_size(), w.matrix_size());
    drawBox(Box(w.world_size() / 2, w.world_size() / 2));

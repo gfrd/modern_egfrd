@@ -15,7 +15,7 @@ class ExtSim;
 inline void glVertex3(Vector3 v) { glVertex3d(v.X(), v.Y(), v.Z()); }
 
 void RenderGFRD(const EGFRDSimulator& s, const CameraController& cam, int showpid, bool drawShells, StructureTypeID selStructure, ParticleID selParticle, DomainID selDomain, std::array<uint, 3>& domain_type_count);
-void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid, bool drawShells, uint selStructure, uint selParticle, std::array<uint, 3>& domain_type_count);
+void RenderGFRDExtern(const ExtSim& w, const CameraController& cam, int showpid, bool drawShells, idtype selStructure, idtype selParticle, std::array<uint, 3>& domain_type_count);
 
 void drawAllStructures(StructureContainer::structures_range, const CameraController& cam, StructureTypeID selStructure);
 void drawAllShells(const std::vector<std::pair<std::reference_wrapper<const Shell>, uint>>& shells, const Vector3& u);

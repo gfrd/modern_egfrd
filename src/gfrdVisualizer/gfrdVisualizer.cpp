@@ -324,7 +324,7 @@ void handleDisplay(void)
                {
                   for (auto &s : d.get_shell_list())
                      look += s.second.get().position();
-                  look /= d.num_shells();
+                  look /= static_cast<double>(d.num_shells());
                }
                else
                   look = d.get_shell().second.get().position();
