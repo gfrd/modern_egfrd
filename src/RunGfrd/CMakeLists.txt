@@ -11,3 +11,9 @@ endif()
 target_link_libraries(RunGfrd PRIVATE eGFRD)
 
 target_compile_features (RunGfrd PRIVATE cxx_noexcept cxx_deleted_functions cxx_nullptr cxx_auto_type cxx_range_for cxx_override cxx_alias_templates)
+
+if (WIN32)
+	configure_file(Resources/resource.rc.in resource.rc @ONLY)
+	target_include_directories(RunGfrd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Resources )
+	target_sources(RunGfrd PRIVATE Resources/resource.h ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)
+endif()

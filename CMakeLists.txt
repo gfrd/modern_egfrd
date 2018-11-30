@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.2.0)
 
 project(modern_egfrd CXX)
 
-# The version number.
+# Get the build day (days since 1st Jan 2000)
+string(TIMESTAMP _GFRD_YEAR %Y)
+string(TIMESTAMP _GFRD_DOY %j)
+math (EXPR BUILDDAYNUMBER "365*(${_GFRD_YEAR}-2000) + (${_GFRD_YEAR}-2000+3)/4 + ${_GFRD_DOY}-1" )
+
+# The version number
 set (GFRD_VERSION_MAJOR 2)
 set (GFRD_VERSION_MINOR 1)
+set (GFRD_VERSION_PATCH ${BUILDDAYNUMBER})
 string(TIMESTAMP GFRD_VERSION_BUILD)
 
 # GSL is required for almost all targets

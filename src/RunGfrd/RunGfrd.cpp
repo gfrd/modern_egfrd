@@ -20,7 +20,7 @@ void print_header()
 void print_version()
 {
    print_header();
-   std::cout << " version: " << GFRD_VERSION_MAJOR << "." << GFRD_VERSION_MINOR << std::endl;
+   std::cout << " version: " << GFRD_VERSION_MAJOR << "." << GFRD_VERSION_MINOR << "." << GFRD_VERSION_PATCH << std::endl;
    std::cout << " build: "<< GFRD_VERSION_BUILD << std::endl;
    std::cout << " platform: " << (sizeof(std::nullptr_t)==8 ? "x64" : "x86");
 #if _DEBUG
