@@ -13,7 +13,11 @@ function(check_make_unique)
       return()
     endif ()
 
-    try_compile (HAS_MAKE_UNIQUE "${_BINDIR}" "${_SRCFILE}")
+	IF (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} LESS 3.8)
+		try_compile (HAS_MAKE_UNIQUE "${_BINDIR}" "${_SRCFILE}")
+	ELSE()
+		try_compile (HAS_MAKE_UNIQUE "${_BINDIR}" "${_SRCFILE}" CXX_STANDARD 11)
+	ENDIF()
 
     if (HAS_MAKE_UNIQUE)
       message (STATUS "Checking support for std::make_unique - done")
@@ -25,6 +29,3 @@ function(check_make_unique)
   endif ()
 
 endfunction()
-
-
-
