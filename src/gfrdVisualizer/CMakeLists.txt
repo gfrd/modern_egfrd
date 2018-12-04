@@ -1,39 +1,38 @@
-
 if (APPLE)
-	# On OSX we need freeGlut and not the default system GLUT which is found by find_package(GLUT).
-	# furthermore freeglut (from homebrew) links to the X11 version of OpenGl, so we also need to check that.
+	# On Mac OS-X we need FreeGLUT and not the default system GLUT which is found by find_package(GLUT).
+	# furthermore FreeGLUT (from homebrew) links to the XQuartz version of OpenGL, so we also need to check that.
 
 	# specify your Homebrew prefix (brew --prefix)
 	set (_GLUT_ROOT_PATH    "/usr/local/"  )
 
-	# find FreeGlut
+	# find FreeGLUT
 	find_path (_GLUT_INCLUDE_DIR GL/freeglut.h PATHS ${_GLUT_ROOT_PATH}/include)
 	find_library (_GLUT_LIBRARY libglut.dylib PATHS ${_GLUT_ROOT_PATH}/lib NO_DEFAULT_PATH )
 	
 	if (NOT _GLUT_INCLUDE_DIR OR NOT _GLUT_LIBRARY)
-		message (WARNING, "FreeGlut was not found!")
+		message (WARNING, "FreeGLUT was not found!")
 	else()
-		message("Found FreeGlut (include: ${_GLUT_INCLUDE_DIR} and lib: ${_GLUT_LIBRARY} )")
+		message("Found FreeGLUT (include: ${_GLUT_INCLUDE_DIR} and lib: ${_GLUT_LIBRARY} )")
 
 		set (GLUT_FOUND TRUE)
 		add_library(GLUT::GLUT UNKNOWN IMPORTED)
 		set_target_properties(GLUT::GLUT PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_GLUT_INCLUDE_DIR}")
 		set_target_properties(GLUT::GLUT PROPERTIES IMPORTED_LOCATION "${_GLUT_LIBRARY}")
 
-		# If freeglut was installed with brew, it uses the X11 window system
-		# otherwise it most likely links to the native window-system.
-		# Now you have to choose! No automated test available (maybe check pkg-config ??).
+		# If FreeGLUT was installed with brew, it uses the XQuartz window manager
+		# otherwise it most likely links to the native window manager.
+		# Here you have to choose! No automated test available (maybe check pkg-config ??).
 		if (NOT TRUE)
 			# find native version of OpenGL
 			find_package(OpenGL)
 		else()
-			# find X11 version of OpenGL (copied from freeglut.rb)
+			# find XQuartz/OpenGL (lines copied from freeglut.rb)
 			find_path(_GLX_INCLUDE_DIR GL/glx.h PATHS /opt/X11/include /usr/X11/include /usr/X11R6/include)
 			find_library(_OPENGL_gl_LIBRARY GL PATHS /opt/X11/lib /usr/X11/lib /usr/X11R6/lib)
 			find_library(_OPENGL_glu_LIBRARY GLU PATHS /opt/X11/lib /usr/X11/lib /usr/X11R6/lib)
 			
 			if (NOT _GLX_INCLUDE_DIR OR NOT _OPENGL_gl_LIBRARY)
-				message (WARNING, "OpenGL(X11) was not found!")
+				message (WARNING, "OpenGL(XQuartz) was not found!")
 			else()
 				message("Found OpenGL (include: ${_GLX_INCLUDE_DIR} and libs: ${_OPENGL_gl_LIBRARY} and ${_OPENGL_glu_LIBRARY} )")
 
@@ -67,7 +66,10 @@ if (WIN32)
 	configure_file(Resources/resource.rc.in resource.rc @ONLY)
 	target_include_directories(gfrdVisualizer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Resources )
 	target_sources(gfrdVisualizer PRIVATE Resources/resource.h ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)
+elseif (APPLE)
+	target_compile_options(gfrdVisualizer -Wno-deprecated-declarations)
 endif()
+
 
 else()
 

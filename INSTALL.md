@@ -192,25 +192,95 @@
    
 ### Building on Apple MacOS
 
-1. Todo
+1. Get prerequisites
+
+   Assuming 'Command Line Tools or Xcode' and 'HomeBrew' are installed: 
+   ```
+   > brew install cmake gsl
+   ```
+2. Get source codes: 
+
+   You can git clone the repository
+   ```
+   > git clone https://github.com/gfrd/modern_egfrd
+   > cd modern_egfrd
+   ```
+   or download and unzip:
+   ```
+   > wget https://codeload.github.com/gfrd/modern_egfrd/zip/master
+   > unzip master
+   > cd modern_egfrd-master
+   ```
+   
+ 
+3. Configure and build:
+   
+   In general 'out-of-source' builds are preferred, so first make a sub-folder. Then generate and build a Release configuration.
+   ```
+   > mkdir build
+   > cd build
+   > cmake -DCMAKE_BUILD_TYPE=Release ..
+   > make RunGfrd
+   ```
+
+4. Execute the sample:
+
+   ```
+   > cd bin
+   > ./RunGfrd ../../samples/simple/simple.gfrd
+   ```
+
+5. Build and execute tests
+
+   ```
+   > make TestGreensFunctions TestGFRD test
+   ```
+
+6. Build and execute 3D Visualizer [Optional]
+
+   Get prerequisites (XQuartz and FreeGLUT)*:
+   ```
+   > brew cask install xquartz 
+   > brew install freeglut
+   ```
+   
+   In build folder, erase the CMakeCache file and regenerate:
+   ```
+   > rm CMakeCache.txt
+   > cmake -DCMAKE_BUILD_TYPE=Release ..
+   ```
+   
+   It should now find 'OpenGL' and 'FreeGlut' so you can build the visualizer:
+   ```
+   > make gfrdVisualizer
+   > cd bin
+   > ./gfrdVisualizer
+   ```
+   When running press keys f, d, i, s and a for some action, press h for help.
 
 
 
+   * The OS-X version of GLUT does not include the 'additional features' that FreeGLUT provides.
+   * The brew installation of FreeGLUT links to the X11 window manager. When you build FreeGLUT manually, it uses the native window manager. In that case toggle the flag in `/src/gfrdVisualizer/CMakeLists.txt` file line 26.
+   
+   
+   
 ### Compliance
 
 
    This package has been tested on:
 
-   | **Distribution** | **CMake** | **C++** | **GSL** |
-   |------------------|:---------:|:-------:|:-------:|
-   | CentOS 7         | v3.6.3    | v5.3.1  | v1.15   |
-   | Fedora 25        |           | v6.3.1  | v2.1    |
-   | Ubuntu 16        | v3.5.1    | v5.4.0  | v2.1    |
-   | Debian 8.8       |           | v4.9.2  | v1.16   |
-   | Ubuntu 14        | v3.2.2    | v4.9.2  | v1.16   |
-   | CentOS 6.6       |           | v4.9.2  | v1.13   |
-   | Win7 / VS2017    | v3.7      | v19.10  | v1.16   |
-   | Win10 / VS2017   | v3.7      | v19.10  | v2.3    |
+   | **Distribution**     | **CMake** | **C++**       | **GSL** |
+   |----------------------|:---------:|:-------------:|:-------:|
+   | CentOS 7             | v3.6.3    | g++ v5.3.1    | v1.15   |
+   | Fedora 25            |           | g++ v6.3.1    | v2.1    |
+   | Ubuntu 16            | v3.5.1    | g++ v5.4.0    | v2.1    |
+   | Debian 8.8           |           | g++ v4.9.2    | v1.16   |
+   | Ubuntu 14            | v3.2.2    | g++ v4.9.2    | v1.16   |
+   | CentOS 6.6           |           | g++ v4.9.2    | v1.13   |
+   | Win7 / VS2017        | v3.7      | MSVC v19.10   | v1.16   |
+   | Win10 / VS2017       | v3.7      | MSVC v19.10   | v2.3    |
+   | macOS Mojave 10.14.1 | v3.13     | LLVM v10.0.0  | v2.5    |
 
    
    For all distributions checked so far everything builds with zero errors and (almost) zero warnings!
