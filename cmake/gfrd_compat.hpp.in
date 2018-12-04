@@ -1,5 +1,4 @@
-#ifndef GFRD_COMPAT_HPP
-#define GFRD_COMPAT_HPP
+#pragma once
 
 #include <memory>
 
@@ -44,6 +43,4 @@ namespace std
         make_unique(Args&&...) = delete;
 }
 #endif
-
-#endif // GFRD_COMPAT_HPP
 

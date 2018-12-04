@@ -3,32 +3,13 @@
 #include <gsl/gsl_errno.h>
 #include <csignal>
 #include <exceptions.hpp>
-#include "getoptions.hpp"
+#include "../Common/getoptions.hpp"
 #include "Simulation.hpp"
 #include "SimResume.hpp"
 #include "SimModel.hpp"
 #include "SimCustom.hpp"
-#include "gfrd_compat.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
-
-void print_header()
-{
-   std::cout << "eGFRD (modern), NWO-I AMOLF, 2017, Amsterdam, The Netherlands, www.grfd.org" << std::endl;
-}
-
-void print_version()
-{
-   print_header();
-   std::cout << " version: " << GFRD_VERSION_MAJOR << "." << GFRD_VERSION_MINOR << "." << GFRD_VERSION_PATCH << std::endl;
-   std::cout << " build: "<< GFRD_VERSION_BUILD << std::endl;
-   std::cout << " platform: " << (sizeof(std::nullptr_t)==8 ? "x64" : "x86");
-#if _DEBUG
-   std::cout << " DEBUG";
-#endif
-   std::cout << std::endl << " matrixspace: " << CompileConfigSimulator::MatrixCellsX << "x" << CompileConfigSimulator::MatrixCellsY << "x" << CompileConfigSimulator::MatrixCellsZ << std::endl;
-   std::cout << std::endl;
-}
 
 void print_usage()
 {
@@ -98,6 +79,7 @@ int main(int argc, char** argv)
 
         if (args.option(i) == "h" || args.option(i) == "?" || args.option(i) == "-help")
         {
+           gfrd_print_header();
            std::cout << "Usage:" << std::endl << std::endl;
            if (sim) sim->print_usage(); else print_usage();
            return 1;
@@ -105,7 +87,7 @@ int main(int argc, char** argv)
 
         if (args.option(i) == "v" || args.option(i) == "-version")
         {
-            print_version(); return 1;
+            gfrd_print_version(); return 1;
         }
 
         if (sim) arg_err = sim->HandleCommandArguments(i, args); else arg_err = static_cast<int>(i);
@@ -113,7 +95,7 @@ int main(int argc, char** argv)
 
       if (arg_err!=-1 || sim == nullptr)
       {
-         print_header();
+         gfrd_print_header();
          if (arg_err!=-1) 
             std::cout << "ERROR: Unknown or invalid argument: " << (args.isparam(arg_err) ? "-" : "") << args.option(arg_err) << std::endl;
          else 

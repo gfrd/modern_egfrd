@@ -52,7 +52,7 @@ endif()
 if (OPENGL_FOUND AND GLUT_FOUND)
 
 set (SRC ExternalSim.cpp gfrdRenderer.cpp gfrdVisualizer.cpp ScreenShot.cpp)
-set (HDR CameraController.hpp ExternalSim.hpp gfrdRenderer.hpp ScreenShot.hpp)
+set (HDR ../Common/getoptions.hpp CameraController.hpp ExternalSim.hpp gfrdRenderer.hpp ScreenShot.hpp)
 
 add_executable(gfrdVisualizer ${SRC} ${HDR})
 

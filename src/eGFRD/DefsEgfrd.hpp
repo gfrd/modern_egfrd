@@ -3,6 +3,7 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 // common includes (limit to those that are really handy)
 
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <csignal>
@@ -126,5 +127,25 @@ static_assert(CompileConfigSimulator::MatrixCellsZ >= 3, "MatrixSpace cells shou
 // --------------------------------------------------------------------------------------------------------------------------------
 
 class Persistence;
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+inline void gfrd_print_header()
+{
+   std::cout << "eGFRD (modern), NWO-I AMOLF, 2017, Amsterdam, The Netherlands, www.grfd.org" << std::endl;
+}
+
+inline void gfrd_print_version()
+{
+   gfrd_print_header();
+   std::cout << " version: " << GFRD_VERSION_MAJOR << "." << GFRD_VERSION_MINOR << "." << GFRD_VERSION_PATCH << std::endl;
+   std::cout << " build: " << GFRD_VERSION_BUILD << std::endl;
+   std::cout << " platform: " << (sizeof(std::nullptr_t) == 8 ? "x64" : "x86");
+#if _DEBUG
+   std::cout << " DEBUG";
+#endif
+   std::cout << std::endl << " matrixspace: " << CompileConfigSimulator::MatrixCellsX << "x" << CompileConfigSimulator::MatrixCellsY << "x" << CompileConfigSimulator::MatrixCellsZ << std::endl;
+   std::cout << std::endl;
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
