@@ -65,7 +65,7 @@ void check_sim()
    {
       sptr->check();
    }
-   catch (gfrd_exception ex)
+   catch (const gfrd_exception& ex)
    {
       Log("Visualize").fatal() << "Check failed: time: " << sptr->time() << ", step: " << sptr->num_steps() << ", fault: " << ex.what();
       autoSim = false;
@@ -162,7 +162,7 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
          default: break;
       }
    }
-   catch (std::exception ex)
+   catch (const std::exception&)
    {
       abort();
    }
@@ -193,7 +193,7 @@ void handleIdle(void)
 
       if (extSim.active() && extSim.refresh()) glutPostRedisplay();
    }
-   catch (std::exception ex)
+   catch (const std::exception&)
    {
       abort();
    }
@@ -429,7 +429,7 @@ void handleDisplay(void)
 
       glutSwapBuffers();
    }
-   catch (std::exception ex)
+   catch (const std::exception&)
    {
       abort();
    }
@@ -472,7 +472,7 @@ void print_usage()
 {
    std::cout << "  1) gfrdVisualizer -r,--resume <path-to-simstate> [glut-options]" << std::endl;
    std::cout << "  2) gfrdVisualizer -c,--crash <path-to-dump> [glut-options]" << std::endl;
-   std::cout << "  3) gfrdVisualizer -d,--demo [ N ] [glut-options]" << std::endl;
+   std::cout << "  3) gfrdVisualizer -x,--demo [ N ] [glut-options]" << std::endl;
    std::cout << "        [-h,-?,--help]        Print command line usage information" << std::endl;
    std::cout << "        [-v,--version]        Print version/build information" << std::endl << std::endl;
    std::cout << "1) Load simulator maintenance/state file." << std::endl;
@@ -553,9 +553,9 @@ int main(int argc, char** argv)
 
          if (args.option(i) == "c" || args.option(i) == "-crash")
          {
-            if (args.isvalue_F(i))
+            if (args.isvalue_F(i + 1))
             {
-               extSim.readSimFile(args.option(i).c_str());     // try ASCII dump file (crash dump)
+               extSim.readSimFile(args.option(++i).c_str());     // try ASCII dump file (crash dump)
                if (extSim.active()) sptr = nullptr;            // render logic uses extSim when sptr == null!
             }
             else arg_err = static_cast<int>(i);
@@ -563,7 +563,7 @@ int main(int argc, char** argv)
             continue;
          }
 
-         if (args.option(i) == "d" || args.option(i) == "-demo")
+         if (args.option(i) == "x" || args.option(i) == "-demo")
          {
             if (args.isvalue_NP(i + 1)) localDemoInit = std::stoi(args.option(++i));
             else localDemoInit = 1;
@@ -602,7 +602,7 @@ int main(int argc, char** argv)
       }
 
    }
-   catch (std::runtime_error ex)
+   catch (const std::runtime_error& ex)
    {
       Log("RunGfrd").fatal() << ex.what();
       return 2;
@@ -734,7 +734,7 @@ int main(int argc, char** argv)
          break;
       }
    }
-   catch (std::runtime_error ex)
+   catch (const std::runtime_error& ex)
    {
       Log("RunGfrd").fatal() << ex.what();
       return 2;

@@ -36,7 +36,12 @@ struct SpeciesTypeSection final : SectionBase
    bool set_keypair(const std::string& key, const std::string& value) override
    {
       if (SectionBase::set_keypair(key,value)) return true;
-      if (key == key_name) { name_ = format_check(value); return true; }
+      if (key == key_name) 
+      { 
+         THROW_UNLESS_MSG(illegal_section_value, name_.empty(), "Name already set! Use a new SpeciesType section to define a new species type.");
+         name_ = format_check(value); 
+         return true; 
+      }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
 

@@ -85,9 +85,7 @@ VariablesSection::VariablesSection() : SectionBase()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-VariablesSection::~VariablesSection()
-{
-}
+VariablesSection::~VariablesSection() {}
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -140,7 +138,7 @@ void VariablesSection::add_value_variable(const std::string name, const std::str
    }
 
    if (value_vars_.size() >= variable_table_size)   // resize of std::vector causes all table reference to be destroyed (no relocation update possible)
-      THROW_EXCEPTION(illegal_size, "Variable table is full (max=" << variable_table_size);
+      THROW_EXCEPTION(illegal_size, "Variable table is full (max=" << variable_table_size << ").");
       
    double val = evaluate_value_expression(expression, name);
    value_vars_.emplace_back(variable_t<double>{name, expression, val, force});
@@ -195,3 +193,43 @@ std::string VariablesSection::replace_hex_to_dec(const std::string& expression) 
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<Vector3> VariablesSection::evaluate_value_expressions_repeat(std::string exprX, std::string exprY, std::string exprZ, int N, std::string name) const
+{
+   exprtk::expression<double> eX;
+   eX.register_symbol_table(*table_);
+   exprtk::expression<double> eY;
+   eY.register_symbol_table(*table_);
+   exprtk::expression<double> eZ;
+   eZ.register_symbol_table(*table_);
+
+   exprtk::parser<double> parser;
+   parser.settings().disable_all_control_structures();
+
+   double d,x,xx;
+   exprtk::symbol_table<double> st;
+   st.add_constant("N", N);
+   st.add_variable("n", d);
+   st.add_variable("x", x);
+   st.add_variable("xx", xx);
+   eX.register_symbol_table(st);
+   eY.register_symbol_table(st);
+   eZ.register_symbol_table(st);
+
+   if (!parser.compile(exprX, eX)) THROW_EXCEPTION(illegal_section_value, "ParseError: " << parser.error() << " in '" << name << "_x = " << exprX << "'\n");
+   if (!parser.compile(exprY, eY)) THROW_EXCEPTION(illegal_section_value, "ParseError: " << parser.error() << " in '" << name << "_y = " << exprX << "'\n");
+   if (!parser.compile(exprZ, eZ)) THROW_EXCEPTION(illegal_section_value, "ParseError: " << parser.error() << " in '" << name << "_z = " << exprX << "'\n");
+   
+   std::vector<Vector3> v;
+   for (int n = 0; n < N; ++n)
+   {
+      d = n;
+      x = N > 1 ? d / (N - 1) : 0;
+      xx = N > 1 ? 2 * d / (N - 1) - 1: 0;
+      v.emplace_back(Vector3(eX.value(), eY.value(), eZ.value()));
+   }
+   return v;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include "ParserExceptions.hpp"
 #include <iostream>
+#include "Vector3.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -65,6 +66,8 @@ struct VariablesSection final : SectionBase
    double evaluate_value_expression(std::string expression, std::string name) const;
 
    std::string evaluate_string_expression(std::string expression, std::string name) const;
+
+   std::vector<Vector3> evaluate_value_expressions_repeat(std::string exprX, std::string exprY, std::string exprZ, int N, std::string name) const;
 
    // --------------------------------------------------------------------------------------------------------------------------------
 

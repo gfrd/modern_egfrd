@@ -58,7 +58,7 @@ private:
       {
          const auto eval = vars_->evaluate_string_expression(value, key_seed);
          try { return std::stoul(eval, nullptr, 0); }
-         catch (std::runtime_error) { THROW_EXCEPTION(illegal_section_key, "Value for key '" << key_seed << "' not valid. Failed to parse " << eval << " to integer."); }
+         catch (const std::runtime_error&) { THROW_EXCEPTION(illegal_section_key, "Value for key '" << key_seed << "' not valid. Failed to parse " << eval << " to integer."); }
       }
       
       // or parameter is a value-expression, evaluate it and convert to integer (just floor the value)

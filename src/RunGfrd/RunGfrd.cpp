@@ -104,7 +104,7 @@ int main(int argc, char** argv)
          return 1;
       }
    }
-   catch (std::runtime_error ex)
+   catch (const std::runtime_error& ex)
    {
       Log("RunGfrd").fatal() << ex.what();
       return 2;

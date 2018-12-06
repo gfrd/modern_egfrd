@@ -139,18 +139,18 @@ private:
       double k_max = 0.0;
 
       // TODO Rates for particle-surface interactions
-      // since surface rates are not devided by 2 to compensate for double reaction attempts.
+      // since surface rates are not divided by 2 to compensate for double reaction attempts.
       k_max *= 2.0;
 
 
-      // mono-molucular reactions: (NO CHECKED in original)
+      // mono-molecular reactions: (NO CHECKED in original)
       //for (auto sid : species)
       //{
       //   const auto& rules = reactions_.query_reaction_rules(sid);
       //   k_max = std::accumulate(rules.begin(), rules.end(), k_max, [](double s, const ReactionRule& rule) { return std::max(s, rule.getK()); });
       //}
 
-      // bi-molucular reactions:
+      // bi-molecular reactions:
       for (auto sid_a : species)
          for (auto sid_b : species)
          {

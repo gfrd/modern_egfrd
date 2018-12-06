@@ -60,7 +60,7 @@ public:
       else
       {
          std::smatch match;
-         auto regex = std::regex("^\\s*([\\w<>\\$\\(\\)\\^\\']+[^;]*).*");
+         auto regex = std::regex(R"(^\s*([\w<>\$\(\)\^\']+[^;]*).*)");
          bool is_match = std::regex_match(line, match, regex);
          THROW_UNLESS_MSG(illegal_section_value, !is_match, "Invalid line encountered: " << line)
       }
@@ -84,7 +84,7 @@ private:
    bool get_name_value(const std::string& line, std::string& name, std::string& value) const
    {
       std::smatch match;
-      auto regex = std::regex("^\\s*(\\w+)\\s*=\\s*([\\w<>\\$\\(\\)\\^\\']+[^;]*).*");
+      auto regex = std::regex(R"(^\s*(\w+)\s*=\s*([\w<>\$\(\)\^\']+[^;]*).*)");
       bool is_match = std::regex_search(line, match, regex);
       name = match[1].str();
       value = match[2].str();
@@ -149,7 +149,7 @@ private:
    std::unique_ptr<ProgressSection> progressSection_;
 
    SectionBase* current_;
-   const std::regex regex_section_ = std::regex("^\\s*\\[\\s*(\\w+)\\s*\\](.*)");
+   const std::regex regex_section_ = std::regex(R"(^\s*\[\s*(\w+)\s*\](.*))");
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

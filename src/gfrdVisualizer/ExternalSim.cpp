@@ -163,7 +163,7 @@ bool ExtSim::readSimFile(const char*filename)
       return true;
 
    }
-   catch (std::out_of_range oor)
+   catch (const std::out_of_range& oor)
    {
       infile.close();
       return false;

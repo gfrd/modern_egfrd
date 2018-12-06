@@ -1,0 +1,35 @@
+; eGFRD placement simulation
+
+[Variables]
+N = 75
+
+[World]
+Size = 2
+
+[Simulator]
+MaintenanceStep = 10000
+MaintenanceFile = sim_dump.out
+
+
+[SpeciesType]
+Name = A
+   r = 1e-2
+   D = 1
+   
+[SpeciesType]   
+Name = B
+   r = 1e-2
+   
+[SpeciesType]   
+Name = C
+   r = 7e-2
+
+   
+[Particles]
+
+A = (1 + 0.8*sin(5*xx), 1 + 0.8*xx, 1 + 0.8*cos(5*xx)), N		; place N 'A' particles in a spiral
+
+B = ( 0.1+0.2*(n%10), 0.1, 0.1+0.2*floor(n/10) ), 10*10			; place 100 'B' particles in a grid
+
+C = (1, 1 ,1)													; place 'C' particle in the center
+

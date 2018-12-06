@@ -77,7 +77,7 @@ public:
          PrintSettings();
          if (!SetupSimulation()) return;
       }
-      catch (std::runtime_error ex)
+      catch (const std::runtime_error& ex)
       {
          Log("RunGfrd").fatal() << ex.what();
          failed_ = true;
@@ -136,7 +136,7 @@ protected:
             //SimStep(prerun);
          }
       }
-      catch (std::runtime_error ex)
+      catch (const std::runtime_error& ex)
       {
          failed_ = true;
       }
@@ -150,7 +150,7 @@ protected:
       {
          simulator_->check();
       }
-      catch (gfrd_exception ex)
+      catch (const gfrd_exception& ex)
       {
          Log("RunGfrd").fatal() << "Check failed in simulation, at time: " << time() << ", step: " << num_steps() << ", fault: " << ex.what();
          simulator_->dump(make_string() << "sim_check_failed_atstep" << std::setfill('0') << std::setw(10) << num_steps() << ".log", false);
@@ -164,7 +164,7 @@ protected:
             p.store(simstate_file_);
             p.store_egfrd(*simulator_);
          }
-         catch (std::runtime_error ex)
+         catch (const std::runtime_error& ex)
          {
             Log("RunGfrd").warn() << "Failed to store simulator state to file! fault: " << ex.what();
          }

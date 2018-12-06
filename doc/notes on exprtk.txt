@@ -3,9 +3,9 @@ note on exprtk:
 Download:   http://www.partow.net/programming/exprtk/index.html
 Version is not specified
 
-applied changed (see patch.diff) for fixing complation issues:
+applied changed (see patch.diff) for fixing compilation issues:
 
-	line 254: size_t convert to int on calles to details::to_str,
+	line 254: size_t convert to int on calls to details::to_str,
 			  added sizt_t overload for to_str (unsigned only).
 
 	line 17727: register_symbol_table does not modify the table, changed to const, so i can be called from const function(s).

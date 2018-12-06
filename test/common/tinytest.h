@@ -87,7 +87,7 @@ TINYTEST_TIME_STOP(msg)
       TINYERRORA("'%s' was not thrown", #E)                                               \
       TINYFAIL                                                                            \
    }                                                                                      \
-   catch (E)                                                                              \
+   catch (const E&)                                                                       \
    { }                                                                                    \
    catch (...)                                                                            \
    { TINYERRORA("'%s' was not thrown, but some other exception was!", #E)                 \

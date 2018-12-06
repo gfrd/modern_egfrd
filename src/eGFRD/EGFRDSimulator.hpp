@@ -317,7 +317,7 @@ private:
 #endif
          return true;
       }
-      catch (gfrd_exception ex)
+      catch (const gfrd_exception& ex)
       {
          Log("GFRD").fatal() << ex.what();
          dump(make_string() << "sim_state_" << std::setfill('0') << std::setw(10) << num_steps_ << "_exception" << ".log");
