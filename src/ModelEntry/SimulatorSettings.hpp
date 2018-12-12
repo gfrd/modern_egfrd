@@ -17,10 +17,10 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class SimulatorSettings
+class ME_EXPORT SimulatorSettings
 {
 public:
-   explicit SimulatorSettings() : current_(nullptr) { }
+   explicit SimulatorSettings();
    ~SimulatorSettings() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------

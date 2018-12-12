@@ -9,9 +9,23 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+#if defined(_MSC_VER)
+#if defined(ModelEntry_EXPORTS)
+#define ME_EXPORT __declspec(dllexport)
+#else
+#define ME_EXPORT __declspec(dllimport)
+#endif
+#else
+#define ME_EXPORT
+#endif
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 struct VariablesSection;
 
-struct SectionBase
+// --------------------------------------------------------------------------------------------------------------------------------
+
+struct ME_EXPORT SectionBase
 {
    explicit SectionBase() : vars_(nullptr) { }
    virtual ~SectionBase() = default;
@@ -84,7 +98,7 @@ private:
 };
 
 
-struct SectionModeBase : SectionBase
+struct ME_EXPORT SectionModeBase : SectionBase
 {
    explicit SectionModeBase() : mode_(modes::Off) { }
 

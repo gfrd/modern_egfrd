@@ -16,6 +16,7 @@
 #include "ExternalSim.hpp"
 #include "Persistence.hpp"
 #include "../Common/getoptions.hpp"
+#include "SimulatorSettings.hpp"
 
 #if defined(_MSC_VER)
 #include "resource.h"
@@ -36,13 +37,32 @@ idtype selParticle = 0;
 idtype selDomain = 0;
 idtype selStructure = 0;
 uint selSection = 0;
-std::string statefile;
+std::string modelfile;
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::string> help = { "ESC = exit" , "H = show help", "F = full screen", "S = show shells", "D = demo rotate", "P = screenshot", "O = draw origin" ,"I = particle ID/SID" ,
-                                   ". = sim step", "/ = check sim", "A = auto", "B = burst all",  "</> = select structure",
-                                   "+/- = select particle", "g = goto particle", "0 = deselect all", "[/] = select domain", "j = goto domain", "C = center world", };
+std::vector<std::pair<bool, std::string>> help = 
+{
+   std::make_pair(true, "ESC = exit"),
+   std::make_pair(true, "H = show help") ,
+   std::make_pair(true, "F = full screen") ,
+   std::make_pair(true, "S = show shells") ,
+   std::make_pair(true, "D = demo rotate") ,
+   std::make_pair(true, "P = screen-shot") ,
+   std::make_pair(true, "O = draw origin") ,
+   std::make_pair(true, "I = particle ID/SID") ,
+   std::make_pair(false, ". = sim step") ,
+   std::make_pair(false, "/ = check sim") ,
+   std::make_pair(false, "A = auto") ,
+   std::make_pair(false, "B = burst all") ,
+   std::make_pair(true, "</> = select structure") ,
+   std::make_pair(true, "+/- = select particle") ,
+   std::make_pair(true, "g = goto particle") ,
+   std::make_pair(true, "0 = deselect all") ,
+   std::make_pair(true, "[/] = select domain") ,
+   std::make_pair(true, "j = goto domain") ,
+   std::make_pair(true, "C = center world"),
+};
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -51,9 +71,9 @@ size_t get_help_width()
    size_t width = 0;
    for (auto& txt : help)
    {
-      size_t size = glutBitmapWidth(GLUT_BITMAP_9_BY_15, 'c') * txt.length();
-      width = std::max(width, size);
-   };
+      size_t size = glutBitmapWidth(GLUT_BITMAP_9_BY_15, 'c') * txt.second.length();
+      if (txt.first || sptr != nullptr) width = std::max(width, size);
+   }
    return width;
 }
 
@@ -90,7 +110,7 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
          case 'o': case 'O': drawOrig = !drawOrig; glutPostRedisplay(); break;
          case 'i': case 'I': drawPid++; if (drawPid == 3) drawPid = 0; glutPostRedisplay(); break;
 
-         case '.': if (sptr) sptr->step(); else extSim.readSimFile(extSim.get_filename()); glutPostRedisplay(); break;
+         case '.': if (sptr) sptr->step(); glutPostRedisplay(); break;
          case '/': if (sptr) check_sim(); break;
          case 'a': case 'A': autoSim = !autoSim; autoCheck = (cChar == 'a'); glutPostRedisplay(); break;
          case 'b': case 'B': if (sptr) sptr->burst_all(); glutPostRedisplay(); break;
@@ -156,9 +176,6 @@ void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
          case '5': cam.set_angles(M_PI, 0.0); glutPostRedisplay(); break;        // BACK
          case '6': cam.set_angles(-M_PI / 2, 0.0); glutPostRedisplay(); break;     // RIGHT
 
-         //case 'z': case 'Z': { Persistence p; p.store("d:\\simstate.bin"); p.store_egfrd(*sptr); } break;
-         case 'x': case 'X': if (!statefile.empty()) { Persistence p; p.retreive(statefile); p.retreive_egfrd(*sptr); glutPostRedisplay(); } break;
-
          default: break;
       }
    }
@@ -179,7 +196,7 @@ void handleReshape(int width, int height)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handleIdle(void)
+void handleIdle()
 {
    try
    {
@@ -243,7 +260,7 @@ void drawArrow(Vector3 p1, Vector3 p2, uint color, double size)
 }
 
 
-void drawOrigin(void)
+void drawOrigin()
 {
    const uint color = 0x00F0EEDF;
    auto scale = std::abs(cam.distance() / 20.f);
@@ -269,7 +286,7 @@ void drawOrigin(void)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handleDisplay(void)
+void handleDisplay()
 {
    try
    {
@@ -403,9 +420,12 @@ void handleDisplay(void)
             if (help_width == 0) help_width = get_help_width();
             for (auto& txt : help)
             {
-               glRasterPos2i(viewport[2] - static_cast<GLint>(help_width), y - glutBitmapHeight(GLUT_BITMAP_9_BY_15) + viewport[3]);
-               glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>(txt.c_str()));
-               y -= 18;
+               if (txt.first || sptr != nullptr) 
+               {
+                  glRasterPos2i(viewport[2] - static_cast<GLint>(help_width), y - glutBitmapHeight(GLUT_BITMAP_9_BY_15) + viewport[3]);
+                  glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>(txt.second.c_str()));
+                  y -= 18;
+               }
             }
          }
 
@@ -447,7 +467,7 @@ void handleMouse(int button, int updown, int x, int y)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handlePasiveMouseMotion(int x, int y)
+void handlePassiveMouseMotion(int x, int y)
 {
    cam.handlePasiveMouseMotion(x, y);
 }
@@ -468,16 +488,103 @@ void handleMouseWheel(int wheel_number, int direction, int x, int y)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+void SetupModel(const std::string& filename, const std::vector < std::string>& arguments, World& world, RandomNumberGenerator& rng, ReactionRuleCollection& rules)
+{
+   SimulatorSettings settings;
+
+   for (auto& arg : arguments)
+      settings.add_variable(arg);
+
+   std::cout << std::setw(14) << "model file = " << filename << "\n";
+
+   std::ifstream stream(filename);
+   if (!stream.is_open()) { Log("RunGfrd").fatal() << "Failed to load input file!"; return; }
+   stream >> settings;
+   stream.close();
+
+   {
+      auto &section = settings.getSimulatorSection();
+      if (section.seed()) rng.seed(section.seed());
+   }
+
+   double world_size;
+   {
+      auto& section(settings.getWorldSection());
+      world_size = section.world_size();
+      THROW_UNLESS_MSG(illegal_size, world_size > 0, "invalid world-size!");
+      THROW_UNLESS_MSG(illegal_size, world.matrix_size()[0] == section.matrix_space(), "invalid matrix space x-size!");
+      THROW_UNLESS_MSG(illegal_size, world.matrix_size()[1] == section.matrix_space(), "invalid matrix space y-size!");
+      THROW_UNLESS_MSG(illegal_size, world.matrix_size()[2] == section.matrix_space(), "invalid matrix space z-size!");
+   }
+
+   auto& vars = settings.getVariablesSection();
+
+   Model model;
+   {
+      auto& sections = settings.getSpeciesTypeSections();
+      for (auto& section : sections)
+         section.create_species(model, vars);
+   }
+
+   world.initialize(world_size, model);
+
+   for (auto& section : settings.getReactionRuleSections())
+      section.create_reaction_rule(model, rules);
+
+   for (auto& section : settings.getParticlesSections())
+      section.add_particles_to_world(model, world, rng);
+
+
+   // Print !
+
+   std::cout << "\n";
+
+   settings.getVariablesSection().PrintSettings();
+
+   //Simulation::PrintSettings();
+
+   std::cout << "\n";
+
+   for (auto& species : settings.getSpeciesTypeSections())
+      species.PrintSettings();
+
+   std::cout << "\n";
+
+   for (auto& rule : settings.getReactionRuleSections())
+      rule.PrintSettings();
+
+   std::cout << "\n";
+
+   for (auto& section : settings.getParticlesSections())
+      section.PrintSettings();
+
+   std::cout << "\n";
+
+   const auto& cns = settings.getCopyNumbersSection();
+   if (cns != nullptr) std::cout << "CopyNumbersSection ignored in visualizer.\n";
+   const auto& pps = settings.getParticlePositionsSection();
+   if (pps != nullptr) std::cout << "ParticlePositionsSection ignored in visualizer.\n";
+   const auto& rrs = settings.getReactionRecordSection();
+   if (rrs != nullptr) std::cout << "ReactionRecordSection ignored in visualizer.\n";
+   const auto& ps = settings.getProgressSection();
+   if (ps != nullptr) std::cout << "ProgressSection ignored in visualizer.\n";
+
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 void print_usage()
 {
-   std::cout << "  1) gfrdVisualizer -r,--resume <path-to-simstate> [glut-options]" << std::endl;
-   std::cout << "  2) gfrdVisualizer -c,--crash <path-to-dump> [glut-options]" << std::endl;
-   std::cout << "  3) gfrdVisualizer -x,--demo [ N ] [glut-options]" << std::endl;
+   std::cout << "  1) gfrdVisualizer <path-to-model> [ -d var=value ]" << std::endl;
+   std::cout << "  2) gfrdVisualizer -r,--resume <path-to-simstate> [glut-options]" << std::endl;
+   std::cout << "  3) gfrdVisualizer -c,--crash <path-to-dump> [glut-options]" << std::endl;
+   std::cout << "  4) gfrdVisualizer -x,--demo [ N ] [glut-options]" << std::endl;
    std::cout << "        [-h,-?,--help]        Print command line usage information" << std::endl;
    std::cout << "        [-v,--version]        Print version/build information" << std::endl << std::endl;
-   std::cout << "1) Load simulator maintenance/state file." << std::endl;
-   std::cout << "2) Load simulator crash/dump file." << std::endl;
-   std::cout << "3) Start simulation build-in demo (N = 1..3)" << std::endl;
+   std::cout << "1) Start simulation described in model-file." << std::endl;
+   std::cout << "2) Load simulator maintenance/state file." << std::endl;
+   std::cout << "3) Load simulator crash/dump file." << std::endl;
+   std::cout << "4) Start simulation build-in demo (N = 1..3)" << std::endl;
    std::cout << std::endl << std::endl;
 }
 
@@ -529,44 +636,46 @@ int main(int argc, char** argv)
    World world;
    EGFRDSimulator s(world, rules, rng);
    sptr = &s;
+   std::vector<std::string> model_arguments;
 
-   int localDemoInit = 1;
+   int localDemoInit = 0;
    try
    {
       int arg_err = -1;
       getoptions args(argc, argv);
       for (size_t i = 0; i < args.size() && arg_err == -1; ++i)
       {
-         if (args.option(i) == "r" || args.option(i) == "-resume")
+         if (localDemoInit == 0 && args.isvalue_F(i))
          {
-            if (args.isvalue_F(i + 1))
-            {
-               statefile = args.option(++i);
-               Persistence p;
-               if (p.retreive(statefile)) p.retreive_egfrd(*sptr);
-               else arg_err = static_cast<int>(i);
-            }
-            else arg_err = static_cast<int>(i);
-            localDemoInit = 0;
+            modelfile = args.option(i);
+            localDemoInit = 1;
             continue;
          }
 
-         if (args.option(i) == "c" || args.option(i) == "-crash")
+         if ((localDemoInit == 0 || localDemoInit == 1) && args.isparam(i) && args.option(i) == "d" && args.isvalue(i + 1))
          {
-            if (args.isvalue_F(i + 1))
-            {
-               extSim.readSimFile(args.option(++i).c_str());     // try ASCII dump file (crash dump)
-               if (extSim.active()) sptr = nullptr;            // render logic uses extSim when sptr == null!
-            }
-            else arg_err = static_cast<int>(i);
-            localDemoInit = 0;
+            model_arguments.emplace_back(args.option(++i));
             continue;
          }
 
-         if (args.option(i) == "x" || args.option(i) == "-demo")
+         if (localDemoInit == 0 && (args.option(i) == "r" || args.option(i) == "-resume") && args.isvalue_F(i + 1))
          {
-            if (args.isvalue_NP(i + 1)) localDemoInit = std::stoi(args.option(++i));
-            else localDemoInit = 1;
+            modelfile = args.option(++i);
+            localDemoInit = 2;
+            continue;
+         }
+
+         if (localDemoInit == 0 && (args.option(i) == "c" || args.option(i) == "-crash") && args.isvalue_F(i + 1))
+         {
+            modelfile = args.option(++i);
+            localDemoInit = 3;
+            continue;
+         }
+
+         if (localDemoInit == 0 && (args.option(i) == "x" || args.option(i) == "-demo"))
+         {
+            if (args.isvalue_NP(i + 1)) localDemoInit = 100 + std::stoi(args.option(++i));
+            else localDemoInit = 101;
             continue;
          }
 
@@ -585,7 +694,7 @@ int main(int argc, char** argv)
          }
 
          // glut-options, ignore those here
-         if ((args.option(i) == "display" || args.option(i) == "geometry") && !args.isparam(i+1)) { i++; continue; }
+         if ((args.option(i) == "display" || args.option(i) == "geometry") && !args.isparam(i + 1)) { i++; continue; }
          if (args.option(i) == "iconic" || args.option(i) == "indirect") continue;
          if (args.option(i) == "gldebug" || args.option(i) == "direct" || args.option(i) == "sync") continue;
 
@@ -610,12 +719,33 @@ int main(int argc, char** argv)
 
    try
    {
+      gfrd_print_header();
       Model m;
-      switch (localDemoInit)      // select demo init
+      switch (localDemoInit)
       {
-         case 0: break;
+         case 1:           // model file
+         SetupModel(modelfile, model_arguments, world, rng, rules);
+         break;
 
-         case 1: // Init GFRD (with three particle types in a box, cycling A -> B -> C -> A)
+         case 2:
+         {
+            std::cout << std::setw(14) << "state file = " << modelfile << "\n";
+            Persistence p;
+            if (p.retreive(modelfile)) p.retreive_egfrd(*sptr);
+            else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
+         } break;
+
+         case 3:
+         {
+            std::cout << std::setw(14) << "crash file = " << modelfile << "\n";
+            extSim.readSimFile(modelfile.c_str());     // try ASCII dump file (crash dump)
+            if (extSim.active()) sptr = nullptr;            // render logic uses extSim when sptr == null!
+            else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
+         } break;
+
+
+         case 0:
+         case 101: // Init GFRD (with three particle types in a box, cycling A -> B -> C -> A)
          {
             auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
             auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
@@ -631,7 +761,7 @@ int main(int argc, char** argv)
          }
          break;
 
-         case 2:            // demo DNA string, just for the fun
+         case 102:            // demo DNA string, just for the fun
          {
             auto sG = m.add_structure_type(StructureType("Guanine"));
             auto sC = m.add_structure_type(StructureType("Cytosine"));
@@ -675,7 +805,7 @@ int main(int argc, char** argv)
          }
          break;
 
-         case 3:        // Init GFRD (with PlanarSurfaces, not functional yet)
+         case 103:        // Init GFRD (with PlanarSurfaces, not functional yet)
          {
             auto sPlane = m.add_structure_type(StructureType("plane"));
 
@@ -706,7 +836,7 @@ int main(int argc, char** argv)
          }
          break;
 
-         case 4:
+         case 104:
          {
             auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
             auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
@@ -729,9 +859,8 @@ int main(int argc, char** argv)
             }
          } break;
 
-         default:
-         std::cout << "ERROR: Demo number out of range." << std::endl;
-         break;
+         default: THROW_EXCEPTION(illegal_size, "Demo number out of range.");
+
       }
    }
    catch (const std::runtime_error& ex)
@@ -759,7 +888,7 @@ int main(int argc, char** argv)
 
    glutMouseFunc(handleMouse);
    glutMotionFunc(handleMouseMotion);
-   glutPassiveMotionFunc(handlePasiveMouseMotion);
+   glutPassiveMotionFunc(handlePassiveMouseMotion);
    glutMouseWheelFunc(handleMouseWheel);
    glutKeyboardFunc(handleKeyboard);
    glutDisplayFunc(handleDisplay);

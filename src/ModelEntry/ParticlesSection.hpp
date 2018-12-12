@@ -8,7 +8,7 @@
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-struct ParticlesSection : SectionModeBase
+struct ME_EXPORT ParticlesSection : SectionModeBase
 {
    explicit ParticlesSection() : SectionModeBase() { mode_ = modes::On; }
    ~ParticlesSection() = default;

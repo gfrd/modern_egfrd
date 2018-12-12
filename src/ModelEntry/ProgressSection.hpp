@@ -6,7 +6,7 @@
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-struct ProgressSection : SectionModeBase
+struct ME_EXPORT ProgressSection : SectionModeBase
 {
    explicit ProgressSection() : column_width_(80) { mode_ = modes::On; }
    ~ProgressSection() = default;

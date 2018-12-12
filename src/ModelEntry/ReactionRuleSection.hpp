@@ -5,12 +5,13 @@
 #include "ReactionRule.hpp"
 #include "ParserExceptions.hpp"
 #include "Model.hpp"
+#include "ReactionRuleCollection.hpp"
 #include "SectionBase.hpp"
 #include <iomanip>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct ReactionRuleSection final : SectionModeBase
+struct ME_EXPORT ReactionRuleSection final : SectionModeBase
 {
    explicit ReactionRuleSection() : SectionModeBase(), rule_(std::string()), is_bidirectional_(false), is_bimolecular_(false)
    {

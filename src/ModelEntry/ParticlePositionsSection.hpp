@@ -7,15 +7,21 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct ReactionRecordSection final : SectionModeBase
+struct ME_EXPORT ParticlePositionSection final : SectionModeBase
 {
-   explicit ReactionRecordSection() : SectionModeBase() { mode_ = modes::Run; }
-   ~ReactionRecordSection() = default;
+   explicit ParticlePositionSection() : SectionModeBase() { mode_ = modes::Run; init_auto_vars({ {key_interval, 1E-3 }}); }
+
+   ~ParticlePositionSection() = default;
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   static std::string section_name() { return "ReactionRecord"; }
+   static std::string section_name() { return "ParticlePositions"; }
+
+   const std::string key_mode = "Mode";
+   const std::string key_interval = "Interval";
    const std::string key_file = "File";
+
+   double interval() const { return auto_var_value(key_interval); }
    std::string file() const { return file_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -33,7 +39,7 @@ struct ReactionRecordSection final : SectionModeBase
    {
       std::string mode;
       if (mode_ != modes::Run) mode = mode_ == modes::Off ? ", Mode = Off" : ", Mode = On";
-      std::cout  << std::setw(14) << "react_rec = " << "'" << (file_.empty() ? "stdout" : file_) << "'" << mode << "\n";
+      std::cout  << std::setw(14) << "pos_record = " << "'" << (file_.empty() ? "stdout" : file_) << "'" << ", Interval = " << interval()  << " [s]"  << mode << "\n";
       std::cout << "\n";
    }
 
@@ -45,11 +51,12 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-inline std::ostream& operator<<(std::ostream& stream, const ReactionRecordSection& rrs)
+inline std::ostream& operator<<(std::ostream& stream, const ParticlePositionSection& cns)
 {
-   stream << "[" << rrs.section_name() << "]" << std::endl;
-   stream << rrs.key_mode << " = " << (rrs.mode() == SectionModeBase::modes::Run ? "Run" : rrs.mode() == SectionModeBase::modes::On ? "On" : "Off") << std::endl;
-   stream << rrs.key_file << " = " << rrs.file() << std::endl;
+   stream << "[" << cns.section_name() << "]" << std::endl;
+   stream << cns.key_mode << " = " << (cns.mode() == SectionModeBase::modes::Run ? "Run" : cns.mode() == SectionModeBase::modes::On ? "On" : "Off") << std::endl;
+   stream << cns.key_interval << " = " << cns.interval() << std::endl;
+   stream << cns.key_file << " = " << cns.file() << std::endl;
    stream << std::endl;
    return stream;
 }

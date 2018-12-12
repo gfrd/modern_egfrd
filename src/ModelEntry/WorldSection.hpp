@@ -6,7 +6,7 @@
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-struct WorldSection final : SectionBase
+struct ME_EXPORT WorldSection final : SectionBase
 {
    explicit WorldSection() : SectionBase(), matrix_space_(MATRIXSIZE) { init_auto_vars({{key_world_size, 0.0}}); }
 

@@ -8,7 +8,7 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct CopyNumbersSection final : SectionModeBase
+struct ME_EXPORT CopyNumbersSection final : SectionModeBase
 {
    explicit CopyNumbersSection() : SectionModeBase(), type_(types::Instantaneous) { mode_ = modes::Run; init_auto_vars({ {key_interval, 1E-3 }}); }
    

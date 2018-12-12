@@ -3,12 +3,13 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include "SpeciesType.hpp"
+#include "Model.hpp"
 #include "SectionBase.hpp"
 #include <iomanip>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct SpeciesTypeSection final : SectionBase
+struct ME_EXPORT SpeciesTypeSection final : SectionBase
 {
    explicit SpeciesTypeSection() : SectionBase()
    {

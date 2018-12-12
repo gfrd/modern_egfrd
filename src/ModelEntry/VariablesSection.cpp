@@ -8,8 +8,8 @@
 #include "SectionBase.hpp"
 #include "VariablesSection.hpp"
 #include "ParserExceptions.hpp"
-#include "../../exprtk/exprtk.hpp"           // <-- only include it here (it's huge and takes long to compile)
-#include "../../eGFRD/DefsEgfrd.hpp"
+#include "../exprtk/exprtk.hpp"           // <-- only include it here (it's huge and takes long to compile)
+#include "../eGFRD/DefsEgfrd.hpp"
 #include "convert.hpp"
 #include <regex>
 

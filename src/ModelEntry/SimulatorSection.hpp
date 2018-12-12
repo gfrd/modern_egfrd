@@ -7,7 +7,7 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct SimulatorSection final : SectionBase
+struct ME_EXPORT SimulatorSection final : SectionBase
 {
    explicit SimulatorSection() : SectionBase(), seed_(0), maintenance_step_(0)
    {

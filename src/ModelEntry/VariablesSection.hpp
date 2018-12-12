@@ -3,7 +3,7 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include "SectionBase.hpp"
-#include "../../eGFRD/DefsEgfrd.hpp"
+#include "../eGFRD/DefsEgfrd.hpp"
 #include <iomanip>
 #include "ParserExceptions.hpp"
 #include <iostream>
@@ -20,7 +20,7 @@ namespace exprtk
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct VariablesSection final : SectionBase
+struct ME_EXPORT VariablesSection final : SectionBase
 {
    // --------------------------------------------------------------------------------------------------------------------------------
 

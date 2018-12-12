@@ -136,7 +136,7 @@ protected:
             //SimStep(prerun);
          }
       }
-      catch (const std::runtime_error& ex)
+      catch (const std::runtime_error&)
       {
          failed_ = true;
       }

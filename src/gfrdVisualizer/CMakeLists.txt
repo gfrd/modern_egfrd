@@ -56,13 +56,14 @@ set (HDR ../Common/getoptions.hpp CameraController.hpp ExternalSim.hpp gfrdRende
 
 add_executable(gfrdVisualizer ${SRC} ${HDR})
 
-target_link_libraries(gfrdVisualizer PRIVATE eGFRD ${OPENGL_LIBRARIES} GLUT::GLUT)
+target_link_libraries(gfrdVisualizer PRIVATE eGFRD ModelEntry ${OPENGL_LIBRARIES} GLUT::GLUT)
 
 target_compile_features (gfrdVisualizer PRIVATE cxx_noexcept cxx_deleted_functions cxx_nullptr cxx_auto_type cxx_range_for cxx_override)
 
 if (WIN32)
-    target_link_libraries(gfrdVisualizer PUBLIC gdiplus)
+	target_link_libraries(gfrdVisualizer PUBLIC gdiplus)
 	target_compile_definitions(gfrdVisualizer PRIVATE _CRT_SECURE_NO_WARNINGS)
+	target_compile_options(gfrdVisualizer PRIVATE /wd4251)
 	configure_file(Resources/resource.rc.in resource.rc @ONLY)
 	target_include_directories(gfrdVisualizer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Resources )
 	target_sources(gfrdVisualizer PRIVATE Resources/resource.h ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)

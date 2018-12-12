@@ -5,6 +5,10 @@ add_library(GreensFunctions SHARED ${SRC} ${HDR})
 
 target_include_directories (GreensFunctions INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${GFRD_COMPAT_DIR})
 
+if (WIN32)
+target_compile_options(GreensFunctions PRIVATE /wd4251)
+endif()
+
 target_link_libraries (GreensFunctions PUBLIC Logger GSL::gsl)
 
 target_compile_features (GreensFunctions PUBLIC cxx_noexcept cxx_deleted_functions cxx_override cxx_alias_templates PRIVATE cxx_nullptr cxx_auto_type cxx_lambdas)
