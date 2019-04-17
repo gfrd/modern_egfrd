@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <stdexcept>
 #include <gsl/gsl_errno.h>
 #include "freeFunctions.hpp"
 #include "helperFunctionsGf.hpp"

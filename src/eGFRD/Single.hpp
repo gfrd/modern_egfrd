@@ -236,7 +236,7 @@ public:
     EventType draw_iv_event_type(RandomNumberGenerator& rng) const override 
     { 
        UNUSED(rng);
-       THROW_EXCEPTION(illegal_state, "SingleCylindrical does not support iv events."); 
+       THROW_EXCEPTION(illegal_state, "SingleCylindrical does not support iv events.");
     }
 
     Vector3 create_position_vector(double r, RandomNumberGenerator& rng) const override

@@ -1,8 +1,6 @@
 #include <stdexcept>
-#include <iostream>
 #include <fstream>
 #include <gsl/gsl_sf_bessel.h>
-
 #include "helperFunctionsGf.hpp"
 #include "CylindricalBesselGenerator.hpp"
 
@@ -91,7 +89,6 @@ double CylindricalBesselGenerator::J(uint n, double z) const
    {
       const uint i = static_cast<uint>((z - table.start) / table.delta);
       ASSERT(i + 1 < table.N);
-
       return hermite_interpolate(z, table.start, table.delta, table.values.get());
    }
 
@@ -110,7 +107,6 @@ double CylindricalBesselGenerator::Y(const uint n, const double z) const
    {
       const uint i = static_cast<uint>((z - table.start) / table.delta);
       ASSERT(i + 1 < table.N);
-
       return hermite_interpolate(z, table.start, table.delta, table.values.get());
    }
 

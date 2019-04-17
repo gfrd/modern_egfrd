@@ -43,7 +43,7 @@ public:
 
    gi::iteratorRange<domain_map> get_domains() const { return gi::iteratorRange<domain_map>(domains_); }
 
-   bool has_domain(DomainID did) const {return domains_.find(did) != domains_.end(); }
+   bool has_domain(DomainID did) const { return domains_.find(did) != domains_.end(); }
 
    const Domain& get_domain(DomainID did) { auto& domain = domains_[did]; return *domain; }
 
@@ -70,7 +70,7 @@ public:
    {
       // create list of domains to burst
       std::vector<DomainID> domains;
-      for (const auto&d : domains_)
+      for (const auto& d : domains_)
          domains.emplace_back(d.first);
 
       while (domains.size() > 0)
@@ -120,7 +120,7 @@ private:
    std::unique_ptr<Single> create_default_single(const DomainID did, const ShellID sid, particle_id_pair pip, std::shared_ptr<Structure> structure, const ReactionRuleCollection::reaction_rule_set& rr) const
    {
       // switch on structure type
-      auto *world = dynamic_cast<CuboidalRegion*>(structure.get());
+      auto* world = dynamic_cast<CuboidalRegion*>(structure.get());
       if (world != nullptr)
       {
          const auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(pip.second.position(), pip.second.radius()), Shell::Code::INIT));
@@ -128,7 +128,7 @@ private:
          return std::unique_ptr<Single>(std::move(domain));
       }
 
-      auto *plane = dynamic_cast<PlanarSurface*>(structure.get());
+      auto* plane = dynamic_cast<PlanarSurface*>(structure.get());
       if (plane != nullptr)
       {
          // TODO scaling parameters , see shells.py:2009
@@ -164,7 +164,7 @@ private:
    {
       if (structure1.get() == structure2.get())
       {
-         auto *world = dynamic_cast<CuboidalRegion*>(structure1.get());
+         auto* world = dynamic_cast<CuboidalRegion*>(structure1.get());
          if (world != nullptr)
          {
             auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
@@ -250,7 +250,7 @@ private:
       }
 
       // particle radius times MULTI_SHELL_FACTOR may not exceed half the matrix cell size (test shell overlap condition)
-      double max_particle_radius = shellmat_.cell_size() / (2.0 *GfrdCfg.MULTI_SHELL_FACTOR);
+      double max_particle_radius = shellmat_.cell_size() / (2.0 * GfrdCfg.MULTI_SHELL_FACTOR);
       for (const auto& s : world_.get_species())
       {
          THROW_UNLESS_MSG(illegal_argument, s.second.radius() <= max_particle_radius, "Species '" << static_cast<idtype>(s.first) << ":" << s.second.name() << "' radius (" << s.second.radius() << ") exceeds maximum (" << max_particle_radius << ") for this matrix space.");
@@ -337,22 +337,22 @@ private:
       case Domain::Multiplicity::SINGLE:
       {
          auto pse = dynamic_cast<Single*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
-            process_single_event(*pse, ignore);
+         THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain");
+         process_single_event(*pse, ignore);
       } break;
 
       case Domain::Multiplicity::PAIR:
       {
          auto ppe = dynamic_cast<Pair*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
-            process_pair_event(*ppe, ignore);
+         THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain");
+         process_pair_event(*ppe, ignore);
       } break;
 
       case Domain::Multiplicity::MULTI:
       {
          auto pme = dynamic_cast<Multi*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
-            process_multi_event(*pme, ignore);
+         THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain");
+         process_multi_event(*pme, ignore);
       } break;
 
       default:
@@ -1247,7 +1247,7 @@ private:
       THROW_UNLESS_MSG(illegal_state, shellmat_.size() == shellcount, "Shells in matrix " << shellmat_.size() << " does not match shell count from domains " << shellcount << ".");
 
       // count shells (pair=2) and compare to number of particles
-      size_t pcount = std::accumulate(domains_.begin(), domains_.end(), size_t(0), [](size_t sum, const domain_map::value_type& d) { return sum + (d.second->multiplicity() == Domain::Multiplicity::PAIR ? 2 : d.second->num_shells()); });
+      size_t pcount = std::accumulate(domains_.begin(), domains_.end(), size_t(0), [](size_t sum, const domain_map::value_type & d) { return sum + (d.second->multiplicity() == Domain::Multiplicity::PAIR ? 2 : d.second->num_shells()); });
       THROW_UNLESS_MSG(illegal_state, pcount == world_.num_particles(), "Counted shells " << pcount << " does not match number of particles " << world_.num_particles() << ".");
 
 
