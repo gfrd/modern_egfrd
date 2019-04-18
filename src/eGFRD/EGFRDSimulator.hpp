@@ -53,7 +53,7 @@ public:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   void add_extrnal_event(double time, CustomAction* action)
+   void add_external_event(double time, CustomAction *action)
    {
       THROW_UNLESS_MSG(illegal_argument, action != nullptr, "No method provided");
       THROW_UNLESS_MSG(illegal_argument, time >= time_, "Cannot insert event in the past");
@@ -195,7 +195,8 @@ private:
          // DiskSurface & CylindricalSurface => MixedPair1DStatictestShell
       }
 
-      THROW_EXCEPTION(not_implemented, "Structure types not available.");
+//      THROW_EXCEPTION(not_implemented, "Structure types not available.");
+      return nullptr;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -301,7 +302,7 @@ private:
             if (custom_action != nullptr)    // Persistence restored simulations may encounter cleared CustomActions.
             {
                custom_action->do_action(time_);
-               add_extrnal_event(time_ + custom_action->interval(), custom_action);
+                add_external_event(time_ + custom_action->interval(), custom_action);
             }
          }  break;
 
@@ -362,7 +363,7 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::vector<particle_id_pair> fire_single_reaction(const particle_id_pair& reactant, const ReactionRule& rrule, const position_structid_pair& pair, std::vector<DomainID>& ignore)
+   std::vector<particle_id_pair> fire_single_reaction(const particle_id_pair& reactant, const ReactionRule& reaction_rule, const position_structid_pair& pair, std::vector<DomainID>& ignore)
    {
       /*
       # This takes care of the identity change when a single particle decays into one or a number of other particles
@@ -372,18 +373,18 @@ private:
       # A(any structure) -> B(same structure) + C(same structure or 3D)
       */
 
-      switch (rrule.get_products().size())
+      switch (reaction_rule.get_products().size())
       {
       case 0: // decay to zero
          world_.remove_particle(reactant.first);
-         if (rrec_) rrec_->StoreDecayReaction(time_, rrule.id(), reactant.first);
+         if (rrec_) rrec_->StoreDecayReaction(time_, reaction_rule.id(), reactant.first);
          return std::vector<particle_id_pair>();
 
       case 1:
       {
          // reactant -> single product
          const SpeciesType& reactant_species = world_.get_species(reactant.second.sid());
-         const SpeciesType& product_species = world_.get_species(rrule.get_products()[0]);
+         const SpeciesType& product_species = world_.get_species(reaction_rule.get_products()[0]);
 
          std::vector<Vector3> product_pos_list;
          StructureID product_structure_id;
@@ -414,7 +415,7 @@ private:
             {
                world_.remove_particle(reactant.first);
                auto newparticle = world_.add_particle(product_species.id(), product_structure_id, pos);
-               if (rrec_) rrec_->StoreUniMolecularReaction(time_, rrule.id(), reactant.first, newparticle.first);
+               if (rrec_) rrec_->StoreUniMolecularReaction(time_, reaction_rule.id(), reactant.first, newparticle.first);
                return std::vector<particle_id_pair>({ newparticle });
             }
          }
@@ -429,8 +430,8 @@ private:
       {
          // reactant -> two products
          const SpeciesType& reactant_species = world_.get_species(reactant.second.sid());
-         const SpeciesType& product1_species = world_.get_species(rrule.get_products()[0]);
-         const SpeciesType& product2_species = world_.get_species(rrule.get_products()[1]);
+         const SpeciesType& product1_species = world_.get_species(reaction_rule.get_products()[0]);
+         const SpeciesType& product2_species = world_.get_species(reaction_rule.get_products()[1]);
          double r01 = product1_species.radius() + product2_species.radius();
 
          if (reactant_species.structure_type_id() != product1_species.structure_type_id() || product1_species.structure_type_id() != product2_species.structure_type_id())
@@ -438,7 +439,7 @@ private:
             THROW_EXCEPTION(not_implemented, "Structure change not available.");
          }
 
-         // when fire_single-reaction is called from within a Pair domain, the pair-partner particel may be in the way of two products, so try 4 random placements
+         // when fire_single-reaction is called from within a Pair domain, the pair-partner particle may be in the way of two products, so try 4 random placements
          for (int retry = 4; retry > 0; --retry)
          {
             // calculate a random vector in the structure with unit length
@@ -466,7 +467,7 @@ private:
                world_.remove_particle(reactant.first);
                auto newparticle1 = world_.add_particle(product1_species.id(), product1_structure_id, pos1);
                auto newparticle2 = world_.add_particle(product2_species.id(), product2_structure_id, pos2);
-               if (rrec_) rrec_->StoreUnbindingReaction(time_, rrule.id(), reactant.first, newparticle1.first, newparticle2.first);
+               if (rrec_) rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first, newparticle2.first);
                return std::vector<particle_id_pair>({ newparticle1, newparticle2 });
             }
             //Log("GFRD").info("single reaction %d: placing product(s) failed, retry %d, iv: %g,%g,%g l=%g", reactant.first, retry, iv.X(), iv.Y(), iv.Z(), iv.length());
@@ -970,35 +971,35 @@ private:
 
       // collect all distances and radii of surrounding particles with init-shells
 
-      bool succes;
+      bool success;
       ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single.shell_id(), single.particle());
       CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single_pos);
       if (sic.multiple())
       {
          // make a MULTI domain
-         succes = form_multi(single.id(), sic.multi_range());
+         success = form_multi(single.id(), sic.multi_range());
       }
       else if (sic.did())
       {
          // Make a PAIR domain, with this single and sic.did()
-         succes = try_pair(single.id(), sic.did());
+         success = try_pair(single.id(), sic.did());
 
          // When pair failed, try create a Single
-         if (!succes)
+         if (!success)
          {
-            succes = update_single(single);
+            success = update_single(single);
          }
       }
       else
       {
          // Just scale and update the Single domain
-         succes = update_single(single);
+         success = update_single(single);
       }
 
-      if (!succes)
+      if (!success)
       {
-         succes = form_multi(single.id(), sic.multi_range());
-         THROW_UNLESS_MSG(illegal_state, succes, "Failed to make new domain!");
+         success = form_multi(single.id(), sic.multi_range());
+         THROW_UNLESS_MSG(illegal_state, success, "Failed to make new domain!");
       }
    }
 
@@ -1275,34 +1276,34 @@ private:
          const auto& shell = i.second;
          DomainID did = shell.did();
          auto& domain = domains_.at(did);
-         std::vector<DomainID> ovl;
+         std::vector<DomainID> overlap;
 
          if (shell.shape() == Shell::Shape::SPHERE)
          {
             auto sphere = shell.get_sphere();
             ShellCreateUtils::shell_overlap_check<shell_matrix_type> soc(sphere);
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, sphere.position());
-            ovl = std::move(soc.overlap());
+            overlap = std::move(soc.overlap());
          }
          else
          {
-            //auto cylinder = shell.get_cylinder();
-            //ShellCreateUtils::shell_overlap_check<shell_matrix_type> soc(cylinder);       // TODO check cylinder overlaps
-            //CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
-            //ovl = std::move(soc.overlap());
+//            auto cylinder = shell.get_cylinder();
+//            ShellCreateUtils::shell_overlap_check<shell_matrix_type> soc(cylinder);       // TODO check cylinder overlaps
+//            CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
+//            overlap = std::move(soc.overlap());
          }
 
          auto multi = dynamic_cast<Multi*>(domain.get());
          if (multi != nullptr)
          {
-            THROW_UNLESS_MSG(illegal_state, ovl.size() >= 1 && ovl.size() <= multi->num_shells(), "Shells of multi domain:" << did << " overlaps with more shells (" << ovl.size() << ") than it holds (" << multi->num_shells() << ").");
-            for (const auto& j : ovl)
+            THROW_UNLESS_MSG(illegal_state, overlap.size() >= 1 && overlap.size() <= multi->num_shells(), "Shells of multi domain:" << did << " overlaps with more shells (" << overlap.size() << ") than it holds (" << multi->num_shells() << ").");
+            for (const auto& j : overlap)
                THROW_UNLESS_MSG(illegal_state, j == did, "Shell of multi domain:" << did << " overlaps with shell from domain:" << j);
          }
-         else
+         else if(overlap.size() > 0)
          {
-            THROW_UNLESS_MSG(illegal_state, ovl.size() == 1, "Shell of domain:" << did << " overlaps with other shells.");
-            THROW_UNLESS_MSG(illegal_state, *ovl.begin() == did, "Shell of domain:" << did << " overlaps with other shell (Domain:" << *ovl.begin() << " ).");
+            THROW_UNLESS_MSG(illegal_state, overlap.size() == 1, "Shell of domain:" << did << " overlaps with other shells.");
+            THROW_UNLESS_MSG(illegal_state, *overlap.begin() == did, "Shell of domain:" << did << " overlaps with other shell (Domain:" << *overlap.begin() << " ).");
          }
       }
    }

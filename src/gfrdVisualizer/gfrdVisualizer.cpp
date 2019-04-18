@@ -812,23 +812,24 @@ int main(int argc, char** argv)
             auto sA = m.add_species_type(SpeciesType("A", sPlane, 2e-12, 1e-9));
             auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-9));
 
-            world.initialize(1E-6, m);
+            world.initialize(1e-6, m);
             auto ws = world.world_size();
             auto wsid = world.get_def_structure_id();
 
-            auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
-            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.3 * ws.X(), 0.3 * ws.Y(), false)));
+//            auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
+            auto vy = Vector3::uz;
+            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.3 * ws.X(), 0.3 * ws.Y(), true)));
             auto psid = world.add_structure(plane);
             UNUSED(psid);
 
-            for (int i = 0; i < 3; ++i)
-            {
-               auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2*i*ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2*ws.Y(), false)));
-               world.add_structure(plane2);
-            }
+//            for (int i = 0; i < 3; ++i)
+//            {
+//               auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2*i*ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2*ws.Y(), false)));
+//               world.add_structure(plane2);
+//            }
 
-            world.throwInParticles(sA, 2, rng, false, 0.2 * ws, 0.8 * ws);
-            world.throwInParticles(sB, 1, rng, false);
+            world.throwInParticles(sA, 40, rng, false, 0.2 * ws, 0.8 * ws);
+            world.throwInParticles(sB, 10, rng, false);
 
             // Reaction Rules bind and unbind to plane
             rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
