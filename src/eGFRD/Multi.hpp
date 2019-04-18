@@ -159,7 +159,7 @@ private:
             double r01 = s0.radius() + s1.radius();
             StructureTypeID sdef = world_.get_def_structure_type_id();
 
-            THROW_UNLESS_MSG(not_implemented, s0.structure_type_id() == sdef && s0.structure_type_id() == sdef, "Structures not yet supported!");
+            THROW_UNLESS_MSG(not_implemented, s0.structure_type_id() == sdef && s1.structure_type_id() == sdef, "Structures not yet supported!");
             auto scale = 1.0 / (4 * M_PI * r01 * r01);         // for Cubiodal Surface (world)
 
             const auto& rules = reactions_.query_reaction_rules(sid_a, sid_b);

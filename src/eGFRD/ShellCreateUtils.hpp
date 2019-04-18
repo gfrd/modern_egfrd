@@ -154,7 +154,7 @@ struct ShellCreateUtils
 
    public:
 
-      shell_overlap_check(const Sphere& sphere) : sphere_(sphere), ovelap_domains_() { }
+      shell_overlap_check(const Sphere& sphere) : sphere_(sphere), overlap_domains_() { }
 
       void operator()(const_iterator i, const Vector3& offset)
       {
@@ -163,20 +163,20 @@ struct ShellCreateUtils
          if (shell.shape() == Shell::Shape::SPHERE)
          {
             double distance = shell.get_sphere().offset(offset).distance(sphere_.position());
-            if (distance < sphere_.radius()) ovelap_domains_.emplace_back(shell.did());
+            if (distance < sphere_.radius()) overlap_domains_.emplace_back(shell.did());
          }
          else if (shell.shape() == Shell::Shape::CYLINDER)
          {
             double distance = shell.get_cylinder().offset(offset).distance(sphere_.position());
-            if (distance < sphere_.radius()) ovelap_domains_.emplace_back(shell.did());
+            if (distance < sphere_.radius()) overlap_domains_.emplace_back(shell.did());
          }
       }
 
-      std::vector<DomainID> overlap() { return std::move(ovelap_domains_); }     // move, so only call once
+      std::vector<DomainID> overlap() { return std::move(overlap_domains_); }     // move, so only call once
 
    private:
       const Sphere&              sphere_;
-      std::vector<DomainID>      ovelap_domains_;
+      std::vector<DomainID>      overlap_domains_;
    };
 
 

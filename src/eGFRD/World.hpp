@@ -422,7 +422,10 @@ public:
          Vector3 cyc_old_pos2 = cyc_pos - displacement;                                // calculate the old_pos relative to the transposed new position.
 
          double distance = (*i).second->newBD_distance(cyc_pos, s.radius(), cyc_old_pos2, sigma);
-         if (distance < s.radius()) nc(i, distance);
+         if (distance < s.radius())
+         {
+             nc(i, distance);
+         }
       }
    }
 

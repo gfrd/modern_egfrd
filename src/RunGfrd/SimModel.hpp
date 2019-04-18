@@ -171,8 +171,8 @@ private:
       case SectionModeBase::modes::Off: return false;
       case SectionModeBase::modes::On: return first || both;
       case SectionModeBase::modes::Run: return prepare_time() == 0 || !first;
+      default: THROW_EXCEPTION(illegal_state, "unknown mode");
       }
-      THROW_EXCEPTION(illegal_state, "unknown mode");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ private:
       if (cns.type() == CopyNumbersSection::types::Average)
       {
          cna_ = std::make_unique<CopyNumbersAvg>(world_, rules_, cns.interval());
-         simulator_->add_extrnal_event(0, cna_.get());
+         simulator_->add_external_event(0, cna_.get());
          simulator_->add_reaction_recorder(cna_.get());
          if (!cns.file().empty())
          {
@@ -193,7 +193,7 @@ private:
       else
       {
          cni_ = std::make_unique<CopyNumbersInst>(world_, cns.interval());
-         simulator_->add_extrnal_event(0, cni_.get());
+         simulator_->add_external_event(0, cni_.get());
          if (!cns.file().empty())
          {
             if (!cfile_.is_open()) cfile_.open(cns.file(), std::fstream::out | std::fstream::trunc);
@@ -205,7 +205,7 @@ private:
    void set_particlepostions_section(const ParticlePositionSection& pps)
    {
       pp_ = std::make_unique<ParticlePositions>(simulator_, pps.interval());
-      simulator_->add_extrnal_event(0, pp_.get());
+      simulator_->add_external_event(0, pp_.get());
       if (!pps.file().empty())
       {
          if (!pfile_.is_open()) pfile_.open(pps.file(), std::fstream::out | std::fstream::trunc);
@@ -247,13 +247,13 @@ private:
       if (first && (end_time_ > 0 || prep_time_ > 0))
       {
          progress_ = std::make_unique<Progress>(Progress(prep_time_ > 0 ? prep_time_ : end_time_, width));
-         simulator_->add_extrnal_event(0, progress_.get());
+         simulator_->add_external_event(0, progress_.get());
       }
       // Need to redo the progressbar (or other external events) since simulator is reset after pre-simulation phase.
       if (!first && end_time_ > 0)
       {
          progress_ = std::make_unique<Progress>(Progress(end_time_, width));
-         simulator_->add_extrnal_event(0, progress_.get());
+         simulator_->add_external_event(0, progress_.get());
       }
    }
 

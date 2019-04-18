@@ -82,7 +82,7 @@ private:
    SerialIDGenerator<SpeciesTypeID>    spgen_;                             // The id generator which makes sure that all species-/structureTypes have a unique id
    SerialIDGenerator<StructureTypeID>  stgen_;                             // The id generator which makes sure that all species-/structureTypes have a unique id
    species_map                         species_map_;                       // mapping: SpeciesTypeID->SpeciesType
-   structure_map                       structure_map_;                     // mapping: SpeciesTypeID->StructureType
+   structure_map                       structure_map_;                     // mapping: StructureTypeID->StructureType
    StructureTypeID                     default_structure_type_id_;         // The id of the default structure_type ("world")
 };
 
