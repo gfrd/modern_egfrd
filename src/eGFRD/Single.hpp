@@ -243,11 +243,14 @@ public:
     {
         // draw random circle and rotate it in the plane
         Vector2 c = r * Vector2::random(rng);
-        auto m = Matrix4::createRotationAB(structure_->shape().unit_z(), Vector3::uy);
+        auto struc = structure_.get();
+        auto shape = struc->shape();
+        auto unit_z = shape.unit_z();
+        auto m = Matrix4::createRotationAB(unit_z, Vector3::uy);
         return m.multiply(Vector3(c.X(), 0.0, c.Y()));
     }
 
-    GFRD_EXPORT virtual bool create_updated_shell(const shell_matrix_type& smat, const World& world) override;
+    GFRD_EXPORT bool create_updated_shell(const shell_matrix_type& smat, const World& world) override;
 
 private:
     std::shared_ptr<PlanarSurface> structure_;
@@ -255,3 +258,35 @@ private:
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
+
+
+class SinglePlanarInteraction : public SingleCylindrical
+{
+public:
+    using InteractionRules = ReactionRuleCollection::interaction_rule_set;
+
+    SinglePlanarInteraction(const DomainID did, const particle_id_pair& pid_pair, const PlanarSurface& structure,
+            const shell_id_pair& sid_pair, const ReactionRules& reaction_rules, const InteractionRules& interaction_rules)
+            : SingleCylindrical(did, pid_pair, sid_pair, reaction_rules), interacting_structure_(structure)
+    {
+    }
+
+    const char* type_name() const override { return "SinglePlanarInteraction"; }
+
+    Vector3 create_position_vector(double r, RandomNumberGenerator& rng) const override
+    {
+        // draw random circle and rotate it in the plane
+        Vector2 c = r * Vector2::random(rng);
+        auto struc = interacting_structure_;
+        auto shape = struc.shape();
+        auto unit_z = shape.unit_z();
+        auto m = Matrix4::createRotationAB(unit_z, Vector3::uy);
+//        return m.multiply(Vector3(c.X(), 0.0, c.Y()));
+        return Vector3(c.X(), 0.0, c.Y());
+    }
+
+    GFRD_EXPORT bool create_updated_shell(const shell_matrix_type& smat, const World& world) override;
+
+private:
+    const PlanarSurface& interacting_structure_;
+};

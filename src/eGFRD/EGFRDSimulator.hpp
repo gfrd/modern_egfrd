@@ -160,7 +160,8 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::unique_ptr<Pair> create_default_pair(const DomainID did, const ShellID sid, particle_id_pair pip1, std::shared_ptr<Structure> structure1, particle_id_pair pip2, std::shared_ptr<Structure> structure2, const ReactionRuleCollection::reaction_rule_set& rr) const
+   std::unique_ptr<Pair> create_default_pair(const DomainID did, const ShellID sid, particle_id_pair pip1, std::shared_ptr<Structure> structure1,
+           particle_id_pair pip2, std::shared_ptr<Structure> structure2, const ReactionRuleCollection::reaction_rule_set& reaction_rules) const
    {
       if (structure1.get() == structure2.get())
       {
@@ -168,10 +169,9 @@ private:
          if (world != nullptr)
          {
             auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
-            auto domain = std::make_unique<PairSpherical>(did, pip1, pip2, sid_pair, rr);
+            auto domain = std::make_unique<PairSpherical>(did, pip1, pip2, sid_pair, reaction_rules);
             return std::unique_ptr<Pair>(std::move(domain));
          }
-
 
          //if isinstance(single1.structure, CuboidalRegion) :
          //   return SphericalPairtestShell(single1, single2, geometrycontainer, domains)
@@ -186,6 +186,26 @@ private:
       {
          // All sorts of Pair Interactions (on different structures)
 
+          if(are_structure_types<CuboidalRegion *, PlanarSurface *>(structure1, structure2)) {
+              // For the PairMixed2D3D constructor, the order of particle arguments matters (first should be 2D)
+              particle_id_pair pip_2d, pip_3d;
+              std::shared_ptr<Structure> struc_2d, struc_3d;
+
+              if(is_structure_type<PlanarSurface*>(structure1)) {
+                  pip_2d = pip1, pip_3d = pip2;
+                  struc_2d = structure1, struc_3d = structure2;
+              } else {
+                  pip_2d = pip2, pip_3d = pip1;
+                  struc_2d = structure2, struc_3d = structure1;
+              }
+
+              auto cylinder = Cylinder(pip_2d.second.position(), 1.0,
+                      dynamic_cast<PlanarSurface*>(struc_2d.get())->shape().unit_z(), 0.5);
+              auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
+              auto domain = std::make_unique<PairMixed2D3D>(did, pip_2d, pip_3d, struc_2d, struc_3d, sid_pair, reaction_rules, world());
+              return std::unique_ptr<Pair>(std::move(domain));
+          }
+
          // PlanarSurface & PlanarSurface => PlanarSurfaceTransitionPairtestShell
          // PlanarSurface & CuboidalRegion => MixedPair2D3DtestShell
          // CuboidalRegion & PlanarSurface => MixedPair2D3DtestShell
@@ -195,9 +215,42 @@ private:
          // DiskSurface & CylindricalSurface => MixedPair1DStatictestShell
       }
 
-//      THROW_EXCEPTION(not_implemented, "Structure types not available.");
-      return nullptr;
+      THROW_EXCEPTION(not_implemented, "Needed structure types not yet available.");
    }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   std::unique_ptr<Single> create_default_interaction(const DomainID did, const ShellID sid, const ShellID old_sid, particle_id_pair pip,
+           const std::shared_ptr<Structure>& interaction_structure, const ReactionRuleCollection::reaction_rule_set& reaction_rules,
+           const ReactionRuleCollection::interaction_rule_set& interaction_rules)
+   {
+       // We make a spherical init shell here, construct the cylinder at the next event update
+       auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(old_sid), Shell(did, Sphere(pip.second.position(), pip.second.radius()), Shell::Code::INIT));
+
+       auto* plane = dynamic_cast<PlanarSurface*>(interaction_structure.get());
+       if (plane != nullptr)
+       {
+//           auto x = SinglePlanarInteraction(did, pip, std::shared_ptr<PlanarSurface>(plane), sid_pair, reaction_rules, interaction_rules);
+           auto domain = std::make_unique<SinglePlanarInteraction>(did, pip, *plane, sid_pair, reaction_rules, interaction_rules);
+           return std::unique_ptr<Single>(std::move(domain));
+       }
+
+       THROW_EXCEPTION(not_implemented, "Surface interactions other than 3D<->PlanarSurface are not yet implemented");
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+    template<typename Type1, typename Type2>
+    bool are_structure_types(std::shared_ptr<Structure> structure1, std::shared_ptr<Structure> structure2) const {
+       // Check if structure 1 is type 1, and 2 is type 2, or vice versa.
+        return (is_structure_type<Type1>(structure1) && is_structure_type<Type2>(structure2)) ||
+                (is_structure_type<Type1>(structure2) && is_structure_type<Type2>(structure1));
+    }
+    template<typename Type>
+    bool is_structure_type(std::shared_ptr<Structure> structure) const {
+       // Check if structure is of given type
+        return dynamic_cast<Type>(structure.get()) != nullptr;
+    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -212,7 +265,7 @@ private:
       auto structure = world_.get_structure(pip.second.structure_id());
 
       // 2. Create and register the single domain.The type of the single that will be created depends on the 
-      // structure(region or surface) this particle is in / on.Either SphericalSingle, PlanarSurfaceSingle, or CylindricalSurfaceSingle.
+      // structure(region or surface) this particle is in / on. Either SphericalSingle, PlanarSurfaceSingle, or CylindricalSurfaceSingle.
       auto single = create_default_single(did, sid, pip, structure, rr);
 
       // 3. update time and shell container
@@ -972,17 +1025,30 @@ private:
       // collect all distances and radii of surrounding particles with init-shells
 
       bool success;
-      ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single.shell_id(), single.particle());
-      CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single_pos);
-      if (sic.multiple())
+
+      // Find particles within interaction range
+      ShellCreateUtils::shell_interaction_check<shell_matrix_type> interacting_shells(single.shell_id(), single.particle());
+      CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, interacting_shells, single_pos);
+
+      // Find surfaces within interaction range
+      auto ignored_structures = std::vector<StructureID>{world_.get_def_structure_id(), single.particle().structure_id()};
+      ShellCreateUtils::surface_interaction_check interacting_surfaces(ignored_structures, single.particle());
+      interacting_surfaces.find_interacting_surfaces(world_.get_structures());
+
+      if (interacting_shells.multiple() || interacting_surfaces.multiple() ||
+            (interacting_shells.did() && interacting_surfaces.sid()) )
       {
-         // make a MULTI domain
-         success = form_multi(single.id(), sic.multi_range());
+         // Multiple interacting particles/structures, so we must make a MULTI domain
+         success = form_multi(single.id(), interacting_shells.multi_range());
       }
-      else if (sic.did())
+      else if (interacting_surfaces.sid()) {
+          // Make a SurfaceInteraction domain
+          success = try_interaction(single, interacting_surfaces.sid());
+      }
+      else if (interacting_shells.did())
       {
-         // Make a PAIR domain, with this single and sic.did()
-         success = try_pair(single.id(), sic.did());
+         // Make a PAIR domain, with this single and interacting_shells.did()
+         success = try_pair(single.id(), interacting_shells.did());
 
          // When pair failed, try create a Single
          if (!success)
@@ -992,18 +1058,59 @@ private:
       }
       else
       {
-         // Just scale and update the Single domain
+         // No interacting particles/surfaces, just scale and update the Single domain
          success = update_single(single);
       }
 
+      // If nothing else worked, make a multi domain as a fallback
       if (!success)
       {
-         success = form_multi(single.id(), sic.multi_range());
+         success = form_multi(single.id(), interacting_shells.multi_range());
          THROW_UNLESS_MSG(illegal_state, success, "Failed to make new domain!");
       }
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
+
+   bool try_interaction(const Single& single, StructureID sid)
+   {
+       auto struc = world_.get_structure(sid);
+
+       DomainID old_did = single.id();
+       DomainID new_did = didgen_();
+       ShellID new_sid = sidgen_();         // TODO, maybe move id-gen to after we know there is space!
+       auto old_domain = dynamic_cast<Single*>(domains_[old_did].get());
+       auto old_sid = old_domain->shell_pair().first;
+
+       const auto& reaction_rules = reaction_rules_.query_reaction_rules(single.particle().sid());
+       const auto& interaction_rules = reaction_rules_.query_interaction_rules(single.particle().sid(), struc->sid());
+       auto interaction = create_default_interaction(new_did, new_sid, old_sid, single.pip(), struc, reaction_rules, interaction_rules);
+       if (interaction != nullptr)
+       {
+           bool success = interaction->create_updated_shell(shellmat_, world_);
+           if (!success) return false;
+
+           // update the shell containers with the new shell
+           shellmat_.update(interaction->shell_pair());
+
+           // determine next action for this event
+           interaction->determine_next_event(rng_);
+           interaction->set_last_time(time_);
+
+           // remove old domain, and add new interaction domain
+           remove_domain(old_did);
+           domains_[new_did] = std::unique_ptr<Domain>(std::move(interaction));
+
+           // update scheduler
+           add_domain_event(new_did);
+           return true;
+       }
+       else
+       {
+           Log("GFRD").info() << "Make interaction from " << single.shell().did() << " and " << sid << " failed (surfaces other than PlanarSurface not implemented)!";
+           return false;
+       }
+   }
 
    bool try_pair(DomainID did1, DomainID did2)
    {
@@ -1027,8 +1134,8 @@ private:
       auto pair = create_default_pair(did, sid, pip1, structure1, pip2, structure2, rules);
       if (pair != nullptr)
       {
-         bool succes = pair->create_updated_shell(shellmat_, world_, single1->shell_id(), single2->shell_id());
-         if (!succes) return false;
+         bool success = pair->create_updated_shell(shellmat_, world_, single1->shell_id(), single2->shell_id());
+         if (!success) return false;
 
          pair->set_k_totals(single1->particle().sid(), single1->k_total(), single2->k_total());
          // # 3. update the shell containers with the new shell

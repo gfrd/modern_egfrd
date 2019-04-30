@@ -19,6 +19,7 @@
 #include <GreensFunction3DRadInf.hpp>
 #include <GreensFunction3DAbs.hpp>
 #include <GreensFunction3D.hpp>
+#include <GreensFunction3DRadAbs.hpp>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -389,3 +390,188 @@ public:
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
+
+
+class PairMixed2D3D : public Pair
+{
+public:
+    PairMixed2D3D(const DomainID did, const particle_id_pair& pid_pair_2d, const particle_id_pair& pid_pair_3d,
+            const std::shared_ptr<Structure>& structure_2d, std::shared_ptr<Structure>& structure_3d, const shell_id_pair& sid_pair, const ReactionRules& reactions, const World &world)
+            : Pair(did, pid_pair_2d, pid_pair_3d, sid_pair, reactions),
+            pid_pair_2d(pid_pair_2d), pid_pair_3d(pid_pair_3d), structure_2d(structure_2d), structure_3d(structure_3d), world_(world)
+    {
+        THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
+        THROW_UNLESS(illegal_state, structure_2d.get()->id() == pid_pair_2d.second.structure_id());
+        THROW_UNLESS(illegal_state, structure_3d.get()->id() == pid_pair_3d.second.structure_id());
+
+
+        // The scaling factor needed to make the anisotropic diffusion problem
+        // of the IV into an isotropic one. 3D particle is the only contributor
+        // to diffusion normal to the plane.
+        scaling_factor_ = sqrt(D_R() / pid_pair_3d.second.D());
+    }
+
+    const char* type_name() const override { return "PairMixed2D3D"; }
+
+    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override {
+        double max_size = smat.cell_size() * GfrdCfg.MAX_CELL_OCCUPANCY;
+
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
+        return false;
+    }
+
+    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override {
+
+        auto particle1 = pid_pair_2d.second, particle2 = pid_pair_3d.second;
+        auto pos1 = particle1.position(), pos2 = particle2.position();
+        auto D1 = particle1.D(), D2 = particle2.D();
+        auto particle2_trans = world_.cyclic_transpose(pos1, pos2);
+
+        // CoM calculation:
+        // The CoM is calculated in a similar way to a normal 3D pair...
+        auto com_vector = (((pos1 * D2) + (pos2 * D1)) / (D1 + D2)).modulo(world_.world_size());
+        com_vector = world_.cyclic_transpose(com_vector, structure_2d.get()->position());
+
+        // ...and then projected onto the plane to make sure the CoM is in the surface
+        auto projected_com_vector = structure_2d.get()->project_point(com_vector).first;
+        projected_com_vector = world_.apply_boundary(projected_com_vector);
+
+        return projected_com_vector;
+    }
+
+    Vector3 create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override {
+        auto particle1 = pid_pair_2d.second, particle2 = pid_pair_3d.second;
+        auto pos1 = particle1.position(), pos2 = particle2.position();
+        auto pos2_trans = world_.cyclic_transpose(pos2, pos1);
+
+        // IV calculation
+        auto iv = pos2_trans - pos1;
+
+        // We assume for now that the 2D structure is a PlanarSurface. This might not
+        // be the case as more structures get added. This cast is needed to expose shape().
+        // We could also add shape() to a superclass.
+        auto surface = dynamic_cast<PlanarSurface*>(structure_2d.get());
+        THROW_UNLESS_MSG(illegal_state, surface != nullptr, "PairMixed2D3D has a non-planar 2D surface, which is not supported.");
+
+        // Rescale the iv in the axis normal to the plane
+        auto unit_z = surface->shape().unit_z();
+        auto iv_z_component = Vector3::dot(iv, unit_z);
+        auto iv_z = unit_z * iv_z_component;
+        auto scaled_iv_z = unit_z * (iv_z_component * scaling_factor_);
+
+        return iv - iv_z + scaled_iv_z;
+    }
+
+    std::pair<position_structid_pair, position_structid_pair>
+    do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double radius1, double radius2, StructureID s1,
+                      StructureID s2, Vector3 unit, const World &world) const override {
+
+        auto weight1 = D1 / D_tot(), weight2 = D2 / D_tot();
+        auto z_backtransform = sqrt(D2 / D_tot());
+
+        // Like in create_interparticle_vector(), we assume the 2D surface is a PlanarSurface
+        auto surface = dynamic_cast<PlanarSurface*>(structure_2d.get());
+        THROW_UNLESS_MSG(illegal_state, surface != nullptr, "PairMixed2D3D has a non-planar 2D surface, which is not supported.");
+        auto shape = surface->shape();
+
+        // Get the coordinates of the iv relative to the system of the surface (or actually the shell)
+        auto iv_x = shape.unit_x() * Vector3::dot(iv, shape.unit_x());
+        auto iv_y = shape.unit_y() * Vector3::dot(iv, shape.unit_y());
+
+        auto iv_x_length = iv_x.length(), iv_y_length = iv_y.length();
+
+        // Reflect the coordinates in the unit_z direction back to the side of the membrane
+        // where the domain is. Note that it's implied that the origin of the coordinate system lies in the
+        // plane of the membrane.
+        auto iv_z_length =  fabs(Vector3::dot(iv, unit)); // FIXME maybe first project the shell unit_z onto the surface unit vector to prevent numerical problems?
+
+        // Do the reverse scaling in z-direction
+        auto iv_z_length_backtransform = iv_z_length * z_backtransform;
+
+        // The following is to avoid overlaps in case that the z-component of the IV is scaled down
+        // so much that it would cause a particle overlap.
+        // This can happen because the inner boundary in the space of transformed coordinates is not a
+        // prolate spheroid, as it should, but approximated by a sphere. This can lead to IV exit points
+        // within the prolate spheroid, i.e. within the sphere with radius sigma = radius1 + radius2 in
+        // the real space after inverse transform.  FIXME This works, but is still somewhat of a HACK!
+        auto min_iv_length = (radius1 + radius2) * GfrdCfg.MINIMAL_SEPARATION_FACTOR;
+
+        if (iv_x_length * iv_x_length + iv_y_length * iv_y_length + iv_z_length_backtransform * iv_z_length_backtransform < min_iv_length * min_iv_length) {
+            auto z_safety_factor_sq = (min_iv_length * min_iv_length - iv_x_length*iv_x_length - iv_y_length*iv_y_length)
+                    / (iv_z_length_backtransform * iv_z_length_backtransform);
+
+            THROW_UNLESS_MSG(illegal_state, z_safety_factor_sq >= 0.0, "Can't have negative z safety factor.");
+            Log("GFRD").warn() << "PairMixed2D3D: applying z safety factor to enlarge too small interparticle vector.";
+
+            iv_z_length_backtransform = sqrt(z_safety_factor_sq) * iv_z_length_backtransform;
+        }
+
+        // TODO: also check for membrane overlapping?
+
+        // Construct the z-vector-component and the new position vectors
+        auto iv_z = unit * iv_z_length_backtransform;
+        auto new_2d_pos = com - weight1 * (iv_x + iv_y);
+        auto new_3d_pos = com + (weight2 * (iv_x + iv_y)) + iv_z;
+
+        // Make pairs
+        auto pair_2d = std::make_pair(new_2d_pos, structure_2d.get()->id());
+        auto pair_3d = std::make_pair(new_3d_pos, structure_3d.get()->id());
+        return std::make_pair(pair_2d, pair_3d);
+    }
+
+    EventType draw_iv_event_type(RandomNumberGenerator &rng) override {
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
+        return EventType::INIT;
+    }
+
+    const PairGreensFunction &choose_pair_greens_function() const override {
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.")
+        return *gf_iv_;
+    }
+
+    void determine_radii() {
+        // Determines the dimensions of the domains used for the Green's functions
+        // from the dimensions of the cylindrical shell.
+        // Note that the function assumes that the cylinder is dimensioned properly.
+
+        auto particle_2d = pid_pair_2d.second, particle_3d = pid_pair_3d.second;
+        auto radius_2d = particle_2d.radius(), radius_3d = particle_3d.radius();
+        auto D_2d = particle_2d.D(), D_3d = particle_3d.D();
+
+        auto shell_radius = shell().get_cylinder().radius();
+        auto shell_half_length = shell().get_cylinder().half_length();
+        auto z_left = radius_2d;
+        auto z_right = 2.0 * shell_half_length - z_left;
+
+        // Partition the space in the protective domain over the IV and the CoM domains
+        // The outer bound of the interparticle vector is set by the particle diffusing in 3D via:
+        a_r_ = (z_right - radius_3d) * scaling_factor_;
+
+        // Calculate the maximal displacement of a particle given an interparticle vector bound a_r
+        // taking into account the radius for both the 2D and 3D particle. This sets the remaining
+        // space for the CoM diffusion.
+        auto space_for_iv = gsl_max( (D_2d/D_tot()) * a_r() + radius_2d,
+                                     (D_3d/D_tot()) * a_r() + radius_3d);
+
+        // It then determines the CoM vector bound via
+        a_R_ = shell_radius - space_for_iv;
+        if(feq(a_R(), 0.0, shell_radius)) {
+            a_R_ = 0.0;
+            Log("GFRD").info() << "(PairMixed2D3D) determine_radii: setting a_R to zero";
+        }
+
+        // TODO: Add sanity checks from pair.py
+    }
+
+private:
+    friend class Persistence;
+
+    const World &world_;
+
+    const particle_id_pair pid_pair_2d;
+    const particle_id_pair pid_pair_3d;
+    std::shared_ptr<Structure> structure_2d;
+    std::shared_ptr<Structure> structure_3d;
+
+    double scaling_factor_;
+};

@@ -25,10 +25,10 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
    THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 
    double min_radius = get_min_pair_size();
-   double max_radius = smat.cell_size() / 2.0;      // assure spheres cannot overlap
+   double max_radius = smat.cell_size() * GfrdCfg.MAX_CELL_OCCUPANCY;      // assure spheres cannot overlap
    auto radius = max_radius;
 
-   // when not defusing, use minimal shell (we're not going anywhere, lease space for all others)
+   // when not diffusing, use minimal shell (we're not going anywhere, lease space for all others)
    if (D_tot() == 0.0) radius = min_radius;
 
    // check distances to surfaces, ignore def.struct and particle.structure
@@ -53,8 +53,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
 
    determine_radii(iv_.length(), radius);     // calculate inner and outer radius a_r_, a_R_.
 
-   gf_com_ = std::make_unique<GreensFunction3DAbsSym>(GreensFunction3DAbsSym(D_R(), a_R_));
-   gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_tot(), k_total(), r0(), sigma(), a_r_));
+   gf_com_ = std::make_unique<GreensFunction3DAbsSym>(D_R(), a_R_);
+   gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(D_tot(), k_total(), r0(), sigma(), a_r_);
 
    return true;
 }
@@ -77,17 +77,17 @@ GFRD_EXPORT const PairGreensFunction& PairSpherical::choose_pair_greens_function
          return *gf_iv_.get();
 
       // near sigma; use GreensFunction3DRadInf
-      gf_tmp_ = std::make_unique<GreensFunction3DRadInf>(GreensFunction3DRadInf(D_tot(), k_total(), r0(), sigma()));
+      gf_tmp_ = std::make_unique<GreensFunction3DRadInf>(D_tot(), k_total(), r0(), sigma());
       return *gf_tmp_.get();
    }
 
    // sigma unreachable
    if (distance_from_shell < threshold_distance)
       // near a;
-      gf_tmp_ = std::make_unique<GreensFunction3DAbs>(GreensFunction3DAbs(D_tot(), r0(), a_r_));
+      gf_tmp_ = std::make_unique<GreensFunction3DAbs>(D_tot(), r0(), a_r_);
    else
       // distant from both a and sigma;
-      gf_tmp_ = std::make_unique<GreensFunction3D>(GreensFunction3D(D_tot(), r0()));
+      gf_tmp_ = std::make_unique<GreensFunction3D>(D_tot(), r0());
 
    return *gf_tmp_.get();
 }
