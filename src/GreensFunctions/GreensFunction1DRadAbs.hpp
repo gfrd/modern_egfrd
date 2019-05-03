@@ -156,7 +156,7 @@ private:
 
    const double v_;         // The diffusion constant and drift velocity
    const double k_;         // The reaction constant
-   const double r0_;
+   const double r0_;        // Initial distance of particle
    const double sigma_;     // The left and right boundary of the domain (sets the l_scale, see below)
    const double a_;
    const double lscale_;   // This is the length scale of the system

@@ -243,50 +243,188 @@ public:
     {
         // draw random circle and rotate it in the plane
         Vector2 c = r * Vector2::random(rng);
-        auto struc = structure_.get();
-        auto shape = struc->shape();
-        auto unit_z = shape.unit_z();
-        auto m = Matrix4::createRotationAB(unit_z, Vector3::uy);
+        auto m = Matrix4::createRotationAB(structure_.get()->shape().unit_z(), Vector3::uy);
         return m.multiply(Vector3(c.X(), 0.0, c.Y()));
     }
 
     GFRD_EXPORT bool create_updated_shell(const shell_matrix_type& smat, const World& world) override;
 
-private:
+protected:
     std::shared_ptr<PlanarSurface> structure_;
 
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-
-class SinglePlanarInteraction : public SingleCylindrical
-{
+class SingleInteraction : public Single {
 public:
     using InteractionRules = ReactionRuleCollection::interaction_rule_set;
 
-    SinglePlanarInteraction(const DomainID did, const particle_id_pair& pid_pair, const PlanarSurface& structure,
-            const shell_id_pair& sid_pair, const ReactionRules& reaction_rules, const InteractionRules& interaction_rules)
-            : SingleCylindrical(did, pid_pair, sid_pair, reaction_rules), interacting_structure_(structure)
+    SingleInteraction(const DomainID did, const particle_id_pair &pid_pair,
+                      const shell_id_pair &sid_pair, const ReactionRules &reaction_rules,
+                      const InteractionRules &interaction_rules)
+            : Single(did, pid_pair, sid_pair, reaction_rules),
+              interaction_rules_(interaction_rules)
     {
     }
 
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    virtual double draw_iv_event_time(RandomNumberGenerator &rng)
+    {
+        return GreenFunctionHelper::draw_time_wrapper(rng, *gf_iv_);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    void determine_next_event(RandomNumberGenerator& rng) override
+    {
+        auto t_escape = draw_escape_time(rng);
+        auto t_reaction = draw_reaction_time(rng);
+        auto t_iv = draw_iv_event_time(rng);
+
+        if (t_escape < t_reaction && t_escape < t_iv)
+        {
+            dt_ = t_escape;
+            eventType_ = EventType::SINGLE_ESCAPE;
+        }
+        else if(t_reaction < t_escape && t_reaction < t_iv)
+        {
+            dt_ = t_reaction;
+            eventType_ = EventType::SINGLE_REACTION;
+        }
+        else
+        {
+            dt_ = t_iv;
+            eventType_ = EventType::IV_EVENT; // Particular IV event type is determined just-in-time in eGFRDSimulator::process_single_event()
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    EventType draw_iv_event_type(RandomNumberGenerator& rng) const override
+    {
+        auto type = GreenFunctionHelper::draw_eventtype_wrapper(rng, *gf_iv_, dt_);
+
+        switch(type)
+        {
+            case GreensFunction::EventKind::IV_ESCAPE:
+                return EventType::SINGLE_ESCAPE;
+            case GreensFunction::EventKind::IV_REACTION:
+                return EventType::SINGLE_INTERACTION;
+            default:
+                THROW_EXCEPTION(not_implemented, " Unknown IV event type");
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double interaction_k_total() const
+    {
+        // calculates the total rate for a list of interaction rules
+        // The probability for the interaction to happen is proportional to the sum of the rates of all the possible interactions.
+        double k_tot = 0;
+        for (auto& rr : interaction_rules_)
+            k_tot += rr.getK();
+        return k_tot;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    const InteractionRule& draw_interaction_rule(RandomNumberGenerator& rng) const
+    {
+        // draws an interaction rule out of a list of reaction rules based on their relative rates
+        double rnd = rng.uniform(0, interaction_k_total());
+        auto i = interaction_rules_.begin();
+        double k_sum = 0.0;
+        while (k_sum + i->getK() < rnd) { k_sum += i->getK();  ++i; }
+
+        return *i;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    virtual std::shared_ptr<const Structure*> get_interacting_structure() const = 0;
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+protected:
+    const InteractionRules& interaction_rules_;
+    std::unique_ptr<GreensFunction> gf_iv_;
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+
+class SinglePlanarInteraction : public SingleInteraction
+{
+public:
+
+    SinglePlanarInteraction(const DomainID did, const particle_id_pair& pid_pair, const PlanarSurface& structure,
+            const shell_id_pair& sid_pair, const ReactionRules& reaction_rules, const InteractionRules& interaction_rules)
+            : SingleInteraction(did, pid_pair, sid_pair, reaction_rules, interaction_rules), interacting_structure_(structure),
+              structure_pointer_(std::make_shared<const Structure*>(&interacting_structure_))
+    {
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
     const char* type_name() const override { return "SinglePlanarInteraction"; }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
 
     Vector3 create_position_vector(double r, RandomNumberGenerator& rng) const override
     {
         // draw random circle and rotate it in the plane
         Vector2 c = r * Vector2::random(rng);
-        auto struc = interacting_structure_;
-        auto shape = struc.shape();
-        auto unit_z = shape.unit_z();
-        auto m = Matrix4::createRotationAB(unit_z, Vector3::uy);
-//        return m.multiply(Vector3(c.X(), 0.0, c.Y()));
-        return Vector3(c.X(), 0.0, c.Y());
+        auto m = Matrix4::createRotationAB(interacting_structure_.shape().unit_z(), Vector3::uy);
+        return m.multiply(Vector3(c.X(), 0.0, c.Y()));
     }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double get_distance_to_surface()
+    {
+        // This is the distance from the particle to the PlanarSurface
+        return particle_surface_dist_;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double get_distance_to_escape(double half_length)
+    {
+        // This calculates the distance from the particle to the flat boundary away from the surface
+        auto cylinder_length = half_length*2;
+        auto right_dist_to_surface = cylinder_length - particle_surface_dist_ - (pid_pair_.second.radius() * GfrdCfg.SINGLE_SHELL_FACTOR);
+        return right_dist_to_surface;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double center_offset(double half_length)
+    {
+        return half_length - get_distance_to_surface();
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double get_inner_a() const override { return sid_pair_.second.get_cylinder().radius() - pid_pair_.second.radius(); }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    std::shared_ptr<const Structure*> get_interacting_structure() const override
+    {
+        return structure_pointer_;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
 
     GFRD_EXPORT bool create_updated_shell(const shell_matrix_type& smat, const World& world) override;
 
-private:
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+protected:
     const PlanarSurface& interacting_structure_;
+    const std::shared_ptr<const Structure*> structure_pointer_;
+    double particle_surface_dist_ = 0.0;
 };

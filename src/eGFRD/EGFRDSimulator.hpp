@@ -173,6 +173,8 @@ private:
             return std::unique_ptr<Pair>(std::move(domain));
          }
 
+         // TODO: add support for PairCylinder
+
          //if isinstance(single1.structure, CuboidalRegion) :
          //   return SphericalPairtestShell(single1, single2, geometrycontainer, domains)
          //   elif isinstance(single1.structure, PlanarSurface) :
@@ -391,27 +393,60 @@ private:
       case Domain::Multiplicity::SINGLE:
       {
          auto pse = dynamic_cast<Single*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain")
-            process_single_event(*pse, ignore);
+         THROW_UNLESS_MSG(illegal_state, pse != nullptr, "Not a Single domain");
+         process_single_event(*pse, ignore);
       } break;
 
       case Domain::Multiplicity::PAIR:
       {
          auto ppe = dynamic_cast<Pair*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain")
-            process_pair_event(*ppe, ignore);
+         THROW_UNLESS_MSG(illegal_state, ppe != nullptr, "Not a Pair domain");
+         process_pair_event(*ppe, ignore);
       } break;
 
       case Domain::Multiplicity::MULTI:
       {
          auto pme = dynamic_cast<Multi*>(domain.get());
-         THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain")
-            process_multi_event(*pme, ignore);
+         THROW_UNLESS_MSG(illegal_state, pme != nullptr, "Not a Multi domain");
+         process_multi_event(*pme, ignore);
       } break;
 
       default:
          THROW_EXCEPTION(illegal_state, "Unknown event");
       }
+   }
+
+   std::vector<particle_id_pair> fire_single_interaction(const particle_id_pair& reactant,
+           const InteractionRule& interaction_rule, const std::shared_ptr<const Structure*>& interacting_structure_p)
+   {
+       auto structure = *interacting_structure_p.get();
+       switch (interaction_rule.get_products().size()) {
+           case 0:
+           {
+               world_.remove_particle(reactant.first);
+               if (rrec_) rrec_->StoreDecayReaction(time_, interaction_rule.id(), reactant.first);
+               return std::vector<particle_id_pair>();
+           }
+           case 1:
+           {
+               const SpeciesType &reactant_species = world_.get_species(reactant.second.sid());
+               const SpeciesType &product_species = world_.get_species(interaction_rule.get_products()[0]);
+
+               // Determine position orthogonally projected on the surface the particle interacted with
+               auto projected_pos = structure->project_point(reactant.second.position()).first;
+               auto product_structure_id = structure->id();
+
+               // Remove old particle and add the new interacted particle
+               world_.remove_particle(reactant.first);
+               auto product = world_.add_particle(product_species.id(), product_structure_id, projected_pos);
+               if (rrec_) rrec_->StoreUniMolecularReaction(time_, interaction_rule.id(), reactant.first, product.first);
+               return std::vector<particle_id_pair>({product});
+           }
+           default:
+           {
+               THROW_EXCEPTION(not_implemented, "Interactions with more than 1 product are not yet supported.");
+           }
+       }
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -632,7 +667,8 @@ private:
          if (eventType == Domain::EventType::IV_EVENT)
             eventType = single.draw_iv_event_type(rng_);
 
-         ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE || eventType == Domain::EventType::BURST);
+         ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE ||
+                  eventType == Domain::EventType::SINGLE_INTERACTION || eventType == Domain::EventType::BURST);
          ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule::empty();
 
          // get the(new) position and structure on which the particle is located.
@@ -642,22 +678,36 @@ private:
          // newpos now hold the new position of the particle (not yet committed to the world)
          // if we would here move the particles and make new shells, then it would be similar to a propagate
 
-         remove_domain(single.id());      // single does not exist after this!!!
-
          std::vector<particle_id_pair> new_particles;
          switch (eventType) // possible actions for Single domains
          {
          case Domain::EventType::SINGLE_REACTION:
-            new_particles = fire_single_reaction(pid_pair, rrule, pos_struct, ignore);
-            break;
+         {
+             remove_domain(single.id());      // single does not exist after this!!!
+             new_particles = fire_single_reaction(pid_pair, rrule, pos_struct, ignore);
+             break;
+         }
 
          case Domain::EventType::SINGLE_INTERACTION:
-            //TODO particles, zero_singles_b, ignore = self.fire_interaction(single, newpos, struct_id, ignore)
-            THROW_EXCEPTION(not_implemented, "SINGLE_INTERACTION not supported.")
+         {
+             auto pip = single.pip();
+             auto domain = domains_[single.id()].get();
+             auto single_interaction = dynamic_cast<SingleInteraction *>(domain);
+             if (single_interaction == nullptr) {
+                 THROW_EXCEPTION(illegal_state, "SINGLE_INTERACTION event type without SingleInteraction type domain");
+             }
+             auto interaction_rule = single_interaction->draw_interaction_rule(rng_);
+             auto interacting_surface = single_interaction->get_interacting_structure();
+             remove_domain(single.id());      // single does not exist after this!!!
+
+             new_particles = fire_single_interaction(pip, interaction_rule, interacting_surface);
+             break;
+         }
 
          case Domain::EventType::SINGLE_ESCAPE:
          case Domain::EventType::BURST:
          {
+            remove_domain(single.id());      // single does not exist after this!!!
             auto new_pid = fire_move(pid_pair, pos_struct);
             new_particles.emplace_back(new_pid);
          }  break;

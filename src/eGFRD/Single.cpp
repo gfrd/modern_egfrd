@@ -4,6 +4,7 @@
 #include "EGFRDSimulator.hpp"
 #include <GreensFunction2DAbsSym.hpp>
 #include <GreensFunction3DAbsSym.hpp>
+#include <GreensFunction1DRadAbs.hpp>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -81,9 +82,14 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
     auto pos = pid_pair_.second.position();
-    double min_radius = particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR;
+    particle_surface_dist_ = interacting_structure_.distance(pos);
+
+    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
+
+    double min_radius = particle().radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
     double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-    //double max_heigth = smat.cell_size() / std::sqrt(2.0);
+
+    //double max_height = smat.cell_size() / std::sqrt(2.0);
     auto radius = max_radius;
 
     // check distances to surfaces, ignore def.struct and particle.structure
@@ -95,7 +101,8 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
             radius = std::min(radius, distance);
         }
     }
-    // TODO
+
+    // TODO: check distances with actual geometric overlap checking
     shell_distance_checker sdc(shell_id(),  pos, radius, shell_distance_checker::Construct::SHARE5050);
     CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
     radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
@@ -106,7 +113,18 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     THROW_UNLESS(not_found, plane != nullptr);
     auto unit_z = plane->shape().unit_z();
 
-    sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, radius), Shell::Code::NORMAL);
+    // orient cylinder on correct side of the plane
+    auto orientation = plane->project_point(pos).second;
+    if (orientation.first > 0)
+    {
+        unit_z *= -1;
+    }
+
+    double height = std::max(radius, 2 * (particle().radius() * GfrdCfg.SINGLE_SHELL_FACTOR) + get_distance_to_surface());
+    auto cylinder_center_pos = pos - unit_z * center_offset(height/2);
+
+    sid_pair_.second = Shell(domainID_, Cylinder(cylinder_center_pos, radius, unit_z, height/2), Shell::Code::NORMAL);
     gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));
+    gf_iv_ = std::make_unique<GreensFunction1DRadAbs>(GreensFunction1DRadAbs(pid_pair_.second.D(), interaction_k_total(), particle_surface_dist_, get_distance_to_surface(), get_distance_to_escape(height/2)));
     return true;
 }

@@ -210,8 +210,9 @@ void handleIdle()
 
       if (extSim.active() && extSim.refresh()) glutPostRedisplay();
    }
-   catch (const std::exception&)
+   catch (const std::exception& ex)
    {
+      printf("Unhandled exception: %s", ex.what());
       abort();
    }
 }

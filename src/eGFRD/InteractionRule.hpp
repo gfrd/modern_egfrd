@@ -22,7 +22,7 @@ public:
 
    explicit InteractionRule(const reactants& reactants, double k, const products& products) : id_(), reactants_(reactants), products_(products), k_(k)
    {
-      THROW_UNLESS_MSG(illegal_argument, reactants_.size() == 2,"InteractionRule needs SpeciesTypeID and StructrureTypeID");
+      THROW_UNLESS_MSG(illegal_argument, reactants_.size() == 2,"InteractionRule needs SpeciesTypeID and StructureTypeID");
       std::sort(products_.begin(), products_.end());        // sort for easier duplicate checks
    }
 
