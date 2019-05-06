@@ -188,7 +188,7 @@ private:
       {
          // All sorts of Pair Interactions (on different structures)
 
-          if(are_structure_types<CuboidalRegion *, PlanarSurface *>(structure1, structure2)) {
+          if(are_structure_types<CuboidalRegion*, PlanarSurface*>(structure1, structure2)) {
               // For the PairMixed2D3D constructor, the order of particle arguments matters (first should be 2D)
               particle_id_pair pip_2d, pip_3d;
               std::shared_ptr<Structure> struc_2d, struc_3d;
@@ -232,7 +232,6 @@ private:
        auto* plane = dynamic_cast<PlanarSurface*>(interaction_structure.get());
        if (plane != nullptr)
        {
-//           auto x = SinglePlanarInteraction(did, pip, std::shared_ptr<PlanarSurface>(plane), sid_pair, reaction_rules, interaction_rules);
            auto domain = std::make_unique<SinglePlanarInteraction>(did, pip, *plane, sid_pair, reaction_rules, interaction_rules);
            return std::unique_ptr<Single>(std::move(domain));
        }
@@ -669,9 +668,10 @@ private:
 
          ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE ||
                   eventType == Domain::EventType::SINGLE_INTERACTION || eventType == Domain::EventType::BURST);
+
          ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule::empty();
 
-         // get the(new) position and structure on which the particle is located.
+         // Get the (new) position and structure on which the particle is located.
          position_structid_pair pos_struct = single.draw_new_position(rng_);
          pos_struct = world_.apply_boundary(pos_struct);
 
@@ -683,6 +683,7 @@ private:
          {
          case Domain::EventType::SINGLE_REACTION:
          {
+             // Particle underwent a single-molecular reaction
              remove_domain(single.id());      // single does not exist after this!!!
              new_particles = fire_single_reaction(pid_pair, rrule, pos_struct, ignore);
              break;
@@ -690,6 +691,7 @@ private:
 
          case Domain::EventType::SINGLE_INTERACTION:
          {
+             // Particle interacted with a structure
              auto pip = single.pip();
              auto domain = domains_[single.id()].get();
              auto single_interaction = dynamic_cast<SingleInteraction *>(domain);
@@ -707,6 +709,7 @@ private:
          case Domain::EventType::SINGLE_ESCAPE:
          case Domain::EventType::BURST:
          {
+            // Particle was burst or escaped its protective domain
             remove_domain(single.id());      // single does not exist after this!!!
             auto new_pid = fire_move(pid_pair, pos_struct);
             new_particles.emplace_back(new_pid);
@@ -1074,7 +1077,7 @@ private:
 
       // collect all distances and radii of surrounding particles with init-shells
 
-      bool success;
+      bool success = false;
 
       // Find particles within interaction range
       ShellCreateUtils::shell_interaction_check<shell_matrix_type> interacting_shells(single.shell_id(), single.particle());
@@ -1091,9 +1094,25 @@ private:
          // Multiple interacting particles/structures, so we must make a MULTI domain
          success = form_multi(single.id(), interacting_shells.multi_range());
       }
-      else if (interacting_surfaces.sid()) {
-          // Make a SurfaceInteraction domain
-          success = try_interaction(single, interacting_surfaces.sid());
+      else if (interacting_surfaces.sid() && interacting_surfaces.sid() != single.pip().second.structure_id())
+      {
+          // First check if we can update the existing domain
+          auto domain = domains_[single.id()].get();
+          auto single_interaction = dynamic_cast<SingleInteraction*>(domain);
+          if (single_interaction != nullptr)
+          {
+              auto surface = *single_interaction->get_interacting_structure().get();
+              if(interacting_surfaces.sid() == surface->sid()) {
+                  // Interacting surface is the same as before, so only update the existing domain
+                  success = update_single(single);
+              }
+          }
+
+          if (!success)
+          {
+              // Make a new SurfaceInteraction domain
+              success = try_interaction(single, interacting_surfaces.sid());
+          }
       }
       else if (interacting_shells.did())
       {

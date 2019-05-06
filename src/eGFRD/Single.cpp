@@ -82,7 +82,8 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
     auto pos = pid_pair_.second.position();
-    particle_surface_dist_ = interacting_structure_.distance(pos);
+    auto particle_radius = pid_pair_.second.radius();
+    particle_surface_dist_ = interacting_structure_.distance(pos) - particle_radius;
 
     THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
 
@@ -93,7 +94,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto radius = max_radius;
 
     // check distances to surfaces, ignore def.struct and particle.structure
-    for (auto s : world.get_structures())
+    for (const auto& s : world.get_structures())
     {
         if (s->id() != interacting_structure_.id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
         {
@@ -115,13 +116,14 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
 
     // orient cylinder on correct side of the plane
     auto orientation = plane->project_point(pos).second;
-    if (orientation.first > 0)
+    if (orientation.first < 0)
     {
         unit_z *= -1;
     }
 
-    double height = std::max(radius, 2 * (particle().radius() * GfrdCfg.SINGLE_SHELL_FACTOR) + get_distance_to_surface());
-    auto cylinder_center_pos = pos - unit_z * center_offset(height/2);
+    // TODO: scale height proportional to radius with strategy from paper
+    double height = std::max(radius, 2 * (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + (get_distance_to_surface() + particle_radius));
+    auto cylinder_center_pos = pos - unit_z * center_particle_offset(height / 2);
 
     sid_pair_.second = Shell(domainID_, Cylinder(cylinder_center_pos, radius, unit_z, height/2), Shell::Code::NORMAL);
     gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));

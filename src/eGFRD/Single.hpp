@@ -138,7 +138,7 @@ public:
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    virtual EventType draw_iv_event_type(RandomNumberGenerator& rng) const = 0;
+    virtual EventType draw_iv_event_type(RandomNumberGenerator& rng) = 0;
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -202,7 +202,7 @@ public:
 
     double get_inner_a() const override { return sid_pair_.second.get_sphere().radius() - pid_pair_.second.radius(); }
 
-    EventType draw_iv_event_type(RandomNumberGenerator& rng) const override 
+    EventType draw_iv_event_type(RandomNumberGenerator& rng) override
     {
        UNUSED(rng);
        THROW_EXCEPTION(illegal_state, "SingleSpherical does not support iv events."); 
@@ -233,7 +233,7 @@ public:
 
     double get_inner_a() const override { return sid_pair_.second.get_cylinder().radius() - pid_pair_.second.radius(); }
 
-    EventType draw_iv_event_type(RandomNumberGenerator& rng) const override 
+    EventType draw_iv_event_type(RandomNumberGenerator& rng) override
     { 
        UNUSED(rng);
        THROW_EXCEPTION(illegal_state, "SingleCylindrical does not support iv events."); 
@@ -259,6 +259,7 @@ protected:
 class SingleInteraction : public Single {
 public:
     using InteractionRules = ReactionRuleCollection::interaction_rule_set;
+    using EventKind = GreensFunction::EventKind;
 
     SingleInteraction(const DomainID did, const particle_id_pair &pid_pair,
                       const shell_id_pair &sid_pair, const ReactionRules &reaction_rules,
@@ -302,9 +303,10 @@ public:
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    EventType draw_iv_event_type(RandomNumberGenerator& rng) const override
+    EventType draw_iv_event_type(RandomNumberGenerator& rng) override
     {
         auto type = GreenFunctionHelper::draw_eventtype_wrapper(rng, *gf_iv_, dt_);
+        iv_event_kind_ = type;
 
         switch(type)
         {
@@ -351,6 +353,7 @@ public:
 protected:
     const InteractionRules& interaction_rules_;
     std::unique_ptr<GreensFunction> gf_iv_;
+    EventKind iv_event_kind_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -375,15 +378,57 @@ public:
 
     Vector3 create_position_vector(double r, RandomNumberGenerator& rng) const override
     {
-        // draw random circle and rotate it in the plane
+        // r is drawn from the 2D diffusion Green's function
         Vector2 c = r * Vector2::random(rng);
-        auto m = Matrix4::createRotationAB(interacting_structure_.shape().unit_z(), Vector3::uy);
-        return m.multiply(Vector3(c.X(), 0.0, c.Y()));
+
+        // Express the r vector in the unit vectors of the surface to make sure the particle is
+        // parallel to the surface (due to numerical problem)
+        auto shape = interacting_structure_.shape();
+        auto vector_r = c.X() * shape.unit_x() + c.Y() * shape.unit_y();
+
+        // Calculate z vector
+        auto shell = sid_pair_.second.get_cylinder();
+        auto half_length = shell.half_length();
+
+        // Calculate radiating and absorbing boundary condition distances
+        auto z_surface = -get_distance_to_surface(); // (Negative) distance from particle to planar surface
+        auto z_absorb = get_distance_to_escape(half_length); // Distance from particle to disk away from planar surface
+        double z_displacement = 0;
+
+        if (eventType_ != EventType::IV_EVENT)
+        {
+            // Normal escape event, z_displacement is drawn from 1D IV Green's function
+            z_displacement = GreenFunctionHelper::draw_r_wrapper(rng, *gf_iv_, dt_, z_absorb, z_surface); // last two args= a, sigma
+        }
+        else if (iv_event_kind_ == EventKind::IV_ESCAPE)
+        {
+            // IV escape event
+            z_displacement = z_absorb;
+        }
+        else if (iv_event_kind_ == EventKind::IV_REACTION)
+        {
+            // Interaction event
+            z_displacement = z_surface;
+        }
+
+        // z_displacement is now relative to the particle center, but draw_new_position() requires it relative to
+        // the center of the shell.
+        auto offset = center_particle_offset(shell.half_length());
+        z_displacement += offset;
+
+        // Express the vector_z in the unit vectors of the surface to prevent the particle from
+        // leaving the surface due to numerical problem.
+        auto vector_z = z_displacement * shell.unit_z();
+
+        // The new position is relative to the center of the shell
+        // note that we need to make sure that vector_r and vector_z
+        // are correct (in the structure) to prevent the particle leaving the structure due to numerical errors
+        return vector_r + vector_z;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    double get_distance_to_surface()
+    double get_distance_to_surface() const
     {
         // This is the distance from the particle to the PlanarSurface
         return particle_surface_dist_;
@@ -391,19 +436,27 @@ public:
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    double get_distance_to_escape(double half_length)
+    double get_distance_to_escape(double half_length) const
     {
         // This calculates the distance from the particle to the flat boundary away from the surface
         auto cylinder_length = half_length*2;
-        auto right_dist_to_surface = cylinder_length - particle_surface_dist_ - (pid_pair_.second.radius() * GfrdCfg.SINGLE_SHELL_FACTOR);
-        return right_dist_to_surface;
+        auto particle_radius = pid_pair_.second.radius();
+        // Portion of cylinder behind planar surface
+        auto cylinder_left = (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR);
+        // Portion of cylinder in front of planar surface
+        auto cylinder_right = cylinder_length - cylinder_left;
+
+        auto particle_to_right_boundary = cylinder_right - particle_surface_dist_ - particle_radius;
+        return particle_to_right_boundary;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    double center_offset(double half_length)
+    double center_particle_offset(double half_length) const
     {
-        return half_length - get_distance_to_surface();
+        auto particle_radius = pid_pair_.second.radius();
+        // Distance between the particle center and cylinder center
+        return (half_length - get_distance_to_escape(half_length) - particle_radius);
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
