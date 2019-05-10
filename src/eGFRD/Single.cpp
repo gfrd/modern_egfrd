@@ -46,8 +46,10 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
    auto pos = pid_pair_.second.position();
    double min_radius = particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR;
    double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-   //double max_heigth = smat.cell_size() / std::sqrt(2.0);
    auto radius = max_radius;
+   auto height = 2 * min_radius;
+
+   auto search_distance = height + radius;
 
    // check distances to surfaces, ignore def.struct and particle.structure
    for (auto s : world.get_structures())
@@ -59,7 +61,7 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
       }
    }
    // TODO 
-   shell_distance_checker sdc(shell_id(), pos, radius, shell_distance_checker::Construct::SHARE5050);
+   shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
    radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
 
@@ -71,7 +73,7 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
    auto unit_z = plane->shape().unit_z();
    structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
 
-   sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, radius), Shell::Code::NORMAL);
+   sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
    gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));
    return true;
 }
