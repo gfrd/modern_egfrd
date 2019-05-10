@@ -20,6 +20,8 @@
 #include <GreensFunction3DAbs.hpp>
 #include <GreensFunction3D.hpp>
 #include <GreensFunction3DRadAbs.hpp>
+#include <GreensFunction2DAbsSym.hpp>
+#include <GreensFunction2DRadAbs.hpp>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -376,17 +378,83 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-class PairCylindrical : public Pair
+class PairPlanar : public Pair
 {
 public:
 
-   PairCylindrical(const DomainID did, const particle_id_pair& pid_pair1, const particle_id_pair& pid_pair2, const shell_id_pair& sid_pair, const ReactionRules& reactions)
-      : Pair(did, pid_pair1, pid_pair2, sid_pair, reactions)
+   PairPlanar(const DomainID did, const particle_id_pair& pid_pair1, const particle_id_pair& pid_pair2, const std::shared_ptr<Structure>& structure, const shell_id_pair& sid_pair, const ReactionRules& reactions)
+      : Pair(did, pid_pair1, pid_pair2, sid_pair, reactions), structure_(structure)
    {
       THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
    }
 
-   const char* type_name() const override { return "PairCylindrical"; }
+   const char* type_name() const override { return "PairPlanar"; }
+
+    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override {
+
+        auto pos = particle1().position();
+        auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
+        double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
+        double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+        auto radius = max_radius;
+        auto height = 2 * min_radius;
+        auto D_r = D_tot();
+
+        auto search_distance = height + radius;
+
+        // check distances to surfaces, ignore def.struct and particle.structure
+        for (auto s : world.get_structures())
+        {
+            if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
+            {
+                double distance = s->distance(pos);    // fix cyclic world !
+                radius = std::min(radius, distance);
+            }
+        }
+        // TODO
+        shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
+        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
+        radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
+
+        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+
+        auto structure = world.get_structure(particle1().structure_id());
+        auto *plane = dynamic_cast<PlanarSurface*>(structure.get());
+        THROW_UNLESS(not_found, plane != nullptr);
+        auto unit_z = plane->shape().unit_z();
+        structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
+
+        // TODO: calculate and set a_R, a_r, and check if r0, sigma are initialised properly
+
+        sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
+        gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
+        gf_iv_ = std::make_unique<GreensFunction2DRadAbs>(GreensFunction2DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
+        return true;
+    }
+
+    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override {
+        auto& structure = *structure_;
+        return structure.random_vector(r, rng);
+    }
+
+    Vector3
+    create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override {
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
+        return Vector3();
+    }
+
+    std::pair<position_structid_pair, position_structid_pair>
+    do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double r1, double r2, StructureID s1,
+                      StructureID s2, Vector3 unit, const World &world) const override {
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
+        return std::pair<position_structid_pair, position_structid_pair>();
+    }
+
+    EventType draw_iv_event_type(RandomNumberGenerator &rng) override {
+        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
+        return EventType::IV_ESCAPE;
+    }
+    std::shared_ptr<Structure> structure_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -400,7 +468,7 @@ public:
             : Pair(did, pid_pair_2d, pid_pair_3d, sid_pair, reactions),
             pid_pair_2d(pid_pair_2d), pid_pair_3d(pid_pair_3d), structure_2d(structure_2d), structure_3d(structure_3d), world_(world)
     {
-        THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
+//        THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
         THROW_UNLESS(illegal_state, structure_2d.get()->id() == pid_pair_2d.second.structure_id());
         THROW_UNLESS(illegal_state, structure_3d.get()->id() == pid_pair_3d.second.structure_id());
 

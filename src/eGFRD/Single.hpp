@@ -430,7 +430,8 @@ public:
 
     double get_distance_to_surface() const
     {
-        // This is the distance from the particle to the PlanarSurface
+        // This is the distance from the particle to the PlanarSurface.
+        // Note that this is the distance from the hull of the particle, not its center.
         return particle_surface_dist_;
     }
 
@@ -438,7 +439,8 @@ public:
 
     double get_distance_to_escape(double half_length) const
     {
-        // This calculates the distance from the particle to the flat boundary away from the surface
+        // This calculates the distance from the particle to the flat boundary away from the surface.
+        // Note that this is the distance from the hull of the particle, not its center.
         auto cylinder_length = half_length*2;
         auto particle_radius = pid_pair_.second.radius();
         // Portion of cylinder behind planar surface
