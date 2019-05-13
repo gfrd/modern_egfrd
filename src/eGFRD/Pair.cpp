@@ -13,14 +13,8 @@ const double Pair::CUTOFF_FACTOR = 5.6;
 
 GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& smat, const World& world, ShellID sid1, ShellID sid2)
 {
-   Vector3 pos1 = pid_pair1_.second.position();
-   Vector3 pos2 = pid_pair2_.second.position();
-   Vector3 pos2c = world.cyclic_transpose(pos2, pos1);
-
-   Vector3 com = D_tot() > 0 ? (pid_pair2_.second.D() * pos1 + pid_pair1_.second.D() * pos2c) / D_tot() : 0.5 * (pos1 + pos2c);
-   com_ = world.apply_boundary(com);
-
-   iv_ = pos2c - pos1;
+   // Create IV and CoM vectors from particles
+   do_transform(world);
 
    THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 

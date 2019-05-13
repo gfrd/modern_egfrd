@@ -19,7 +19,19 @@
 */
 inline bool feq(double a, double b, double typical = 1., double tolerance = 1e-7)
 {
-   return std::abs(a - b) <= tolerance * (typical + std::min(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= tolerance * (typical + std::min(std::abs(a), std::abs(b)));
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/**
+* Return True if a is greater than b, subject to given tolerances.
+*
+* The (relative) tolerance must be positive and << 1.0
+*/
+inline bool fgreater(double a, double b, double typical = 1., double tolerance = 1e-7)
+{
+    return a - b > tolerance * (typical + std::min(std::fabs(a), std::fabs(b)));
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------

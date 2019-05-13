@@ -165,12 +165,19 @@ private:
    {
       if (structure1.get() == structure2.get())
       {
+         auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
          auto *world = dynamic_cast<CuboidalRegion*>(structure1.get());
          if (world != nullptr)
          {
-            auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
             auto domain = std::make_unique<PairSpherical>(did, pip1, pip2, sid_pair, reaction_rules);
             return std::unique_ptr<Pair>(std::move(domain));
+         }
+
+         auto *plane = dynamic_cast<PlanarSurface*>(structure1.get());
+         if (plane != nullptr)
+         {
+             auto domain = std::make_unique<PairPlanar>(did, pip1, pip2, structure1, sid_pair, reaction_rules);
+             return std::unique_ptr<Pair>(std::move(domain));
          }
 
          // TODO: add support for PairCylinder

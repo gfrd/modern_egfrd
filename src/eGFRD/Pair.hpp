@@ -185,7 +185,7 @@ public:
       if (eventType_ == EventType::IV_ESCAPE)
          r = a_R_;
       else
-         r = GreenFunctionHelper::draw_r_wrapper(rng, *gf_com_.get(), dt_, a_R_);
+         r = GreenFunctionHelper::draw_r_wrapper(rng, *gf_com_, dt_, a_R_);
 
       // Add displacement to old CoM. This assumes(correctly) that r0 = 0 for the CoM. 
       // Compare this to 1D singles, where r0 is not necessarily 0.
@@ -253,12 +253,65 @@ public:
 
    virtual Vector3 create_com_vector(double r, RandomNumberGenerator& rng) const = 0;
    virtual Vector3 create_interparticle_vector(const PairGreensFunction& gf, double r, RandomNumberGenerator& rng) const = 0;
-   virtual std::pair<position_structid_pair, position_structid_pair> do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double r1, double r2, StructureID s1, StructureID s2, Vector3 unit, const World& world) const = 0;
-   virtual EventType draw_iv_event_type(RandomNumberGenerator& rng) = 0;
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::pair<position_structid_pair, position_structid_pair> draw_new_position(RandomNumberGenerator& rng, const World& world) const
+   virtual EventType draw_iv_event_type(RandomNumberGenerator& rng)
+   {
+       auto event = GreenFunctionHelper::draw_eventtype_wrapper(rng, *gf_iv_, dt_);
+       if (event == GreensFunction::EventKind::IV_REACTION)
+           eventType_ = EventType::IV_REACTION;
+       else if (event == GreensFunction::EventKind::IV_ESCAPE)
+           eventType_ = EventType::IV_ESCAPE;
+       else THROW_EXCEPTION(illegal_state, "Unknown event type.");
+       return eventType_;
+   };
+
+   virtual void do_transform(const World& world)
+   {
+       Vector3 pos1 = pid_pair1_.second.position();
+       Vector3 pos2 = pid_pair2_.second.position();
+       Vector3 pos2c = world.cyclic_transpose(pos2, pos1);
+
+       Vector3 com = D_tot() > 0 ? (pid_pair2_.second.D() * pos1 + pid_pair1_.second.D() * pos2c) / D_tot() : 0.5 * (pos1 + pos2c);
+       com_ = world.apply_boundary(com);
+
+       iv_ = pos2c - pos1;
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   virtual std::pair<position_structid_pair, position_structid_pair> do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double r1, double r2, StructureID s1, StructureID s2, Vector3 unit, const World& world) const
+   {
+       // Here we assume that the com and iv are really in the structure and no adjustments have to be made
+
+       // Since this is meant to be a general class, we do not check explicitly whether the structures
+       // are really the same, but drop a warning if they are not (A possible situation where this matters
+       // is when one particle is on a substructure of the other particle's structure; then the structure IDs
+       // are different, but the calculations then still work perfectly fine).
+       if (s1 != s2)
+       {
+           Logger::get_logger("EGFRD").warn() << "Particles live on different structures in StandardPair";
+       }
+
+       Vector3 pos1, pos2;
+       double D_tot = D1 + D2;
+       if (D_tot != 0)
+       {
+           pos1 = com - iv * (D1 / D_tot);
+           pos2 = com + iv * (D2 / D_tot);
+       }
+       else
+       {
+           pos1 = com - iv * 0.5;
+           pos2 = com + iv * 0.5;
+       }
+       return std::make_pair<position_structid_pair, position_structid_pair>(position_structid_pair(pos1, s1), position_structid_pair(pos2, s2));
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+    std::pair<position_structid_pair, position_structid_pair> draw_new_position(RandomNumberGenerator& rng, const World& world) const
    {
       Vector3 new_com = draw_new_com(rng);
       Vector3 new_iv = draw_new_iv(rng);
@@ -312,17 +365,6 @@ public:
 
    GFRD_EXPORT const PairGreensFunction& choose_pair_greens_function() const override;
 
-   EventType draw_iv_event_type(RandomNumberGenerator& rng) override
-   {
-      auto event = GreenFunctionHelper::draw_eventtype_wrapper(rng, *gf_iv_, dt_);
-      if (event == GreensFunction::EventKind::IV_REACTION)
-         eventType_ = EventType::IV_REACTION;
-      else if (event == GreensFunction::EventKind::IV_ESCAPE)
-         eventType_ = EventType::IV_ESCAPE;
-      else THROW_EXCEPTION(illegal_state, "Unknown event type.");
-      return eventType_;
-   }
-
    Vector3 create_interparticle_vector(const PairGreensFunction& gf, double r, RandomNumberGenerator& rng) const override
    {
       Vector3 new_iv;
@@ -344,32 +386,6 @@ public:
       return (r / r0()) * new_iv;      // adjust length of the vector, note that r0 = length (old_iv)
    }
 
-
-   virtual std::pair<position_structid_pair, position_structid_pair> do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double, double, StructureID s1, StructureID s2, Vector3, const World&) const override
-   {
-      // Here we assume that the com and iv are really in the structure and no adjustments have to be made
-
-      // Since this is meant to be a general class, we do not check explicitly whether the structures
-      // are really the same, but drop a warning if they are not (A possible situation where this matters
-      // is when one particle is on a substructure of the other particle's structure; then the structure IDs
-      // are different, but the calculations then still work perfectly fine).
-      THROW_UNLESS(illegal_state, s1 == s2);      // log.warn('Particles live on different structures in StandardPair, structure1=%s, structure2=%s')
-
-      Vector3 pos1, pos2;
-      double D_tot = D1 + D2;
-      if (D_tot != 0)
-      {
-         pos1 = com - iv * (D1 / D_tot);
-         pos2 = com + iv * (D2 / D_tot);
-      }
-      else
-      {
-         pos1 = com - iv * 0.5;
-         pos2 = com + iv * 0.5;
-      }
-      return std::make_pair<position_structid_pair, position_structid_pair>(position_structid_pair(pos1, s1), position_structid_pair(pos2, s2));
-   }
-
 private:
    friend class Persistence;
 
@@ -383,14 +399,118 @@ class PairPlanar : public Pair
 public:
 
    PairPlanar(const DomainID did, const particle_id_pair& pid_pair1, const particle_id_pair& pid_pair2, const std::shared_ptr<Structure>& structure, const shell_id_pair& sid_pair, const ReactionRules& reactions)
-      : Pair(did, pid_pair1, pid_pair2, sid_pair, reactions), structure_(structure)
+      : Pair(did, pid_pair1, pid_pair2, sid_pair, reactions)
    {
-      THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
+//      THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
+
+       structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
    }
 
    const char* type_name() const override { return "PairPlanar"; }
 
-    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override {
+   void determine_radii(const double shell_size)
+   {
+       auto radius1 = particle1().radius(), radius2 = particle2().radius();
+       auto D1 = particle1().D(), D2 = particle2().D();
+       auto D_geometric = std::sqrt(D1 * D2);
+
+       // a_r_max is the maximum size of a_r for a given maximum ratio of l/delta
+       auto a_r_max = LD_MAX_ * (r0() - sigma()) + sigma();
+
+       // Make sure that D1 != 0 to avoid division by zero.
+       if (D1 == 0)
+       {
+           auto Dtmp = D1;
+           D1 = D2;
+           D2 = Dtmp;
+
+           auto radiustmp = radius1;
+           radius1 = radius2;
+           radius2 = radiustmp;
+       }
+
+       auto Da = D1, Db = D2, radiusa = radius1, radiusb = radius2;
+
+       // TODO: find meaning behind comment: "equalize expected mean t_r and t_R"
+       if ((((D_geometric - D2) * r0()) / D_tot() + shell_size + std::sqrt(D2 / D1) * (radius1 - shell_size) - radius2) >= 0)
+       {
+           Da = D2, Db = D1, radiusa = radius2, radiusb = radius1;
+       }
+
+       a_R_ = (D_geometric * (Db * (shell_size - radiusa) + Da * (shell_size - r0() - radiusa))) /
+               (Da * Da + Da * Db + D_geometric * D_tot());
+
+       a_r_ = (D_geometric * r0() + D_tot() * (shell_size - radiusa)) / (Da + D_geometric);
+
+       // Now if the planned domainsize for r is too large for proper convergence of the Green's
+       // functions, make it the maximum allowed size
+       if (a_r_ > a_r_max)
+       {
+           a_r_ = a_r_max;
+           a_R_ = shell_size - radiusa - a_r_ * Da / D_tot();
+           Logger::get_logger("EGFRD").warn() << "Domainsize changed for convergence: a_r = a_r_max = " << a_r_ << ", a_R = " << a_R_;
+       }
+
+       THROW_UNLESS(illegal_argument, (a_R() + (a_r() * Da / D_tot()) + radiusa) >= (a_R() + (a_r() * Db / D_tot()) + radiusb));
+       THROW_UNLESS(illegal_argument, std::fabs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size)  < 1e-12 * shell_size);
+       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
+       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
+       THROW_UNLESS(illegal_argument, (fgreater(a_R_, 0, radiusa)) || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
+   }
+
+    const PairGreensFunction& choose_pair_greens_function() const override
+    {
+        // Selects between the full solution or an approximation where one of
+        // the boundaries is ignored
+        auto D_r = D_tot();
+        double distance_from_sigma = r0() - sigma();
+        double distance_from_shell = a_r_ - r0();
+        double threshold_distance = CUTOFF_FACTOR * std::sqrt(4.0 * D_r * dt_);
+
+        // If sigma reachable
+        if (distance_from_sigma < threshold_distance)
+        {
+            // If shell reachable
+            if (distance_from_shell < threshold_distance)
+            {
+                // Near both a and sigma;
+                return *gf_iv_;
+            }
+            else
+            {
+                return *gf_iv_;
+                // TODO near sigma; use GreensFunction2DRadInf
+                // gf_tmp_ = std::make_unique<GreensFunction2DRadInf>();
+                // return *gf_tmp_;
+            }
+        }
+        else
+        {
+            // Sigma unreachable
+            if (distance_from_shell < threshold_distance)
+            {
+                return *gf_iv_;
+                // TODO near a; use GreensFunction2DAbs
+                // gf_tmp_ = std::make_unique<GreensFunction2DAbs>();
+            }
+            else
+            {
+                return *gf_iv_;
+                // TODO distant from both a and sigma;
+                //gf_tmp_ = std::make_unique<GreensFunction2D>();
+            }
+        }
+
+        // return *gf_tmp_;
+    }
+
+    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override
+    {
+        // Create IV and CoM vectors from particles
+        do_transform(world);
+
+        THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
+
 
         auto pos = particle1().position();
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
@@ -412,19 +532,18 @@ public:
             }
         }
         // TODO
-        shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
+        shell_distance_checker sdc(sid1, sid2, pos, search_distance, shell_distance_checker::Construct::SHARE5050);
         CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
         radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
 
         if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
-        auto structure = world.get_structure(particle1().structure_id());
-        auto *plane = dynamic_cast<PlanarSurface*>(structure.get());
+        auto plane = structure_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();
-        structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
 
         // TODO: calculate and set a_R, a_r, and check if r0, sigma are initialised properly
+        determine_radii(radius);
 
         sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
         gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
@@ -432,29 +551,38 @@ public:
         return true;
     }
 
-    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override {
-        auto& structure = *structure_;
-        return structure.random_vector(r, rng);
+    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override
+    {
+        auto plane = structure_.get()->shape();
+        auto vec = r * Vector2::random(rng);
+        return vec.X() * plane.unit_x() + vec.Y() * plane.unit_y();
     }
 
     Vector3
-    create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override {
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
-        return Vector3();
+    create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override
+    {
+        auto theta = GreenFunctionHelper::draw_theta_wrapper(rng, gf, r, dt());
+
+        // Note that r0 = length (old_iv)
+        auto new_iv = (r/r0()) * Vector3::transformVector(iv_, Matrix4::createRotationA(theta, structure_.get()->shape().unit_z()));
+
+        // Note that unit_z can point two ways rotating the vector clockwise or counterclockwise
+        // Since theta is symmetric this doesn't matter.
+
+        // Project the new_iv down on the unit vectors of the surface to prevent the particle from
+        // leaving the surface due to numerical problem
+        auto shape = structure_.get()->shape();
+        auto unit_x = shape.unit_x(), unit_y = shape.unit_y();
+
+        auto new_iv_x = unit_x * (Vector3::dot(new_iv, unit_x));
+        auto new_iv_y = unit_y * (Vector3::dot(new_iv, unit_y));
+
+        return new_iv_x + new_iv_y;
     }
 
-    std::pair<position_structid_pair, position_structid_pair>
-    do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double r1, double r2, StructureID s1,
-                      StructureID s2, Vector3 unit, const World &world) const override {
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
-        return std::pair<position_structid_pair, position_structid_pair>();
-    }
-
-    EventType draw_iv_event_type(RandomNumberGenerator &rng) override {
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
-        return EventType::IV_ESCAPE;
-    }
-    std::shared_ptr<Structure> structure_;
+    mutable std::unique_ptr<PairGreensFunction> gf_tmp_;
+    std::shared_ptr<PlanarSurface> structure_;
+    const int LD_MAX_ = 20;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -564,7 +692,8 @@ public:
         // the real space after inverse transform.  FIXME This works, but is still somewhat of a HACK!
         auto min_iv_length = (radius1 + radius2) * GfrdCfg.MINIMAL_SEPARATION_FACTOR;
 
-        if (iv_x_length * iv_x_length + iv_y_length * iv_y_length + iv_z_length_backtransform * iv_z_length_backtransform < min_iv_length * min_iv_length) {
+        if (iv_x_length * iv_x_length + iv_y_length * iv_y_length + iv_z_length_backtransform * iv_z_length_backtransform < min_iv_length * min_iv_length)
+        {
             auto z_safety_factor_sq = (min_iv_length * min_iv_length - iv_x_length*iv_x_length - iv_y_length*iv_y_length)
                     / (iv_z_length_backtransform * iv_z_length_backtransform);
 
@@ -587,17 +716,20 @@ public:
         return std::make_pair(pair_2d, pair_3d);
     }
 
-    EventType draw_iv_event_type(RandomNumberGenerator &rng) override {
+    EventType draw_iv_event_type(RandomNumberGenerator &rng) override
+    {
         THROW_EXCEPTION(not_implemented, "Not yet implemented.");
         return EventType::INIT;
     }
 
-    const PairGreensFunction &choose_pair_greens_function() const override {
+    const PairGreensFunction &choose_pair_greens_function() const override
+    {
         THROW_EXCEPTION(not_implemented, "Not yet implemented.")
         return *gf_iv_;
     }
 
-    void determine_radii() {
+    void determine_radii()
+    {
         // Determines the dimensions of the domains used for the Green's functions
         // from the dimensions of the cylindrical shell.
         // Note that the function assumes that the cylinder is dimensioned properly.
