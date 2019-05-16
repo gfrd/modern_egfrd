@@ -28,9 +28,15 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
       }
    }
 
-   shell_distance_checker sdc(shell_id(), pos, radius, shell_distance_checker::Construct::SHARE5050);
-   CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-   radius = std::min(radius, sdc.distance());
+   // Limit radius to space to closest neighbour
+    shell_distance_checker sdc(shell_id(), pos, radius, shell_distance_checker::Construct::SHARE5050);
+    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
+    radius = std::min(radius, sdc.distance());
+
+    // Limit radius to space to closest surface
+    auto sudc = surface_distance_check(std::vector<StructureID>{world.get_def_structure_id()}, pid_pair_.second);
+    sudc.find_interacting_surfaces(world.get_structures());
+    radius = std::min(radius, sudc.distance());
 
    if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
