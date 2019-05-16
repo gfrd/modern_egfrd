@@ -149,7 +149,7 @@ struct ShellCreateUtils
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    // The shell_interaction_check is a MatrixSpace each_neighbor_xx processor that finds particles (DomainID) that are within the interaction horizon
+    // The surface_interaction_check is a MatrixSpace each_neighbor_xx processor that finds the shortest distance to the 'neighbor surfaces' from the given point.
     class surface_interaction_check
     {
     public:
@@ -158,6 +158,7 @@ struct ShellCreateUtils
 
         StructureID sid() const noexcept { return hit_sid_; }                  // when structure within interaction_horizon
         bool multiple() const noexcept { return multiple_.size() > 1; }        // when two structures within multi_horizon
+        double distance() const noexcept { return top_dist_; }
 
         void find_interacting_surfaces(StructureContainer::structures_range structures)
         {
