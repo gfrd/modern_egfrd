@@ -810,36 +810,30 @@ int main(int argc, char** argv)
          {
             auto sPlane = m.add_structure_type(StructureType("plane"));
 
-            auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 1e-8));
-            auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, 1e-8));
-            auto sC = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-11, 1e-8));
+            auto sA = m.add_species_type(SpeciesType("A", sPlane, 2e-12, 1e-9));
+            auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-9));
 
             world.initialize(6e-6, m);
             auto ws = world.world_size();
             auto wsid = world.get_def_structure_id();
 
-            auto pos = Vector3(ws.X() / 2, ws.Y() / 5, ws.Z() / 2);
-//            auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
-            auto vy = Vector3::uz;
-//            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.1 * ws.X(), 0.1 * ws.Y(), true)));
-            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, vy, 0.5 * ws.X(), 0.5 * ws.Y(), true)));
+            auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
+            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.3 * ws.X(), 0.3 * ws.Y(), false)));
             auto psid = world.add_structure(plane);
             UNUSED(psid);
 
-//            for (int i = 0; i < 3; ++i)
-//            {
-//               auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2*i*ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2*ws.Y(), false)));
-//               world.add_structure(plane2);
-//            }
+            for (int i = 0; i < 3; ++i)
+            {
+               auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2*i*ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2*ws.Y(), false)));
+               world.add_structure(plane2);
+            }
 
-//            world.throwInParticles(sA, 1, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
-            world.throwInParticles(sB, 10, rng, false);
-
-            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+            world.throwInParticles(sA, 2, rng, false, 0.2 * ws, 0.8 * ws);
+            world.throwInParticles(sB, 1, rng, false);
 
             // Reaction Rules bind and unbind to plane
-//            rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
-            rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.22, std::vector < SpeciesTypeID > {sB}));
+            rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
+            rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.2, std::vector < SpeciesTypeID > {sB}));
          }
          break;
 
@@ -865,6 +859,38 @@ int main(int argc, char** argv)
                world.add_particle(s2, world.get_def_structure_id(), world.world_size() / 2 + Vector3((-particles / 2 + i) * world.world_size().X() / (particles + 2), 4e-9, -1e-8));
             }
          } break;
+
+          case 105:
+          {
+
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, uz, 0.5 * ws.X(), 0.5 * ws.Z(), true)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+              world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+
+//            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+
+              // Reaction Rules bind and unbind to plane
+//            rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
+              rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.22, std::vector < SpeciesTypeID > {sB}));
+          }
+          break;
 
          default: THROW_EXCEPTION(illegal_size, "Demo number out of range.");
 
