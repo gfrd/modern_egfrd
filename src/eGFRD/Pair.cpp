@@ -30,7 +30,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
    {
       if (/*s->id() != pid_pair_.second.structure_id() &&*/ s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
       {
-         double distance = s->distance(com_);    // fix cyclic world !
+         auto transposed = world.cyclic_transpose(com_, s->position());
+         double distance = s->distance(transposed);
          radius = std::min(radius, distance);
       }
    }
@@ -38,6 +39,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
    shell_distance_checker sdc(sid1, sid2, com_, radius, shell_distance_checker::Construct::SHARE5050);
    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, com_);
    radius = std::min(radius, sdc.distance());
+
+   radius /= GfrdCfg.SAFETY;
 
    // OLDCODE radius = radius / 1.01;     // for compare with old code
 

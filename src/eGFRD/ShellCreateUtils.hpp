@@ -149,7 +149,7 @@ struct ShellCreateUtils
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    // The surface_interaction_check is a MatrixSpace each_neighbor_xx processor that finds the shortest distance to the 'neighbor surfaces' from the given point.
+    // The surface_interaction_check is a MatrixSpace each_neighbor_xx processor that finds the surfaces with a distance smaller than the interaction horizon from the given point.
     class surface_interaction_check
     {
     public:
@@ -194,6 +194,55 @@ struct ShellCreateUtils
         }
 
     private:
+        const std::vector<StructureID> ignore_;      // structures to ignore interactions with.
+        const Vector3&             point_;           // Particle location, the point whose neighbors are being checked.
+        double                     top_dist_ = 1e6;  // smallest distance found so far
+
+        double                     radius_;          // Particle radius.
+        StructureID                hit_sid_;         // when multiple is false, this contains zero (no hit) or the StructureID of (only) the surface within interaction horizon (create an Interaction domain)
+        std::vector<StructureID>   multiple_;        // when multiple is true, there is more than one surface within the interaction horizon (no Interaction domain can be made)
+    };
+
+
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    // The surface_interaction_check is a MatrixSpace each_neighbor_xx processor that finds the shortest distance to the 'neighbor surfaces' from the given point.
+    class surface_distance_check
+    {
+    public:
+        surface_distance_check(const World& world, std::vector<StructureID> sids_ignore, const Particle& particle) :
+        world_(world), ignore_(std::move(sids_ignore)), point_(particle.position()), radius_(particle.radius()), hit_sid_(0), multiple_() { }
+
+
+        StructureID sid() const noexcept { return hit_sid_; }                  // when structure within interaction_horizon
+        bool multiple() const noexcept { return multiple_.size() > 1; }        // when two structures within multi_horizon
+        double distance() const noexcept { return top_dist_; }
+
+        void measure_distances(StructureContainer::structures_range structures)
+        {
+            // Finds all surfaces (structures) that have a distance smaller than the interaction horizon.
+            // Saves hits in multiple_
+            for(const auto& structure : structures)
+            {
+                if (std::find(ignore_.begin(), ignore_.end(), structure.get()->id()) != ignore_.end())
+                {
+                    // Structure is in ignore list, move on
+                    continue;
+                }
+
+                auto transposed = world_.cyclic_transpose(point_, structure->position());
+                auto surface_distance = structure->distance(transposed);
+                if (surface_distance < top_dist_) {
+                    top_dist_ = surface_distance;
+                    hit_sid_ = structure->id();
+                }
+                multiple_.emplace_back(structure->id());
+            }
+        }
+
+    private:
+        const World&               world_;
         const std::vector<StructureID> ignore_;      // structures to ignore interactions with.
         const Vector3&             point_;           // Particle location, the point whose neighbors are being checked.
         double                     top_dist_ = 1e6;  // smallest distance found so far

@@ -32,7 +32,7 @@ public:
     using ReactionRules = ReactionRuleCollection::reaction_rule_set;
     using shell_matrix_type = MatrixSpace<Shell, ShellID, World::particle_matrix_type::SizeX, World::particle_matrix_type::SizeY, World::particle_matrix_type::SizeZ>;
     using shell_distance_checker = ShellCreateUtils::shell_distance_check<shell_matrix_type>;
-    using surface_distance_check = ShellCreateUtils::surface_interaction_check;
+    using surface_distance_check = ShellCreateUtils::surface_distance_check;
     using position_structid_pair = World::position_structid_pair;
 
     // --------------------------------------------------------------------------------------------------------------------------------

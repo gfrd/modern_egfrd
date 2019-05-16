@@ -23,20 +23,23 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
    {
       if (s->id() != pid_pair_.second.structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
       {
-         double distance = s->distance(pos);    // fix cyclic world !
+         auto transposed = world.cyclic_transpose(pos, s->position());
+         double distance = s->distance(transposed);
          radius = std::min(radius, distance);
       }
    }
 
    // Limit radius to space to closest neighbour
-    shell_distance_checker sdc(shell_id(), pos, radius, shell_distance_checker::Construct::SHARE5050);
-    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-    radius = std::min(radius, sdc.distance());
+   shell_distance_checker sdc(shell_id(), pos, radius, shell_distance_checker::Construct::SHARE5050);
+   CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
+   radius = std::min(radius, sdc.distance());
 
-    // Limit radius to space to closest surface
-    auto sudc = surface_distance_check(std::vector<StructureID>{world.get_def_structure_id()}, pid_pair_.second);
-    sudc.find_interacting_surfaces(world.get_structures());
-    radius = std::min(radius, sudc.distance());
+   // Limit radius to space to closest surface
+   auto sudc = surface_distance_check(world, std::vector<StructureID>{world.get_def_structure_id()}, pid_pair_.second);
+   sudc.measure_distances(world.get_structures());
+   radius = std::min(radius, sudc.distance());
+
+   radius /= GfrdCfg.SAFETY;
 
    if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
@@ -49,6 +52,7 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
 
 GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
+   auto structure_id = pid_pair_.second.structure_id();
    auto pos = pid_pair_.second.position();
    double min_radius = particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR;
    double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
@@ -57,19 +61,17 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 
    auto search_distance = height + radius;
 
-   // check distances to surfaces, ignore def.struct and particle.structure
-   for (auto s : world.get_structures())
-   {
-      if (s->id() != pid_pair_.second.structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
-      {
-         double distance = s->distance(pos);    // fix cyclic world !
-         radius = std::min(radius, distance);
-      }
-   }
-   // TODO 
+   // TODO: use actual geometric overlap check
    shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-   radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
+   radius = std::min(radius, sdc.distance());
+
+    // Limit radius to space to closest surface
+    auto sudc = surface_distance_check(world, std::vector<StructureID>{world.get_def_structure_id(), structure_id}, pid_pair_.second);
+    sudc.measure_distances(world.get_structures());
+    radius = std::min(radius, sudc.distance());
+
+   radius /= GfrdCfg.SAFETY;
 
    if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
@@ -89,11 +91,12 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 
 GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
+    auto structure_id = pid_pair_.second.structure_id();
     auto pos = pid_pair_.second.position();
     auto particle_radius = pid_pair_.second.radius();
     particle_surface_dist_ = interacting_structure_.distance(pos) - particle_radius;
 
-    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
+//    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
 
     double min_radius = particle().radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
     double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
@@ -101,20 +104,17 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     //double max_height = smat.cell_size() / std::sqrt(2.0);
     auto radius = max_radius;
 
-    // check distances to surfaces, ignore def.struct and particle.structure
-    for (const auto& s : world.get_structures())
-    {
-        if (s->id() != interacting_structure_.id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
-        {
-            double distance = s->distance(pos);    // fix cyclic world !
-            radius = std::min(radius, distance);
-        }
-    }
-
     // TODO: check distances with actual geometric overlap checking
     shell_distance_checker sdc(shell_id(),  pos, radius, shell_distance_checker::Construct::SHARE5050);
     CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-    radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
+    radius = std::min(radius, sdc.distance());
+
+    // Limit radius to space to closest surface
+    auto sudc = surface_distance_check(world, std::vector<StructureID>{world.get_def_structure_id(), interacting_structure_.id()}, pid_pair_.second);
+    sudc.measure_distances(world.get_structures());
+    radius = std::min(radius, sudc.distance());
+
+    radius /= GfrdCfg.SAFETY;
 
     if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
