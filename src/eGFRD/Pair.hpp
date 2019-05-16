@@ -404,6 +404,7 @@ public:
 //      THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
 
        structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
+       THROW_UNLESS_MSG(illegal_state, structure != nullptr, "PairPlanar created with structure that is not a PlanarSurface");
    }
 
    const char* type_name() const override { return "PairPlanar"; }
@@ -522,7 +523,7 @@ public:
 
         auto search_distance = height + radius;
 
-        // check distances to surfaces, ignore def.struct and particle.structure
+        // Check distances to surfaces, ignore def.struct and particle.structure
         for (auto s : world.get_structures())
         {
             if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
@@ -531,7 +532,8 @@ public:
                 radius = std::min(radius, distance);
             }
         }
-        // TODO
+
+        // TODO: use actual cylindrical distance check
         shell_distance_checker sdc(sid1, sid2, pos, search_distance, shell_distance_checker::Construct::SHARE5050);
         CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
         radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
@@ -542,7 +544,7 @@ public:
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();
 
-        // TODO: calculate and set a_R, a_r, and check if r0, sigma are initialised properly
+        // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius);
 
         sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
@@ -594,11 +596,14 @@ public:
     PairMixed2D3D(const DomainID did, const particle_id_pair& pid_pair_2d, const particle_id_pair& pid_pair_3d,
             const std::shared_ptr<Structure>& structure_2d, std::shared_ptr<Structure>& structure_3d, const shell_id_pair& sid_pair, const ReactionRules& reactions, const World &world)
             : Pair(did, pid_pair_2d, pid_pair_3d, sid_pair, reactions),
-            pid_pair_2d(pid_pair_2d), pid_pair_3d(pid_pair_3d), structure_2d(structure_2d), structure_3d(structure_3d), world_(world)
+            pid_pair_2d_(pid_pair_2d), pid_pair_3d_(pid_pair_3d), structure_3d_(structure_3d), world_(world)
     {
 //        THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
         THROW_UNLESS(illegal_state, structure_2d.get()->id() == pid_pair_2d.second.structure_id());
         THROW_UNLESS(illegal_state, structure_3d.get()->id() == pid_pair_3d.second.structure_id());
+
+        structure_2d_ = std::dynamic_pointer_cast<PlanarSurface>(structure_2d);
+        THROW_UNLESS_MSG(illegal_state, structure_2d_ != nullptr, "PairPlanar created with structure that is not a PlanarSurface");
 
 
         // The scaling factor needed to make the anisotropic diffusion problem
@@ -609,64 +614,108 @@ public:
 
     const char* type_name() const override { return "PairMixed2D3D"; }
 
-    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override {
-        double max_size = smat.cell_size() * GfrdCfg.MAX_CELL_OCCUPANCY;
+    bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override
+    {
+//        THROW_EXCEPTION(not_implemented, "Not yet implemented");
 
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
-        return false;
+        // Create IV and CoM vectors from particles
+        do_transform(world);
+
+        THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
+
+
+        auto pos = particle1().position();
+        auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
+        double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
+        double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+        auto radius = max_radius;
+        auto height = 2 * min_radius;
+        auto D_r = D_tot();
+
+        auto search_distance = height + radius;
+
+        // Check distances to surfaces, ignore def.struct and particle.structure
+        for (auto s : world.get_structures())
+        {
+            if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
+            {
+                double distance = s->distance(pos);    // fix cyclic world !
+                radius = std::min(radius, distance);
+            }
+        }
+
+        // TODO: use actual cylindrical distance check
+        shell_distance_checker sdc(sid1, sid2, pos, search_distance, shell_distance_checker::Construct::SHARE5050);
+        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
+        radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
+
+        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+
+        auto plane = structure_2d_;
+        THROW_UNLESS(not_found, plane != nullptr);
+        auto unit_z = plane->shape().unit_z();
+
+        // TODO: set proper height instead of just mimicking radius
+        height = radius;
+
+        // Calculate radii for center-of-motion vector R, and interparticle vector r
+        determine_radii(radius, height/2);
+
+        sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
+        gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
+        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
+        return true;
     }
 
-    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override {
-
-        auto particle1 = pid_pair_2d.second, particle2 = pid_pair_3d.second;
-        auto pos1 = particle1.position(), pos2 = particle2.position();
-        auto D1 = particle1.D(), D2 = particle2.D();
-        auto particle2_trans = world_.cyclic_transpose(pos1, pos2);
-
-        // CoM calculation:
-        // The CoM is calculated in a similar way to a normal 3D pair...
-        auto com_vector = (((pos1 * D2) + (pos2 * D1)) / (D1 + D2)).modulo(world_.world_size());
-        com_vector = world_.cyclic_transpose(com_vector, structure_2d.get()->position());
-
-        // ...and then projected onto the plane to make sure the CoM is in the surface
-        auto projected_com_vector = structure_2d.get()->project_point(com_vector).first;
-        projected_com_vector = world_.apply_boundary(projected_com_vector);
-
-        return projected_com_vector;
+    Vector3 create_com_vector(double r, RandomNumberGenerator &rng) const override
+    {
+        auto plane = structure_2d_.get()->shape();
+        auto vec = r * Vector2::random(rng);
+        return vec.X() * plane.unit_x() + vec.Y() * plane.unit_y();
     }
 
-    Vector3 create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override {
-        auto particle1 = pid_pair_2d.second, particle2 = pid_pair_3d.second;
-        auto pos1 = particle1.position(), pos2 = particle2.position();
-        auto pos2_trans = world_.cyclic_transpose(pos2, pos1);
+    Vector3 create_interparticle_vector(const PairGreensFunction &gf, double r, RandomNumberGenerator &rng) const override
+    {
+        auto old_iv = iv_;
+        auto new_iv = iv_;
+        auto theta = GreenFunctionHelper::draw_theta_wrapper(rng, gf, r, dt());
+        if (theta == 0.0)
+        {
+            new_iv = old_iv;
+        }
+        else if (std::fmod(theta, M_PI) == 0.0)
+        {
+            // Rotate the old iv to the new theta
+            auto rotation_axis = Vector3(-old_iv.Y(), old_iv.X(), 0.0); // Crossproduct against z-axis
+            new_iv = Vector3::transformVector(old_iv, Matrix4::createRotationA(theta, rotation_axis.normal()));
 
-        // IV calculation
-        auto iv = pos2_trans - pos1;
+            // Rotate the new iv around the old iv with angle phi
+            auto phi = rng.uniform(0.0, 1.0) * 2 * M_PI;
+            rotation_axis = old_iv.normal();
+            new_iv = Vector3::transformVector(new_iv, Matrix4::createRotationA(phi, rotation_axis.normal()));
+        }
+        else
+        {
+            // theta == pi -> just mirror the old iv
+            new_iv = -old_iv;
+        }
 
-        // We assume for now that the 2D structure is a PlanarSurface. This might not
-        // be the case as more structures get added. This cast is needed to expose shape().
-        // We could also add shape() to a superclass.
-        auto surface = dynamic_cast<PlanarSurface*>(structure_2d.get());
-        THROW_UNLESS_MSG(illegal_state, surface != nullptr, "PairMixed2D3D has a non-planar 2D surface, which is not supported.");
-
-        // Rescale the iv in the axis normal to the plane
-        auto unit_z = surface->shape().unit_z();
-        auto iv_z_component = Vector3::dot(iv, unit_z);
-        auto iv_z = unit_z * iv_z_component;
-        auto scaled_iv_z = unit_z * (iv_z_component * scaling_factor_);
-
-        return iv - iv_z + scaled_iv_z;
+        // Adjust length of the vector to new r
+        // Note that r0 = old_iv.length()
+        new_iv = (r/r0()) * new_iv;
+        return new_iv;
     }
 
     std::pair<position_structid_pair, position_structid_pair>
     do_back_transform(Vector3 com, Vector3 iv, double D1, double D2, double radius1, double radius2, StructureID s1,
-                      StructureID s2, Vector3 unit, const World &world) const override {
+                      StructureID s2, Vector3 unit, const World &world) const override
+    {
 
         auto weight1 = D1 / D_tot(), weight2 = D2 / D_tot();
         auto z_backtransform = sqrt(D2 / D_tot());
 
         // Like in create_interparticle_vector(), we assume the 2D surface is a PlanarSurface
-        auto surface = dynamic_cast<PlanarSurface*>(structure_2d.get());
+        auto surface = dynamic_cast<PlanarSurface*>(structure_2d_.get());
         THROW_UNLESS_MSG(illegal_state, surface != nullptr, "PairMixed2D3D has a non-planar 2D surface, which is not supported.");
         auto shape = surface->shape();
 
@@ -711,35 +760,26 @@ public:
         auto new_3d_pos = com + (weight2 * (iv_x + iv_y)) + iv_z;
 
         // Make pairs
-        auto pair_2d = std::make_pair(new_2d_pos, structure_2d.get()->id());
-        auto pair_3d = std::make_pair(new_3d_pos, structure_3d.get()->id());
+        auto pair_2d = std::make_pair(new_2d_pos, structure_2d_.get()->id());
+        auto pair_3d = std::make_pair(new_3d_pos, structure_3d_.get()->id());
         return std::make_pair(pair_2d, pair_3d);
-    }
-
-    EventType draw_iv_event_type(RandomNumberGenerator &rng) override
-    {
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.");
-        return EventType::INIT;
     }
 
     const PairGreensFunction &choose_pair_greens_function() const override
     {
-        THROW_EXCEPTION(not_implemented, "Not yet implemented.")
         return *gf_iv_;
     }
 
-    void determine_radii()
+    void determine_radii(const double shell_radius, const double shell_half_length)
     {
         // Determines the dimensions of the domains used for the Green's functions
         // from the dimensions of the cylindrical shell.
         // Note that the function assumes that the cylinder is dimensioned properly.
 
-        auto particle_2d = pid_pair_2d.second, particle_3d = pid_pair_3d.second;
+        auto particle_2d = pid_pair_2d_.second, particle_3d = pid_pair_3d_.second;
         auto radius_2d = particle_2d.radius(), radius_3d = particle_3d.radius();
         auto D_2d = particle_2d.D(), D_3d = particle_3d.D();
 
-        auto shell_radius = shell().get_cylinder().radius();
-        auto shell_half_length = shell().get_cylinder().half_length();
         auto z_left = radius_2d;
         auto z_right = 2.0 * shell_half_length - z_left;
 
@@ -763,15 +803,41 @@ public:
         // TODO: Add sanity checks from pair.py
     }
 
+    void do_transform(const World& world) override
+    {
+        Vector3 pos1 = pid_pair1_.second.position();
+        Vector3 pos2 = pid_pair2_.second.position();
+        Vector3 pos2c = world.cyclic_transpose(pos2, pos1);
+
+        // The CoM is calculated in a similar way to a normal 3D pair...
+        Vector3 com = D_tot() > 0 ? (pid_pair2_.second.D() * pos1 + pid_pair1_.second.D() * pos2c) / D_tot() : 0.5 * (pos1 + pos2c);
+
+        // ...and then projected onto the plane to make sure the CoM is in the surface
+        com = world.cyclic_transpose(com, structure_2d_.get()->position());
+        auto projection = structure_2d_.get()->project_point(com);
+        com_ = world.apply_boundary(projection.first);
+
+        // IV calculation
+        auto iv = pos2c - pos1;
+
+        // Rescale the IV in the axis normal to the plane
+        auto plane = structure_2d_;
+        auto iv_z_component = Vector3::dot(iv, plane->shape().unit_z());
+        auto iv_z = plane->shape().unit_z() * iv_z_component;
+        auto new_iv_z = plane->shape().unit_z() * (iv_z_component * scaling_factor_);
+
+        iv_ = iv - iv_z + new_iv_z;
+    }
+
 private:
     friend class Persistence;
 
     const World &world_;
 
-    const particle_id_pair pid_pair_2d;
-    const particle_id_pair pid_pair_3d;
-    std::shared_ptr<Structure> structure_2d;
-    std::shared_ptr<Structure> structure_3d;
+    const particle_id_pair pid_pair_2d_;
+    const particle_id_pair pid_pair_3d_;
+    std::shared_ptr<PlanarSurface> structure_2d_;
+    std::shared_ptr<Structure> structure_3d_;
 
     double scaling_factor_;
 };
