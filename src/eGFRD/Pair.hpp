@@ -610,6 +610,7 @@ public:
         // of the IV into an isotropic one. 3D particle is the only contributor
         // to diffusion normal to the plane.
         scaling_factor_ = sqrt(D_R() / pid_pair_3d.second.D());
+        sqrt_DRDr_ = std::sqrt((2*D_R())/(3*D_tot())); // D_r == D_tot
     }
 
     const char* type_name() const override { return "PairMixed2D3D"; }
@@ -623,7 +624,6 @@ public:
 
         THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 
-
         auto pos = particle1().position();
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
@@ -631,8 +631,11 @@ public:
         auto radius = max_radius;
         auto height = 2 * min_radius;
         auto D_r = D_tot();
+        auto D_2D = particle1().D(), D_3D = particle2().D();
+        auto radius2D = particle1().radius(), radius3D = particle2().radius();
 
         auto search_distance = height + radius;
+        particle_surface_dist_ = structure_2d_->distance(pos);
 
         // Check distances to surfaces, ignore def.struct and particle.structure
         for (auto s : world.get_structures())
@@ -655,8 +658,24 @@ public:
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();
 
+        if (D_R() == 0.0)
+        {
+            auto a_r_3D = (radius - particle2().radius());
+            a_r_ = a_r_3D;
+        }
+        else
+        {
+            auto a_r_2D = (radius - radius2D + r0()*sqrt_DRDr_) / (sqrt_DRDr_ + (D_2D/D_tot()));
+            auto a_r_3D = (radius - radius3D + r0()*sqrt_DRDr_) / (sqrt_DRDr_ + (D_3D/D_tot()));
+            a_r_ = std::min(a_r_2D, a_r_3D);
+        }
+
         // TODO: set proper height instead of just mimicking radius
-        height = radius;
+        height = (a_r_ / scaling_factor_ + radius3D) + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);
+//        auto cylinder_pos =
+
+        auto particle_surface_dist = structure_2d_->distance(pos) - radius2D;
+        auto cylinder_pos = pos - unit_z * center_particle_offset(height / 2);
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);
@@ -829,6 +848,41 @@ public:
         iv_ = iv - iv_z + new_iv_z;
     }
 
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double get_distance_to_surface() const
+    {
+        // This is the distance from the particle to the PlanarSurface.
+        // Note that this is the distance from the hull of the particle, not its center.
+        return particle_surface_dist_;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double get_distance_to_escape(double half_length) const
+    {
+        // This calculates the distance from the particle to the flat boundary away from the surface.
+        // Note that this is the distance from the hull of the particle, not its center.
+        auto cylinder_length = half_length*2;
+        auto particle_radius = pid_pair_.second.radius();
+        // Portion of cylinder behind planar surface
+        auto cylinder_left = (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR);
+        // Portion of cylinder in front of planar surface
+        auto cylinder_right = cylinder_length - cylinder_left;
+
+        auto particle_to_right_boundary = cylinder_right - particle_surface_dist_ - particle_radius;
+        return particle_to_right_boundary;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    double center_particle_offset(double half_length) const
+    {
+        auto particle_radius = pid_pair_.second.radius();
+        // Distance between the particle center and cylinder center
+        return (half_length - get_distance_to_escape(half_length) - particle_radius);
+    }
+
 private:
     friend class Persistence;
 
@@ -839,5 +893,7 @@ private:
     std::shared_ptr<PlanarSurface> structure_2d_;
     std::shared_ptr<Structure> structure_3d_;
 
+    double particle_surface_dist_;
     double scaling_factor_;
+    double sqrt_DRDr_;
 };
