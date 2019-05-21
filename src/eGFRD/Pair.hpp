@@ -609,7 +609,7 @@ public:
         // The scaling factor needed to make the anisotropic diffusion problem
         // of the IV into an isotropic one. 3D particle is the only contributor
         // to diffusion normal to the plane.
-        scaling_factor_ = sqrt(D_R() / pid_pair_3d.second.D());
+        scaling_factor_ = sqrt(D_tot() / pid_pair_3d.second.D()); // D_r == D_tot
         sqrt_DRDr_ = std::sqrt((2*D_R())/(3*D_tot())); // D_r == D_tot
     }
 
@@ -682,7 +682,8 @@ public:
 
         sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
         gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
-        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
+        auto hack = std::max(r0(), sigma());
+        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), hack, sigma(), a_r()));
         return true;
     }
 
@@ -799,12 +800,12 @@ public:
         auto radius_2d = particle_2d.radius(), radius_3d = particle_3d.radius();
         auto D_2d = particle_2d.D(), D_3d = particle_3d.D();
 
-        auto z_left = radius_2d;
+        auto z_left = radius_2d * GfrdCfg.SINGLE_SHELL_FACTOR;
         auto z_right = 2.0 * shell_half_length - z_left;
 
         // Partition the space in the protective domain over the IV and the CoM domains
         // The outer bound of the interparticle vector is set by the particle diffusing in 3D via:
-        a_r_ = (z_right - radius_3d) * scaling_factor_;
+        a_r_ = (z_right - 2*radius_3d) * scaling_factor_;
 
         // Calculate the maximal displacement of a particle given an interparticle vector bound a_r
         // taking into account the radius for both the 2D and 3D particle. This sets the remaining
@@ -864,7 +865,7 @@ public:
         // This calculates the distance from the particle to the flat boundary away from the surface.
         // Note that this is the distance from the hull of the particle, not its center.
         auto cylinder_length = half_length*2;
-        auto particle_radius = pid_pair_.second.radius();
+        auto particle_radius = particle2().radius();
         // Portion of cylinder behind planar surface
         auto cylinder_left = (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR);
         // Portion of cylinder in front of planar surface
@@ -878,7 +879,7 @@ public:
 
     double center_particle_offset(double half_length) const
     {
-        auto particle_radius = pid_pair_.second.radius();
+        auto particle_radius = particle2().radius();
         // Distance between the particle center and cylinder center
         return (half_length - get_distance_to_escape(half_length) - particle_radius);
     }
