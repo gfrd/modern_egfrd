@@ -31,6 +31,7 @@ GreensFunction3DRadAbs::GreensFunction3DRadAbs(double D, double kf, double r0, d
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// Resets the alpha-tables
 void GreensFunction3DRadAbs::clearAlphaTable() const
 {
    std::for_each(alphaTables_.begin(), alphaTables_.end(), [](DoubleVector rv) { rv.clear(); });
@@ -55,6 +56,11 @@ double GreensFunction3DRadAbs::getAlpha0(uint i) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// This function searches for roots (y=0) of the so-called alpha-function
+// (::f_alpha()). It either moves a small search interval along the x-axis to
+// check for sign-change (which would indicate a root), and calls the GSL
+// root finder, or directly calls the root finder if the spacing between
+// roots is found to be converged.
 double GreensFunction3DRadAbs::getAlpha(uint n, uint i) const
 {
    THROW_UNLESS(std::invalid_argument, n < alphaTables_.size());
@@ -74,6 +80,8 @@ double GreensFunction3DRadAbs::getAlpha(uint n, uint i) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// The method evaluates the equation for finding the alphas for given alpha. This
+// is needed to find the alpha's at which the expression is zero -> alpha is the root.
 double GreensFunction3DRadAbs::f_alpha0(double alpha) const
 {
    double alpha_a_m_sigma = alpha * (a_ - sigma_);
@@ -136,6 +144,8 @@ void GreensFunction3DRadAbs::updateAlphaTable0(double t) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// f_alpha() Calculates the value of the mathematical function f_alpha(). The
+// roots (y=0) of this function are constants in the Green's Functions.
 double GreensFunction3DRadAbs::f_alpha(double alpha, int n) const
 {
    double aAlpha = a_ * alpha;
@@ -382,6 +392,7 @@ void GreensFunction3DRadAbs::updateAlphaTable(uint n, double t) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// calculates the constant part of the i-th term for the survival probability
 double GreensFunction3DRadAbs::p_survival_i(double alpha) const
 {
    double sigmasq = sigma_ * sigma_;
@@ -392,6 +403,7 @@ double GreensFunction3DRadAbs::p_survival_i(double alpha) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// Calculates the n-th term of the summation for calculating the flux through  the outer interface (escape)
 double GreensFunction3DRadAbs::leavea_i(double alpha) const
 {
    double sigmasq = sigma_ * sigma_;
@@ -403,6 +415,7 @@ double GreensFunction3DRadAbs::leavea_i(double alpha) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// Calculates the n-th term of the summation for calculating the flux through  the inner interface (reaction)
 double GreensFunction3DRadAbs::leaves_i(double alpha) const
 {
    double sigmasq = sigma_ * sigma_;
@@ -435,6 +448,7 @@ double GreensFunction3DRadAbs::p_int_r_i(double r, double alpha, double num_r0) 
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// calculates a table with all the constant factors for the survival probability
 void GreensFunction3DRadAbs::createPsurvTable(DoubleVector& table) const
 {
    const DoubleVector& alphaTable_0 = getAlphaTable(0);
@@ -491,6 +505,7 @@ double GreensFunction3DRadAbs::p_survival_table(double t, DoubleVector& psurvTab
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// calculates the ith term with exponent and time for the survival probability
 double GreensFunction3DRadAbs::p_survival_i_exp_table(uint i, double t, const DoubleVector& table) const
 {
    double alpha = getAlpha0(i);
@@ -499,11 +514,14 @@ double GreensFunction3DRadAbs::p_survival_i_exp_table(uint i, double t, const Do
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// calculates the flux leaving through the inner interface at a given moment
+// FIXME: This is inaccurate for small t's!!
 double GreensFunction3DRadAbs::leaves(double t) const
 {
    return funcSum(std::bind(&GreensFunction3DRadAbs::leaves_i_exp, this, std::placeholders::_1, t), MAX_ALPHA_SEQ);
 }
 
+// adds the exponential with the time to the sum. Needed for the inner interface (reaction)
 double GreensFunction3DRadAbs::leaves_i_exp(uint i, double t) const
 {
    double alpha = getAlpha0(i);
@@ -512,11 +530,13 @@ double GreensFunction3DRadAbs::leaves_i_exp(uint i, double t) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// calculates the flux leaving through the outer interface at a given moment
 double GreensFunction3DRadAbs::leavea(double t) const
 {
    return funcSum(std::bind(&GreensFunction3DRadAbs::leavea_i_exp, this, std::placeholders::_1, t), MAX_ALPHA_SEQ);
 }
 
+// adds the exponential with the time to the sum. Needed for the calculation of the flux through the outer interface
 double GreensFunction3DRadAbs::leavea_i_exp(uint i, double t) const
 {
    double alpha = getAlpha0(i);
@@ -538,6 +558,8 @@ double GreensFunction3DRadAbs::p_int_r_i_exp(uint i, double t, double r) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// Draws a first passage time, this could be an escape (through the outer boundary) or a reaction (through
+// the inner boundary)
 double GreensFunction3DRadAbs::drawTime(double rnd) const
 {
    THROW_UNLESS(std::invalid_argument, rnd >= 0.0 && rnd <= 1.0);
@@ -597,6 +619,7 @@ double GreensFunction3DRadAbs::drawTime(double rnd) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// This determines based on the flux at a certain time, if the 'escape' was a reaction or a proper escape
 GreensFunction::EventKind GreensFunction3DRadAbs::drawEventType(double rnd, double t) const
 {
    THROW_UNLESS(std::invalid_argument, rnd >= 0.0 && rnd <= 1.0);
@@ -631,6 +654,7 @@ GreensFunction::EventKind GreensFunction3DRadAbs::drawEventType(double rnd, doub
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// This draws a radius R at a given time, provided that the particle was at r0 at t=0
 double GreensFunction3DRadAbs::drawR(double rnd, double t) const
 {
    THROW_UNLESS(std::invalid_argument, rnd >= 0.0 && rnd <= 1.0);
@@ -829,6 +853,7 @@ double GreensFunction3DRadAbs::ip_theta(double theta, double r, double t) const
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+// This method draws a theta given a certain r and time (and initial condition of course)
 double GreensFunction3DRadAbs::drawTheta(double rnd, double r, double t) const
 {
    THROW_UNLESS(std::invalid_argument, rnd >= 0.0 && rnd <= 1.0);
