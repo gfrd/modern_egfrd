@@ -465,24 +465,48 @@ int GreensFunction3DRadAbs_draw_theta_conv()
 
 int GreensFunction3DRadAbs_draw_theta_conv2()
 {
-   double D = 2.0e-12;
-   double kf = 0;
-   double r0 = 2.022e-09;
-   double a = 1e-06;
-   double sigma = 2e-09;
-   auto gf = GreensFunction3DRadAbs(D, kf, r0, sigma, a);
+    double D = 2.0e-12;
+    double kf = 0;
+    double r0 = 2.022e-09;
+    double a = 1e-06;
+    double sigma = 2e-09;
+    auto gf = GreensFunction3DRadAbs(D, kf, r0, sigma, a);
 
-   double rnd = 0.5;
-   double t = 1e-05;
-   double r = 4e-09;
+    double rnd = 0.5;
+    double t = 1e-05;
+    double r = 4e-09;
 
-   double theta = gf.drawTheta(rnd, r, t);
-   // Not all cpu's/gsl version give the same result here.... anyone knows what theta should be ??
-   
-   //TINYTEST_ALMOST_EQUAL(1.3949050836260224, theta, 5*DBL_EPSILON);
-   
-   TINYTEST_FAIL(theta <= 0.0 || theta >= INFINITY); 
-   return 1;
+    double theta = gf.drawTheta(rnd, r, t);
+    // Not all cpu's/gsl version give the same result here.... anyone knows what theta should be ??
+
+    //TINYTEST_ALMOST_EQUAL(1.3949050836260224, theta, 5*DBL_EPSILON);
+
+    TINYTEST_FAIL(theta <= 0.0 || theta >= INFINITY);
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+int GreensFunction3DRadAbs_draw_theta_crash()
+{
+    double D = 1.0999999999999999e-11;
+    double kf = 0.20999999999999999;
+    double r0 = 2.1611013161114808e-07;
+    double a = 2.1618577598506714e-07;
+    double sigma = 5.9999999999999995e-08;
+    auto gf = GreensFunction3DRadAbs(D, kf, r0, sigma, a);
+
+    double rnd = 0.94657725516070546;
+    double t = 3.426105967927357e-10;
+    double r = 2.1618577598506714e-07;
+
+    double theta = gf.drawTheta(rnd, r, t);
+    // Not all cpu's/gsl version give the same result here.... anyone knows what theta should be ??
+
+    //TINYTEST_ALMOST_EQUAL(1.3949050836260224, theta, 5*DBL_EPSILON);
+
+    TINYTEST_FAIL(theta <= 0.0 || theta >= INFINITY);
+    return 1;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -603,6 +627,7 @@ TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_conv)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_conv2)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_alpha_0)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_alpha_i)
+TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_crash)
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------
