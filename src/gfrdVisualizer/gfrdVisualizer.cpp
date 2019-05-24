@@ -913,7 +913,7 @@ int main(int argc, char** argv)
               world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
               world.add_particle(sB, world.get_def_structure_id(), Vector3(4.569515338729998e-06, 5.7614426642224702e-07, 5.5921173272375657e-06));
 
-              rules.add_reaction_rule(ReactionRule(sA, sB, 0.99, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
           }
           break;
 
