@@ -862,6 +862,8 @@ int main(int argc, char** argv)
 
           case 105:
           {
+              // Test interaction between membrane-bound and 3D-diffusing particles
+
 
               auto sPlane = m.add_structure_type(StructureType("plane"));
 
@@ -876,19 +878,41 @@ int main(int argc, char** argv)
               auto origin = Vector3(0, 0, 0);
               auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
               auto uz = Vector3::uz;
-              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, uz, 0.5 * ws.X(), 0.5 * ws.Z(), true)));
-              auto psid = world.add_structure(plane);
-              UNUSED(psid);
+//              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+//              auto psid = world.add_structure(plane);
+//              UNUSED(psid);
 
-              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
-              world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+//              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+              world.throwInParticles(sB, 30, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+
+//              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.2198775752446821e-06, 5.1948420752381338e-07, 5.9361989135308565e-06));
+//              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
 
 //            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
               rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sB, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
 
               // Reaction Rules bind and unbind to plane
 //            rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
               rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.22, std::vector < SpeciesTypeID > {sB}));
+          } break;
+
+          case 106:
+          {
+              // Test PairSpherical domain bug occurring in Demo 5
+
+
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-11, 3e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-12, 1.5e-9));
+              auto ws = world.world_size();
+
+              world.initialize(6e-6, m);
+
+              world.add_particle(sA, world.get_def_structure_id(), Vector3(4.2198775752446821e-06, 5.1948420752381338e-07, 5.9361989135308565e-06));
+              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.99, std::vector<SpeciesTypeID>{sC}));
           }
           break;
 
