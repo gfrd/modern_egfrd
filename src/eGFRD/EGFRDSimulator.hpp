@@ -36,6 +36,53 @@ public:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
+   void TestMutateShell(Vector3 v, Vector2 s, DomainID did)
+   {
+      auto dip = domains_.find(did);
+      if (dip != domains_.end())
+      {
+         auto single = dynamic_cast<Single*>((*dip).second.get());
+         if (single == nullptr) return;
+         std::vector<DomainID> ovl;
+
+         auto& sip = single->shell_pair();
+         if (sip.second.shape() == Shell::Shape::SPHERE)
+         {
+            const Sphere& sphere = sip.second.get_sphere();
+            Vector3* a = (Vector3*)(Sphere*)& sphere;
+            (*a) += v;
+            double* a2 = (double*)(a + 1);
+            if ((*a2) + s.X() > 0) (*a2) += s.X();
+            shellmat_.update(sip);
+
+            ShellCreateUtils::shell_overlap_check_sphere<shell_matrix_type> soc(sphere);
+            CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, sphere.position());
+            ovl = std::move(soc.overlap());
+         }
+         else
+         {
+            const Cylinder& cylinder = sip.second.get_cylinder();
+            Vector3* a = (Vector3*)(Cylinder*)& cylinder;
+            (*a) += v;
+            double* a2 = (double*)(a + 1);
+            if ((*a2) + s.X() > 0) (*a2) += s.X();
+            double* a3 = (double*)(a2 + 1);
+            if ((*a3) + s.Y() > 0) (*a3) += s.Y();
+            shellmat_.update(sip);
+
+            ShellCreateUtils::shell_overlap_check_cylinder<shell_matrix_type> soc(cylinder, 1.0 / world_.cell_size());
+            CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
+            ovl = std::move(soc.overlap());
+         }
+         
+         std::cout << "Overlap: ";
+         for (auto &did : ovl) std::cout << did << " ";
+         std::cout << "\r\n";
+      }
+   }
+
+	// --------------------------------------------------------------------------------------------------------------------------------
+
    explicit EGFRDSimulator(World& world, ReactionRuleCollection& reaction_rules, RandomNumberGenerator& rng) noexcept
       : base_type(world, reaction_rules, rng), sidgen_(), didgen_(), scheduler_(), shellmat_() { }
 
@@ -1280,29 +1327,42 @@ private:
          if (shell.shape() == Shell::Shape::SPHERE)
          {
             auto sphere = shell.get_sphere();
-            ShellCreateUtils::shell_overlap_check<shell_matrix_type> soc(sphere);
+            ShellCreateUtils::shell_overlap_check_sphere<shell_matrix_type> soc(sphere);
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, sphere.position());
             ovl = std::move(soc.overlap());
          }
          else
          {
-            //auto cylinder = shell.get_cylinder();
-            //ShellCreateUtils::shell_overlap_check<shell_matrix_type> soc(cylinder);       // TODO check cylinder overlaps
-            //CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
-            //ovl = std::move(soc.overlap());
+            auto cylinder = shell.get_cylinder();
+            ShellCreateUtils::shell_overlap_check_cylinder<shell_matrix_type> soc(cylinder, 1.0 / world_.cell_size());
+            CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
+            ovl = std::move(soc.overlap());
          }
 
          auto multi = dynamic_cast<Multi*>(domain.get());
          if (multi != nullptr)
          {
+            // Multi domain has one or more shells, overlap-count should be between one (itself) and shell count
             THROW_UNLESS_MSG(illegal_state, ovl.size() >= 1 && ovl.size() <= multi->num_shells(), "Shells of multi domain:" << did << " overlaps with more shells (" << ovl.size() << ") than it holds (" << multi->num_shells() << ").");
             for (const auto& j : ovl)
                THROW_UNLESS_MSG(illegal_state, j == did, "Shell of multi domain:" << did << " overlaps with shell from domain:" << j);
+
+            // From all shells in the domain, there should be one equal to the shell in the matrix.
+            auto dshells = domain->get_shell_list();
+            const auto& dshell = std::find_if(dshells.begin(), dshells.end(), [&i](const Domain::shell_id_pair_ref& x) { return x.first == i.first; });
+            THROW_UNLESS_MSG(illegal_state, dshell != dshells.end(), "Multi domain:" << did << " does not contain ShellID " << i.first <<".");
+            THROW_UNLESS_MSG(illegal_state, (*dshell).second.get() == shell, "Shell of domain:" << did << " differs from Shell in ShellMatrix.");
          }
          else
          {
+            // Single/Pair domain has one shell, overlap-count should be one (itself)
             THROW_UNLESS_MSG(illegal_state, ovl.size() == 1, "Shell of domain:" << did << " overlaps with other shells.");
             THROW_UNLESS_MSG(illegal_state, *ovl.begin() == did, "Shell of domain:" << did << " overlaps with other shell (Domain:" << *ovl.begin() << " ).");
+
+            // The shell in the domain, should be equal to the shell in the matrix.
+            const auto& dshell = domain->get_shell();
+            THROW_UNLESS_MSG(illegal_state, dshell.first == i.first, "ShellID " << dshell.first << " from shell in domain does not match ShellID " << i.first << " from domain in ShellMatrix.");
+            THROW_UNLESS_MSG(illegal_state, dshell.second.get() == shell, "Shell of domain:" << did << " differs from Shell in ShellMatrix.");
          }
       }
    }
@@ -1369,17 +1429,15 @@ private:
       {
          auto s = shell.get_sphere();
          THROW_UNLESS_MSG(illegal_state, s.radius() <= shellmat_.cell_size() / 2.0, "Shell (Sphere) radius may not exceed half the matrix cell size.");
-
-         // find particles within this protective sphere
-         ovl = std::move(world_.check_particle_overlap(s));
+         ovl = std::move(world_.check_particle_overlap(s));          // find particles within this protective sphere
       }
       else
       {
          auto c = shell.get_cylinder();
          THROW_UNLESS_MSG(illegal_state, Vector2(c.half_length(), c.radius()).length() < shellmat_.cell_size() / 2.0, "Shell (Cylinder) any angle (corner distance) may not exceed half the matrix cell size.");
+         ovl = std::move(world_.check_particle_overlap(c));          // find particles within this protective cylinder
 
-         // find particles within this protective cylinder
-         ovl = std::move(world_.check_particle_overlap(c));
+         THROW_UNLESS_MSG(illegal_state, std::abs(c.unit_z().length() - 1.0) < 1e-8, "Shell (Cylinder) orientation (unit_z) should be a normalized vector.");
       }
 
       DomainID did = shell.did();

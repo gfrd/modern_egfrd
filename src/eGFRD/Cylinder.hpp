@@ -17,7 +17,7 @@ public:
 
    Cylinder() noexcept : Cylinder(Vector3(), double(1.0), Vector3::uz, double(0.5)) {}
 
-   Cylinder(const Vector3& position, double radius, const Vector3& uz, double half_length) noexcept : position_(position), radius_(radius), half_length_(half_length), unitZ_(uz) { }
+   Cylinder(const Vector3& position, double radius, const Vector3& uz, double half_length) noexcept : position_(position), radius_(radius), half_length_(half_length), unitZ_(uz.normal()) { }
 
    // member functions
 
