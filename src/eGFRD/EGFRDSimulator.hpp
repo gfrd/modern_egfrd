@@ -1092,7 +1092,7 @@ private:
 
       // Find surfaces within interaction range
       auto ignored_structures = std::vector<StructureID>{world_.get_def_structure_id(), single.particle().structure_id()};
-      ShellCreateUtils::surface_interaction_check interacting_surfaces(ignored_structures, single.particle());
+      ShellCreateUtils::surface_interaction_check interacting_surfaces(ignored_structures, single.particle(), world_);
       interacting_surfaces.find_interacting_surfaces(world_.get_structures());
 
       if (interacting_shells.multiple() || interacting_surfaces.multiple() ||

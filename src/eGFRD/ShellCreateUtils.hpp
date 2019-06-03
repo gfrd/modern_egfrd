@@ -153,7 +153,8 @@ struct ShellCreateUtils
     class surface_interaction_check
     {
     public:
-        surface_interaction_check(std::vector<StructureID> sids_ignore, const Particle& particle) : ignore_(std::move(sids_ignore)), point_(particle.position()), radius_(particle.radius()), hit_sid_(0), multiple_() { }
+        surface_interaction_check(std::vector<StructureID> sids_ignore, const Particle& particle, const World& world) :
+        ignore_(std::move(sids_ignore)), point_(particle.position()), radius_(particle.radius()), world_(world), hit_sid_(0), multiple_() { }
 
 
         StructureID sid() const noexcept { return hit_sid_; }                  // when structure within interaction_horizon
@@ -171,8 +172,8 @@ struct ShellCreateUtils
                     // Structure is in ignore list, move on
                     continue;
                 }
-
-                auto surface_distance = structure->distance(point_);
+                auto transposed = world_.cyclic_transpose(point_, structure->position());
+                auto surface_distance = structure->distance(transposed);
                 auto surface_horizon = radius_ * GfrdCfg.SINGLE_SHELL_FACTOR;
 
                 if(dynamic_cast<const PlanarSurface*>(structure.get()) != nullptr
@@ -198,6 +199,7 @@ struct ShellCreateUtils
         const Vector3&             point_;           // Particle location, the point whose neighbors are being checked.
         double                     top_dist_ = 1e6;  // smallest distance found so far
 
+        const World&               world_;
         double                     radius_;          // Particle radius.
         StructureID                hit_sid_;         // when multiple is false, this contains zero (no hit) or the StructureID of (only) the surface within interaction horizon (create an Interaction domain)
         std::vector<StructureID>   multiple_;        // when multiple is true, there is more than one surface within the interaction horizon (no Interaction domain can be made)

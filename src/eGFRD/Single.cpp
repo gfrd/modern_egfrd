@@ -93,8 +93,9 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
 {
     auto structure_id = pid_pair_.second.structure_id();
     auto pos = pid_pair_.second.position();
+    auto transposed = world.cyclic_transpose(pos, interacting_structure_.position());
     auto particle_radius = pid_pair_.second.radius();
-    particle_surface_dist_ = interacting_structure_.distance(pos) - particle_radius;
+    particle_surface_dist_ = interacting_structure_.distance(transposed) - particle_radius;
 
 //    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
 
@@ -123,7 +124,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto unit_z = plane->shape().unit_z();
 
     // orient cylinder on correct side of the plane
-    auto orientation = plane->project_point(pos).second;
+    auto orientation = plane->project_point(transposed).second;
     if (orientation.first < 0)
     {
         unit_z *= -1;
@@ -131,7 +132,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
 
     // TODO: scale height proportional to radius with strategy from paper
     double height = std::max(radius, 2 * (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + (get_distance_to_surface() + particle_radius));
-    auto cylinder_center_pos = pos - unit_z * center_particle_offset(height / 2);
+    auto cylinder_center_pos = transposed - unit_z * center_particle_offset(height / 2);
 
     sid_pair_.second = Shell(domainID_, Cylinder(cylinder_center_pos, radius, unit_z, height/2), Shell::Code::NORMAL);
     gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));
