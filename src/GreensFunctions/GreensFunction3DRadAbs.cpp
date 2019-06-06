@@ -73,7 +73,9 @@ double GreensFunction3DRadAbs::getAlpha(uint n, uint i) const
       uint offset = alphaOffset(n);
       root_fsolver_wrapper solver;
       for (uint m = oldSize; m <= i; ++m)
-         aTable[m] = alpha_i(m + offset, n, solver);
+      {
+          aTable[m] = alpha_i(m + offset, n, solver);
+      }
    }
    return aTable[i];
 }
@@ -462,12 +464,18 @@ void GreensFunction3DRadAbs::createPsurvTable(DoubleVector& table) const
 uint GreensFunction3DRadAbs::guess_maxi(double t) const
 {
    const uint safety = 2;
-   if (!std::isfinite(t)) return safety;
+   if (!std::isfinite(t))
+   {
+       return safety;
+   }
 
    double alpha0 = getAlpha0(0);
    double Dt = D_ * t;
    double threshold = std::exp(-Dt * alpha0 * alpha0) * GfCfg.TOLERANCE * 0.1;
-   if (threshold <= 0.0) return MAX_ALPHA_SEQ;
+   if (threshold <= 0.0)
+   {
+       return MAX_ALPHA_SEQ;
+   }
 
    double max_alpha = std::sqrt(alpha0 * alpha0 - std::log(threshold) / Dt);
    return std::min(safety + static_cast<uint>(max_alpha * (a_ - sigma_) / M_PI), MAX_ALPHA_SEQ);
@@ -497,6 +505,7 @@ double GreensFunction3DRadAbs::p_survival_table(double t, DoubleVector& psurvTab
    const uint i_max = guess_maxi(t);
    if (psurvTable.size() < i_max)
    {
+      Logger::get_logger("GFRD").info() << "i_max " << i_max;
       getAlpha0(i_max);  // this updates the table
       createPsurvTable(psurvTable);
    }
@@ -777,7 +786,8 @@ double GreensFunction3DRadAbs::funcSumMaxAlpha(int n, double max_alpha, const st
    uint i;
    for (i = 0; i < MAX_ALPHA_SEQ; ++i)
    {
-      p += func(i, n);;
+//       _log.info() << "funcSumMaxAlpha i " << i;
+      p += func(i, n);
       if (getAlpha(n, i) >= max_alpha && i >= min_i) break;
    }
    return p;

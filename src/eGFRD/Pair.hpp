@@ -232,7 +232,7 @@ public:
 
    const ReactionRule& draw_single_reaction_rule(RandomNumberGenerator&rng, const ReactionRuleCollection& rules) const
    {
-      // for a SINGLE_RECTION event, we need a ReactionRule, draw one for the correct particle/species_type
+      // for a SINGLE_REACTION event, we need a ReactionRule, draw one for the correct particle/species_type
       ASSERT(eventType_ == EventType::SINGLE_REACTION);
       ASSERT(pid_reactingsingle_);
 
@@ -634,6 +634,7 @@ public:
         auto D_2D = particle1().D(), D_3D = particle2().D();
         auto radius2D = particle1().radius(), radius3D = particle2().radius();
 
+        // City block distance, to ensure the edges of our cylinder can never overlap with other domains
         auto search_distance = height + radius;
         particle_surface_dist_ = structure_2d_->distance(pos);
 
@@ -656,7 +657,7 @@ public:
 
         auto plane = structure_2d_;
         THROW_UNLESS(not_found, plane != nullptr);
-        auto unit_z = plane->shape().unit_z();
+        auto unit_z = (plane->shape().unit_z() * Vector3::dot(iv(), plane->shape().unit_z())).normal();
 
         if (D_R() == 0.0)
         {
@@ -672,18 +673,18 @@ public:
 
         // TODO: set proper height instead of just mimicking radius
         height = (a_r_ / scaling_factor_ + radius3D) + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);
-//        auto cylinder_pos =
 
         auto particle_surface_dist = structure_2d_->distance(pos) - radius2D;
-        auto cylinder_pos = pos - unit_z * center_particle_offset(height / 2);
+        auto cylinder_pos = pos + unit_z * (height/2 - (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR));
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);
 
-        sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
+        sid_pair_.second = Shell(domainID_, Cylinder(cylinder_pos, radius, unit_z, height/2), Shell::Code::NORMAL);
         gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
-        auto hack = std::max(r0(), sigma());
-        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), hack, sigma(), a_r()));
+//        auto hack = std::max(r0(), sigma());
+//        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), hack, sigma(), a_r()));
+        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
         return true;
     }
 
@@ -703,7 +704,7 @@ public:
         {
             new_iv = old_iv;
         }
-        else if (std::fmod(theta, M_PI) == 0.0)
+        else if (!feq(std::fmod(theta, M_PI), 0.0))
         {
             // Rotate the old iv to the new theta
             auto rotation_axis = Vector3(-old_iv.Y(), old_iv.X(), 0.0); // Crossproduct against z-axis
@@ -825,8 +826,8 @@ public:
 
     void do_transform(const World& world) override
     {
-        Vector3 pos1 = pid_pair1_.second.position();
-        Vector3 pos2 = pid_pair2_.second.position();
+        Vector3 pos1 = pid_pair_2d_.second.position();
+        Vector3 pos2 = pid_pair_3d_.second.position();
         Vector3 pos2c = world.cyclic_transpose(pos2, pos1);
 
         // The CoM is calculated in a similar way to a normal 3D pair...
