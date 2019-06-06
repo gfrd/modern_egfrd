@@ -511,6 +511,25 @@ int GreensFunction3DRadAbs_draw_theta_crash()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+int GreensFunction3DRadAbs_draw_time_crash()
+{
+    double D = 1.9999999999999999e-11;
+    double kf = 0.20999999999999999;
+    double r0 = 2.390394797224125e-07;
+    double a = 4.1269234927260905e-07;
+    double sigma = 5.9999999999999995e-08;
+    auto gf = GreensFunction3DRadAbs(D, kf, r0, sigma, a);
+
+    double rnd = 0.27858084074194517;
+
+    double t = gf.drawTime(rnd);
+
+    TINYTEST_FAIL(t <= 0.0);
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 class UnitTestGreensFunction3DRadAbs
 {
 public:
@@ -627,7 +646,9 @@ TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_conv)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_conv2)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_alpha_0)
 TINYTEST_ADD_TEST(GreensFunction3DRadAbs_alpha_i)
-TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_crash)
+TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_time_crash)
+//TINYTEST_ADD_TEST(GreensFunction3DRadAbs_draw_theta_crash)
+
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------
