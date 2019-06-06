@@ -452,8 +452,11 @@ public:
            Logger::get_logger("EGFRD").warn() << "Domainsize changed for convergence: a_r = a_r_max = " << a_r_ << ", a_R = " << a_R_;
        }
 
-       THROW_UNLESS(illegal_argument, (a_R() + (a_r() * Da / D_tot()) + radiusa) >= (a_R() + (a_r() * Db / D_tot()) + radiusb));
-       THROW_UNLESS(illegal_argument, std::fabs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size)  < 1e-12 * shell_size);
+       // TODO: investigate why these two checks were originally needed, because I don't understand why
+       // they should be true (Tom).
+//       THROW_UNLESS(illegal_argument, (a_R() + (a_r() * Da / D_tot()) + radiusa) >= (a_R() + (a_r() * Db / D_tot()) + radiusb));
+//       THROW_UNLESS(illegal_argument, std::fabs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size)  < 1e-12 * shell_size);
+
        THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
        THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
        THROW_UNLESS(illegal_argument, (fgreater(a_R_, 0, radiusa)) || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
