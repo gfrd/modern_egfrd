@@ -683,10 +683,16 @@ public:
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);
 
+        // We need to check whether the final a_r is large enough to fit r0.
+        // If it is larger, but only just so, the next time delta will be in the
+        // order of nanoseconds, so it is best to skip creating this domain.
+        if (a_r() < r0() * GfrdCfg.SAFETY)
+        {
+            return false;
+        }
+
         sid_pair_.second = Shell(domainID_, Cylinder(cylinder_pos, radius, unit_z, height/2), Shell::Code::NORMAL);
         gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
-//        auto hack = std::max(r0(), sigma());
-//        gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), hack, sigma(), a_r()));
         gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
         return true;
     }
