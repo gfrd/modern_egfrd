@@ -24,7 +24,7 @@ public:
    void handleMouseWheel(int wheel, int direction, int x, int y)
    {
       UNUSED(wheel, x, y);
-      distance_ += static_cast<float>(0.05 * direction * (distance_ == 0 ? 0.1 : distance_));
+      distance_ -= static_cast<float>(0.05 * direction * (distance_ == 0 ? 0.1 : distance_));
       if (distance_ < 0.0) distance_ = 0.0;
       glutPostRedisplay();
    }
