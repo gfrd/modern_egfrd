@@ -1166,15 +1166,13 @@ private:
            bool success = interaction->create_updated_shell(shellmat_, world_);
            if (!success) return false;
 
-           // update the shell containers with the new shell
-           shellmat_.update(interaction->shell_pair());
-
            // determine next action for this event
            interaction->determine_next_event(rng_);
            interaction->set_last_time(time_);
 
            // remove old domain, and add new interaction domain
            remove_domain(old_did);
+           shellmat_.update(interaction->shell_pair());
            domains_[new_did] = std::unique_ptr<Domain>(std::move(interaction));
 
            // update scheduler
