@@ -122,6 +122,7 @@ protected:
    int downX_, downY_;
    double value1_;
    double value2_;
+   double value3_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -160,7 +161,14 @@ public:
       CameraController::handleMouse(button, updown, x, y);
       if (mouseDrag_)
       {
-         if (areaRotate_.contains(x, y))
+         if (button == GLUT_RIGHT_BUTTON)
+         {
+             dragMode_ = DragMode::ShiftXY;
+             value1_ = lookAt_.X();
+             value2_ = lookAt_.Y();
+             value3_ = lookAt_.Z();
+         }
+         else if (areaRotate_.contains(x, y))
          {
             dragMode_ = DragMode::Rotate;
             value1_ = azimuth_;
@@ -224,9 +232,14 @@ public:
          break;
 
       case DragMode::ShiftZ:
-         lookAt(Vector3(value1_ + (downY_ - y) / (60 * mouseDragSpeed) * std::sin(azimuth_), lookAt_.Y(), value2_ - (downY_ - y) / (60 * mouseDragSpeed) * std::cos(azimuth_)));
-         glutPostRedisplay();
-         break;
+          lookAt(Vector3(value1_ + (downY_ - y) / (60 * mouseDragSpeed) * std::sin(azimuth_), lookAt_.Y(), value2_ - (downY_ - y) / (60 * mouseDragSpeed) * std::cos(azimuth_)));
+          glutPostRedisplay();
+          break;
+
+      case DragMode::ShiftXY:
+          lookAt(Vector3(value1_ + (downX_ - x) / (60 * mouseDragSpeed) * std::cos(azimuth_), value2_ - ((downY_ - y) / (60 * mouseDragSpeed)), value3_ + (downX_ - x) / (60 * mouseDragSpeed) * std::sin(azimuth_)));
+          glutPostRedisplay();
+          break;
       }
    }
 
@@ -245,7 +258,7 @@ public:
    }
 
 protected:
-   enum class DragMode { None = 0, Rotate, Depth, ShiftX, ShiftY, ShiftZ };
+   enum class DragMode { None = 0, Rotate, Depth, ShiftX, ShiftY, ShiftZ, ShiftXY };
 
    DragMode dragMode_;
    Rect areaRotate_;

@@ -471,8 +471,21 @@ void handleDisplay()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handleMouse(int button, int updown, int x, int y)
+void handleMouseWheel(int wheel_number, int direction, int x, int y)
 {
+    cam.handleMouseWheel(wheel_number, direction, x, y);
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+void handleMouse(int button, int updown, int x, int y) {
+    // Workaround for glutMouseWheelFunc() only being called on Windows
+    if (button == 3 || button == 4)
+    {
+        // Button 3 == SCROLL_UP, 4 == SCROLL_DOWN
+        return handleMouseWheel(0, button == 3 ? 1 : -1, x, y);
+    }
+
    cam.handleMouse(button, updown, x, y);
 }
 
@@ -488,13 +501,6 @@ void handlePassiveMouseMotion(int x, int y)
 void handleMouseMotion(int x, int y)
 {
    cam.handleMouseMotion(x, y);
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-void handleMouseWheel(int wheel_number, int direction, int x, int y)
-{
-   cam.handleMouseWheel(wheel_number, direction, x, y);
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -1034,7 +1040,7 @@ int main(int argc, char** argv)
    glutMouseFunc(handleMouse);
    glutMotionFunc(handleMouseMotion);
    glutPassiveMotionFunc(handlePassiveMouseMotion);
-   glutMouseWheelFunc(handleMouseWheel);
+   glutMouseWheelFunc(handleMouseWheel); // Only works on Windows, workaround implemented in handleMouse()
    glutKeyboardFunc(handleKeyboard);
    glutDisplayFunc(handleDisplay);
    glutReshapeFunc(handleReshape);
