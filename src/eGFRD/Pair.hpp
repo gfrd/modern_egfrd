@@ -541,11 +541,17 @@ public:
         CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
         radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
 
-        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+        if (radius < min_radius) return false;             // no space for Pair domain.. it will be discarded, and a Multi is created instead!
 
         auto plane = structure_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();
+
+        // Prevent domain creation if there is not enough space
+        if (radius - r0() - max_part_radius <= 0.0)
+        {
+            return false;
+        }
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius);
