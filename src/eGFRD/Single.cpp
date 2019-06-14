@@ -59,7 +59,7 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
    auto radius = max_radius;
    auto height = 2 * min_radius;
 
-   auto search_distance = height + radius;
+   auto search_distance = height + max_radius;
 
    // TODO: use actual geometric overlap check
    shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
