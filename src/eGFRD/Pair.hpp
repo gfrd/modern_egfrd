@@ -633,7 +633,8 @@ public:
 
         THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 
-        auto pos = particle1().position();
+        auto pos_2d = particle1().position();
+        auto pos_3d = world.cyclic_transpose(particle2().position(), pos_2d);
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
         double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
@@ -645,21 +646,22 @@ public:
 
         // City block distance, to ensure the edges of our cylinder can never overlap with other domains
         auto search_distance = height + radius;
-        particle_surface_dist_ = structure_2d_->distance(pos);
+        particle_surface_dist_ = structure_2d_->distance(pos_3d);
 
         // Check distances to surfaces, ignore def.struct and particle.structure
         for (auto s : world.get_structures())
         {
             if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
             {
-                double distance = s->distance(pos);    // fix cyclic world !
+                auto pos_transposed = world.cyclic_transpose(pos_2d, s->position());
+                double distance = s->distance(pos_transposed);
                 radius = std::min(radius, distance);
             }
         }
 
         // TODO: use actual cylindrical distance check
-        shell_distance_checker sdc(sid1, sid2, pos, search_distance, shell_distance_checker::Construct::SHARE5050);
-        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
+        shell_distance_checker sdc(sid1, sid2, pos_2d, search_distance, shell_distance_checker::Construct::SHARE5050);
+        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos_2d);
         radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
 
         if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
@@ -680,11 +682,10 @@ public:
             a_r_ = std::min(a_r_2D, a_r_3D);
         }
 
-        // TODO: set proper height instead of just mimicking radius
-        height = (a_r_ / scaling_factor_ + radius3D) + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);
+        // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
+        height = (a_r_ / scaling_factor_ + radius3D) + get_distance_to_surface() + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);
 
-        auto particle_surface_dist = structure_2d_->distance(pos) - radius2D;
-        auto cylinder_pos = pos + unit_z * (height/2 - (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR));
+        auto cylinder_pos = pos_2d + unit_z * (height/2 - (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR));
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);
@@ -817,7 +818,7 @@ public:
         auto D_2d = particle_2d.D(), D_3d = particle_3d.D();
 
         auto z_left = radius_2d * GfrdCfg.SINGLE_SHELL_FACTOR;
-        auto z_right = 2.0 * shell_half_length - z_left;
+        auto z_right = 2.0 * shell_half_length - get_distance_to_surface() - z_left;
 
         // Partition the space in the protective domain over the IV and the CoM domains
         // The outer bound of the interparticle vector is set by the particle diffusing in 3D via:
