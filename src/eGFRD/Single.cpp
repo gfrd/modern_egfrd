@@ -123,7 +123,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     THROW_UNLESS(not_found, plane != nullptr);
     auto unit_z = plane->shape().unit_z();
 
-    // orient cylinder on correct side of the plane
+    // Orient cylinder on correct side of the plane
     auto orientation = plane->project_point(transposed).second;
     if (orientation.first < 0)
     {
