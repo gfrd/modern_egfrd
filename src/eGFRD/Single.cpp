@@ -52,38 +52,36 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
 
 GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
-   auto structure_id = pid_pair_.second.structure_id();
-   auto pos = pid_pair_.second.position();
-   double min_radius = particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR;
-   double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-   auto radius = max_radius;
-   auto height = 2 * min_radius;
+    auto particle = pid_pair_.second;
+    auto structure_id = particle.structure_id();
+    auto pos = particle.position();
+    double min_radius = particle.radius() * GfrdCfg.MULTI_SHELL_FACTOR;
+    double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+    auto height = 2 * min_radius;
 
-   auto search_distance = height + max_radius;
+    std::vector<StructureID> ignored_structures = {structure_id, world.get_def_structure_id()};
 
-   // TODO: use actual geometric overlap check
-   shell_distance_checker sdc(shell_id(), pos, search_distance, shell_distance_checker::Construct::SHARE5050);
-   CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-   radius = std::min(radius, sdc.distance());
+    auto structure = world.get_structure(structure_id);
+    auto *plane = dynamic_cast<PlanarSurface*>(structure.get());
+    THROW_UNLESS(not_found, plane != nullptr);
+    auto unit_z = plane->shape().unit_z();
+    structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
 
-    // Limit radius to space to closest surface
-    auto sudc = surface_distance_check(world, std::vector<StructureID>{world.get_def_structure_id(), structure_id}, pid_pair_.second);
-    sudc.measure_distances(world.get_structures());
-    radius = std::min(radius, sudc.distance());
+    auto start1 = pos - unit_z * height / 2;
+    auto end1 = pos + unit_z * height / 2;
+    auto radius = std::min(max_radius, scaling::find_maximal_cylinder_radius(start1, end1, smat, world, ignored_structures));
 
-   radius /= GfrdCfg.SAFETY;
+    radius /= GfrdCfg.SAFETY;
 
-   if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+    if (radius < min_radius)
+    {
+        return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+    }
 
-   auto structure = world.get_structure(pid_pair_.second.structure_id());
-   auto *plane = dynamic_cast<PlanarSurface*>(structure.get());
-   THROW_UNLESS(not_found, plane != nullptr);
-   auto unit_z = plane->shape().unit_z();
-   structure_ = std::dynamic_pointer_cast<PlanarSurface>(structure);
 
-   sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
-   gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));
-   return true;
+    sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
+    gf_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(pid_pair_.second.D(), get_inner_a()));
+    return true;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -91,47 +89,52 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 
 GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matrix_type& smat, const World& world)
 {
-    auto structure_id = pid_pair_.second.structure_id();
-    auto pos = pid_pair_.second.position();
+    auto particle = pid_pair_.second;
+    auto structure_id = particle.structure_id();
+    auto pos = particle.position();
     auto transposed = world.cyclic_transpose(pos, interacting_structure_.position());
-    auto particle_radius = pid_pair_.second.radius();
+    auto particle_radius = particle.radius();
     particle_surface_dist_ = interacting_structure_.distance(transposed) - particle_radius;
+
+    std::vector<StructureID> ignored_structures = {particle.structure_id(), world.get_def_structure_id()};
 
 //    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
 
-    double min_radius = particle().radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
+    double min_radius = particle.radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
     double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-
-    //double max_height = smat.cell_size() / std::sqrt(2.0);
-    auto radius = max_radius;
-
-    // TODO: check distances with actual geometric overlap checking
-    shell_distance_checker sdc(shell_id(),  pos, radius, shell_distance_checker::Construct::SHARE5050);
-    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-    radius = std::min(radius, sdc.distance());
-
-    // Limit radius to space to closest surface
-    auto sudc = surface_distance_check(world, std::vector<StructureID>{world.get_def_structure_id(), interacting_structure_.id()}, pid_pair_.second);
-    sudc.measure_distances(world.get_structures());
-    radius = std::min(radius, sudc.distance());
-
-    radius /= GfrdCfg.SAFETY;
-
-    if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
     auto plane = &interacting_structure_;
     THROW_UNLESS(not_found, plane != nullptr);
     auto unit_z = plane->shape().unit_z();
 
-    // Orient cylinder on correct side of the plane
+    // orient cylinder on correct side of the plane
     auto orientation = plane->project_point(transposed).second;
     if (orientation.first < 0)
     {
         unit_z *= -1;
     }
 
-    // TODO: scale height proportional to radius with strategy from paper
-    double height = std::max(radius, 2 * (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + (get_distance_to_surface() + particle_radius));
+    auto height_through_surface = particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR;
+    auto height_to_surface = get_distance_to_surface();
+    auto static_height = height_through_surface + height_to_surface;
+    auto base_pos = transposed - (height_to_surface + height_through_surface) * unit_z;
+    auto scaling_factor = 1;
+    auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor, smat, world, ignored_structures);
+    auto height = static_height + max_dynamic_height;
+    auto radius = max_dynamic_height * scaling_factor;
+
+    radius /= GfrdCfg.SAFETY;
+
+    if (radius < min_radius)
+    {
+        return false;
+    }
+
+    if (height < 2 * (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + height_to_surface + height_through_surface)
+    {
+        return false;
+    }
+
     auto cylinder_center_pos = transposed - unit_z * center_particle_offset(height / 2);
 
     sid_pair_.second = Shell(domainID_, Cylinder(cylinder_center_pos, radius, unit_z, height/2), Shell::Code::NORMAL);

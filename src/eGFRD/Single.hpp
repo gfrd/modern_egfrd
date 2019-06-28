@@ -3,6 +3,7 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include <set>
+#include "scaling.hpp"
 #include "Particle.hpp"
 #include "ParticleID.hpp"
 #include "DomainID.hpp"

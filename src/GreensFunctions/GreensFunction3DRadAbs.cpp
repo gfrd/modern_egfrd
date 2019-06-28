@@ -505,7 +505,6 @@ double GreensFunction3DRadAbs::p_survival_table(double t, DoubleVector& psurvTab
    const uint i_max = guess_maxi(t);
    if (psurvTable.size() < i_max)
    {
-      Logger::get_logger("GFRD").info() << "i_max " << i_max;
       getAlpha0(i_max);  // this updates the table
       createPsurvTable(psurvTable);
    }

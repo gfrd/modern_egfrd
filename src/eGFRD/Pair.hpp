@@ -16,6 +16,7 @@
 #include <GreensFunction.hpp>
 #include "GreenFunctionHelpers.hpp"
 #include "Matrix4.hpp"
+#include "scaling.hpp"
 #include <GreensFunction3DRadInf.hpp>
 #include <GreensFunction3DAbs.hpp>
 #include <GreensFunction3D.hpp>
@@ -648,10 +649,12 @@ public:
         auto search_distance = height + radius;
         particle_surface_dist_ = structure_2d_->distance(pos_3d);
 
+        std::vector<StructureID> ignored_structures = {particle1().structure_id(), particle1().structure_id(), world.get_def_structure_id()};
+
         // Check distances to surfaces, ignore def.struct and particle.structure
         for (auto s : world.get_structures())
         {
-            if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
+            if (std::find(ignored_structures.begin(), ignored_structures.end(), s->id()) == ignored_structures.end())    // ignore structures that particle is attached to
             {
                 auto pos_transposed = world.cyclic_transpose(pos_2d, s->position());
                 double distance = s->distance(pos_transposed);
@@ -681,6 +684,12 @@ public:
             auto a_r_3D = (radius - radius3D + r0()*sqrt_DRDr_) / (sqrt_DRDr_ + (D_3D/D_tot()));
             a_r_ = std::min(a_r_2D, a_r_3D);
         }
+
+        auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
+        auto height_to_surface = get_distance_to_surface();
+        auto static_height = height_through_surface + height_to_surface;
+        auto base_pos = pos_2d - height_through_surface * unit_z;
+        auto max_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures);
 
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
         height = (a_r_ / scaling_factor_ + radius3D) + get_distance_to_surface() + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);

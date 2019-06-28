@@ -3,10 +3,7 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include <algorithm>
-#include <helperFunctionsGf.hpp>
-#include <Logger.hpp>
 #include "Vector3.hpp"
-#include "StructureContainer.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -217,85 +214,5 @@ namespace squared_distance
 
         Vector3 w = w0 + lambda * u;
         return Vector3::dot(w, w);
-    }
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-namespace scaling
-{
-    inline double find_maximal_cylinder_height_to_plane(Vector3 start1, Vector3 unit_z, double height_static,
-                                                        double scaling_factor, PlanarSurface* plane)
-    {
-        auto start2 = plane->project_point(start1).first;
-        auto f = [start1, unit_z, height_static, scaling_factor, plane, start2](double height_dynamic) {
-            Vector3 end1 = start1 + unit_z * (height_static + height_dynamic);
-            auto end2 = plane->project_point(end1).first;
-            auto squared_distance = squared_distance::line_segments(start1, end1, start2, end2);
-
-            // TODO: correct for particle radius
-            // needed_radius is the cylinder radius required at given height, as determined by the scaling factor
-            // that ensures isotropic diffusion of IV
-            auto needed_radius = height_dynamic * scaling_factor;
-            return squared_distance - needed_radius*needed_radius;
-        };
-        gsl_lambda<decltype(f)> F(f);
-        root_fsolver_wrapper solver;
-        solver.set(&F, 0, 1e-7); // TODO reason about better low and high guesses, and manually check if f(higher) < 0.0
-        try {
-            return solver.findRoot(1e-18, 1e-12, "scaling::find_maximal_cylinder_height_to_plane");
-        }
-        catch(const gfrd_exception& e)
-        {
-            Log("GFRD").warn() << "Exception whilst finding root of plane-cylinder scaling distance function";
-            return 0.0;
-        }
-    }
-
-    inline double find_maximal_cylinder_height_to_segment(Vector3 start1, Vector3 unit_z, double height_static,
-                                                          double scaling_factor, Vector3 start2, Vector3 end2)
-    {
-        auto f = [start1, unit_z, height_static, scaling_factor, start2, end2](double height_dynamic) {
-            Vector3 end1 = start1 + unit_z * (height_static + height_dynamic);
-            auto squared_distance = squared_distance::line_segments(start1, end1, start2, end2);
-
-            // TODO: correct for particle radius
-            // needed_radius is the cylinder radius required at given height, as determined by the scaling factor
-            // that ensures isotropic diffusion of IV
-            auto needed_radius = height_dynamic * scaling_factor;
-            return squared_distance - needed_radius*needed_radius;
-        };
-        gsl_lambda<decltype(f)> F(f);
-        root_fsolver_wrapper solver;
-        solver.set(&F, 0, 1e-7); // TODO reason about better low and high guesses, and manually check if f(higher) < 0.0
-        try {
-            return solver.findRoot(1e-18, 1e-12, "scaling::find_maximal_cylinder_height_to_segment");
-        }
-        catch(const gfrd_exception& e)
-        {
-            Log("GFRD").warn() << "Exception whilst finding root of segment-cylinder scaling distance function";
-            return 0.0;
-        }
-    }
-
-    template <typename TMatrixSpace>
-    inline double find_maximal_cylinder_height(Vector3 pos, Vector3 unit_z, double half_length, double height_static,
-            double scaling_factor, const TMatrixSpace& matrixSpace, const StructureContainer::structures_range structures)
-    {
-        double max_dynamic_height = 10e6;
-        Vector3 start1 = pos - half_length * unit_z;
-
-        for(const auto& structure : structures)
-        {
-            auto plane = dynamic_cast<PlanarSurface*>(structure.get());
-            if (plane == nullptr) {
-                THROW_EXCEPTION(not_implemented, "Scaling cylinders up to structures other than PlanarSurfaces is not yet implemented.");
-            }
-
-            auto calculated_max_height = scaling::find_maximal_cylinder_height_to_plane(start1, unit_z, height_static, scaling_factor, plane);
-            max_dynamic_height = calculated_max_height < max_dynamic_height ? calculated_max_height : max_dynamic_height;
-        }
-
-        // TODO: check maximal height to neighbours
     }
 }
