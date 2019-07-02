@@ -957,7 +957,7 @@ int main(int argc, char** argv)
               for (int i = 0; i < 3; i++)
               {
                   world.add_particle(sA, psid, Vector3(ws.X() / 2 - (1e-6 * i), 0.0, ws.Z() / 2));
-                  world.add_particle(sB, world.get_def_structure_id(), Vector3(ws.X() / 2 - (1e-6 * i), 2e-7, ws.Z() / 2));
+                  world.add_particle(sB, wsid, Vector3(ws.X() / 2 - (1e-6 * i), 2e-7, ws.Z() / 2));
               }
 
               rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
@@ -983,8 +983,11 @@ int main(int argc, char** argv)
               auto psid = world.add_structure(plane);
               UNUSED(psid);
 
-              world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2));
-              world.add_particle(sA, psid, Vector3(ws.X() / 2 - 2e-7, 0, ws.Z() / 2));
+              for (int i = 0; i < 3; i++)
+              {
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2 - (1e-6 * i)));
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2 - 2e-7, 0.0, ws.Z() / 2 - (1e-6 * i)));
+              }
 
               rules.add_reaction_rule(ReactionRule(sA, sA, 0.21, std::vector<SpeciesTypeID>{sC}));
           }
@@ -1002,11 +1005,52 @@ int main(int argc, char** argv)
 
               for (int i = 0; i < 3; i++)
               {
-                  world.add_particle(sA, world.get_def_structure_id(), Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2, ws.Z() / 2));
-                  world.add_particle(sA, world.get_def_structure_id(), Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2 - 2e-7, ws.Z() / 2));
+                  world.add_particle(sA, wsid, Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2, ws.Z() / 2));
+                  world.add_particle(sA, wsid, Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2 - 2e-7, ws.Z() / 2));
               }
 
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2 + 1e-6, ws.Y() / 2, ws.Z() / 2));
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2 + 1e-6, ws.Y() / 2 - 4e-7, ws.Z() / 2));
+
               rules.add_reaction_rule(ReactionRule(sA, sA, 0.21, std::vector<SpeciesTypeID>{sC}));
+          }
+              break;
+
+          case 110:
+          {
+              // 3D BD test
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2, ws.Y() / 2, ws.Z() / 2));
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2, ws.Y() / 2 - 7e-8, ws.Z() / 2));
+          }
+              break;
+
+          case 111:
+          {
+              // 2D BD test
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2));
+              world.add_particle(sA, psid, Vector3(ws.X() / 2 - 7e-8, 0.0, ws.Z() / 2));
           }
               break;
 

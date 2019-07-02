@@ -59,6 +59,7 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
     double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
     auto height = 2 * min_radius;
 
+    std::vector<ShellID> ignored_shells = {shell_id()};
     std::vector<StructureID> ignored_structures = {structure_id, world.get_def_structure_id()};
 
     auto structure = world.get_structure(structure_id);
@@ -69,7 +70,8 @@ GFRD_EXPORT bool SingleCylindrical::create_updated_shell(const shell_matrix_type
 
     auto start1 = pos - unit_z * height / 2;
     auto end1 = pos + unit_z * height / 2;
-    auto radius = std::min(max_radius, scaling::find_maximal_cylinder_radius(start1, end1, smat, world, ignored_structures));
+    auto radius = std::min(max_radius, scaling::find_maximal_cylinder_radius(start1, end1, smat, world,
+            ignored_structures, ignored_shells));
 
     radius /= GfrdCfg.SAFETY;
 
@@ -96,6 +98,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto particle_radius = particle.radius();
     particle_surface_dist_ = interacting_structure_.distance(transposed) - particle_radius;
 
+    std::vector<ShellID> ignored_shells = {shell_id()};
     std::vector<StructureID> ignored_structures = {particle.structure_id(), world.get_def_structure_id()};
 
 //    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
@@ -119,9 +122,13 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto static_height = height_through_surface + height_to_surface;
     auto base_pos = transposed - (height_to_surface + height_through_surface) * unit_z;
     auto scaling_factor = 1;
-    auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor, smat, world, ignored_structures);
+    auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height,
+            scaling_factor, smat, world, ignored_structures, ignored_shells);
     auto height = static_height + max_dynamic_height;
     auto radius = max_dynamic_height * scaling_factor;
+
+    // Ensure we don't exceed the matrix cell dimensions
+    radius = std::min(radius, max_radius);
 
     radius /= GfrdCfg.SAFETY;
 
@@ -130,7 +137,9 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
         return false;
     }
 
-    if (height < 2 * (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + height_to_surface + height_through_surface)
+    // Cylinder height should fit at least the portion through the surface, the distance from particle to surface,
+    // and the particle radius.
+    if (height < (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR) + height_to_surface + height_through_surface)
     {
         return false;
     }

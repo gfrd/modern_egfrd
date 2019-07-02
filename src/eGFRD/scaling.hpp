@@ -17,12 +17,16 @@ namespace scaling
     double find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, double height_static,
                                                  double scaling_factor, const TMatrixSpace& matrixSpace,
                                                  const World& world,
-                                                 const std::vector<StructureID>& ignored_structures);
+                                                 const std::vector<StructureID>& ignored_structures,
+                                                 const std::vector<ShellID>& ignored_shells,
+                                                 bool social_scaling=true);
 
     template <typename TMatrixSpace>
     double find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const TMatrixSpace& matrixSpace,
                                                  const World& world,
-                                                 const std::vector<StructureID>& ignored_structures);
+                                                 const std::vector<StructureID>& ignored_structures,
+                                                 const std::vector<ShellID>& ignored_shells,
+                                                 bool social_scaling=true);
 }
 
 
@@ -31,8 +35,24 @@ namespace scaling
 
 
 
-
-
+inline double social_correction(double size, const Shell::Code shell_type)
+{
+    switch(shell_type)
+    {
+        case Shell::Code::INIT:
+            // Share available space equally with neighbouring init shell
+            return size / 2;
+        case Shell::Code::MULTI:
+            // Give multi shell some extra space to move around
+            return size / 1.1;
+        case Shell::Code::NORMAL:
+            // TODO: add a globally tweakable distance divider, that gets optimised in equilibration phase of simulation
+            return size;
+        default:
+            THROW_EXCEPTION(illegal_argument, "Shell is not of init, multi, or normal type");
+            break;
+    }
+}
 
 
 inline double find_maximal_cylinder_height_to_plane(Vector3 start1, Vector3 unit_z, double height_static,
@@ -118,12 +138,22 @@ inline double find_maximal_cylinder_height_to_segment(Vector3 start1, Vector3 un
 template<typename TCollector>
 struct max_height_collector
 {
-    max_height_collector(const World& world, Vector3 base_position, Vector3 unit_z, double height_static, double scaling_factor) :
-            world(world), base_position(base_position), unit_z(unit_z), height_static(height_static), scaling_factor(scaling_factor), max_height(0.0) {}
+    max_height_collector(const World& world, Vector3 base_position, Vector3 unit_z, double height_static, double scaling_factor,
+                         const std::vector<ShellID>& ignored_shells) :
+            world(world), base_position(base_position), unit_z(unit_z), height_static(height_static),
+            scaling_factor(scaling_factor), ignored_shells(ignored_shells), is_limited(false), max_height(1e6) {}
 
     void operator()(typename TCollector::const_iterator i, const Vector3&)
     {
+        auto shellID = (*i).first;
         auto shell = (*i).second;
+
+        if(std::find(ignored_shells.begin(),ignored_shells.end(), shellID) != ignored_shells.end())
+        {
+            // Skip shells in ignored list
+            return;
+        }
+
         Vector3 start2, end2;
         double other_radius = 0.0;
         if(shell.shape() == Shell::Shape::SPHERE)
@@ -149,7 +179,13 @@ struct max_height_collector
         }
 
         double height = find_maximal_cylinder_height_to_segment(base_position, unit_z, height_static, scaling_factor, start2, end2, other_radius);
-        max_height = std::min(height, max_height);
+
+        if(height < max_height)
+        {
+            max_height = height;
+            is_limited = true;
+            limiting_shell_type = shell.code();
+        }
     }
 
     const World& world;
@@ -158,6 +194,85 @@ struct max_height_collector
     Vector3 unit_z;
     double height_static;
     double scaling_factor;
+    const std::vector<ShellID>& ignored_shells;
+    bool is_limited; // true if the height is limited by a neighbouring shell
+    Shell::Code limiting_shell_type; // shell type of neighbouring cell that limits height
+};
+
+template<typename TCollector>
+struct max_radius_collector
+{
+    max_radius_collector(const World& world, Vector3 start1, Vector3 end1, const std::vector<ShellID>& ignored_shells) :
+            world(world), start1(start1), end1(end1), ignored_shells(ignored_shells), is_limited(false), max_radius(1e6) {}
+
+    void operator()(typename TCollector::const_iterator i, const Vector3&)
+    {
+        auto shellID = (*i).first;
+        auto shell = (*i).second;
+
+        if(std::find(ignored_shells.begin(),ignored_shells.end(), shellID) != ignored_shells.end())
+        {
+            // Skip shells in ignored list
+            return;
+        }
+
+        Vector3 start2, end2;
+        double distance = 0.0, other_radius = 0.0;
+        if(shell.shape() == Shell::Shape::SPHERE)
+        {
+            auto sphere = shell.get_sphere();
+            other_radius = sphere.radius();
+
+            // Place the cylinder closest to the sphere, given a cyclic world.
+            start1 = world.cyclic_transpose(start1, sphere.position());
+            end1 = world.cyclic_transpose(end1, sphere.position());
+
+            distance = std::sqrt(squared_distance::line_segment_point(start1, end1, sphere.position()));
+
+            if (feq(distance, 0.0, 1e-12))
+            {
+                return;
+            }
+        }
+        else if (shell.shape() == Shell::Shape::CYLINDER)
+        {
+            auto cylinder = shell.get_cylinder();
+            start2 = cylinder.position() - cylinder.half_length() * cylinder.unit_z();
+            end2 = cylinder.position() + cylinder.half_length() * cylinder.unit_z();
+            other_radius = cylinder.radius();
+
+            // Place the cylinder closest to the other cylinder, given a cyclic world.
+            auto halfway = 0.5 * start2 + 0.5 * end2;
+            start1 = world.cyclic_transpose(start1, halfway);
+            end1 = world.cyclic_transpose(end1, halfway);
+
+            distance = std::sqrt(squared_distance::line_segments(start1, end1, start2, end2));
+
+            if (feq(distance, 0.0, 1e-12))
+            {
+                return;
+            }
+        }
+        else
+        {
+            THROW_EXCEPTION(illegal_argument, "Shell shape to scale to is neither spherical or cylindrical")
+        }
+
+        auto available = distance - other_radius;
+        if(available < max_radius)
+        {
+            max_radius = available;
+            is_limited = true;
+            limiting_shell_type = shell.code();
+        }
+    }
+    const World& world;
+    Vector3 start1;
+    Vector3 end1;
+    const std::vector<ShellID>& ignored_shells;
+    double max_radius;
+    bool is_limited; // true if the radius is limited by a neighbouring shell
+    Shell::Code limiting_shell_type; // shell type of neighbouring cell that limits radius
 };
 
 /**
@@ -182,7 +297,9 @@ template <typename TMatrixSpace>
 double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, double height_static,
                                              double scaling_factor, const TMatrixSpace& matrixSpace,
                                              const World& world,
-                                             const std::vector<StructureID>& ignored_structures)
+                                             const std::vector<StructureID>& ignored_structures,
+                                             const std::vector<ShellID>& ignored_shells,
+                                             bool social_scaling)
 {
     double max_dynamic_height = 10e6;
     auto structures = world.get_structures();
@@ -204,74 +321,27 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
         }
     }
 
-    max_height_collector<TMatrixSpace> col(world, base_pos, unit_z, height_static, scaling_factor);
+    max_height_collector<TMatrixSpace> col(world, base_pos, unit_z, height_static, scaling_factor, ignored_shells);
     matrixSpace.each_neighbor_cyclic(matrixSpace.index(base_pos), col);
     max_dynamic_height = std::min(max_dynamic_height, col.max_height);
 
-    return max_dynamic_height + height_static;
+    auto max_total_height = max_dynamic_height + height_static;
+
+    if(social_scaling && col.is_limited)
+    {
+        return social_correction(max_total_height, col.limiting_shell_type);
+    }
+
+    return max_total_height;
 }
 
-template<typename TCollector>
-struct max_radius_collector
-{
-    max_radius_collector(const World& world, Vector3 start1, Vector3 end1) :
-            world(world), start1(start1), end1(end1), max_radius(1e6) {}
-
-    void operator()(typename TCollector::const_iterator i, const Vector3&)
-    {
-        auto shell = (*i).second;
-        Vector3 start2, end2;
-        double other_radius = 0.0;
-        if(shell.shape() == Shell::Shape::SPHERE)
-        {
-            auto sphere = shell.get_sphere();
-            other_radius = sphere.radius();
-
-            // Place the cylinder closest to the sphere, given a cyclic world.
-            start1 = world.cyclic_transpose(start1, sphere.position());
-            end1 = world.cyclic_transpose(end1, sphere.position());
-
-            auto distance = std::sqrt(squared_distance::line_segment_point(start1, end1, sphere.position()));
-
-            if (feq(distance, 0.0, 1e-12))
-            {
-                return;
-            }
-
-            max_radius = std::min(max_radius, distance - other_radius);
-        }
-        else if (shell.shape() == Shell::Shape::CYLINDER)
-        {
-            auto cylinder = shell.get_cylinder();
-            start2 = cylinder.position() - cylinder.half_length() * cylinder.unit_z();
-            end2 = cylinder.position() + cylinder.half_length() * cylinder.unit_z();
-            other_radius = cylinder.radius();
-
-            // Place the cylinder closest to the other cylinder, given a cyclic world.
-            auto halfway = 0.5 * start2 + 0.5 * end2;
-            start1 = world.cyclic_transpose(start1, halfway);
-            end1 = world.cyclic_transpose(end1, halfway);
-
-            auto distance = std::sqrt(squared_distance::line_segments(start1, end1, start2, end2));
-
-            if (feq(distance, 0.0, 1e-12))
-            {
-                return;
-            }
-
-            max_radius = std::min(max_radius, distance - other_radius);
-        }
-    }
-    const World& world;
-    Vector3 start1;
-    Vector3 end1;
-    double max_radius;
-};
 
 template <typename TMatrixSpace>
 double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const TMatrixSpace& matrixSpace,
                                              const World& world,
-                                             const std::vector<StructureID>& ignored_structures) {
+                                             const std::vector<StructureID>& ignored_structures,
+                                             const std::vector<ShellID>& ignored_shells,
+                                             bool social_scaling) {
     double max_radius = 10e6;
     auto structures = world.get_structures();
 
@@ -294,9 +364,14 @@ double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const
         }
     }
 
-    max_radius_collector<TMatrixSpace> col(world, start1, end1);
+    max_radius_collector<TMatrixSpace> col(world, start1, end1, ignored_shells);
     matrixSpace.each_neighbor_cyclic(matrixSpace.index(start1), col);
     max_radius = std::min(max_radius, col.max_radius);
+
+    if(social_scaling && col.is_limited)
+    {
+        return social_correction(max_radius, col.limiting_shell_type);
+    }
 
     return max_radius;
 }

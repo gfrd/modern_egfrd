@@ -521,35 +521,26 @@ public:
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
         double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-        auto radius = max_radius;
         auto height = 2 * min_radius;
         auto D_r = D_tot();
-
-        auto search_distance = height + radius;
-
-        // Check distances to surfaces, ignore def.struct and particle.structure
-        for (auto s : world.get_structures())
-        {
-            if (s->id() != particle1().structure_id() && s->id() != particle2().structure_id() && s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
-            {
-                double distance = s->distance(pos);    // fix cyclic world !
-                radius = std::min(radius, distance);
-            }
-        }
-
-        // TODO: use actual cylindrical distance check
-        shell_distance_checker sdc(sid1, sid2, pos, search_distance, shell_distance_checker::Construct::SHARE5050);
-        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos);
-        radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
-
-        if (radius < min_radius) return false;             // no space for Pair domain.. it will be discarded, and a Multi is created instead!
 
         auto plane = structure_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();
 
+        std::vector<ShellID> ignored_shells = {sid1, sid2};
+        std::vector<StructureID> ignored_structures = {structure_.get()->id(), world.get_def_structure_id()};
+
+        auto start1 = pos - unit_z * height / 2;
+        auto end1 = pos + unit_z * height / 2;
+        auto radius = scaling::find_maximal_cylinder_radius(start1, end1, smat, world, ignored_structures, ignored_shells);
+
+        // Ensure we don't exceed the matrix cell dimensions
+        radius = std::min(radius, max_radius);
+        radius /= GfrdCfg.SAFETY;
+
         // Prevent domain creation if there is not enough space
-        if (radius - r0() - max_part_radius <= 0.0)
+        if (radius - r0() - max_part_radius <= 0.0 || radius < min_radius)
         {
             return false;
         }
@@ -627,8 +618,6 @@ public:
 
     bool create_updated_shell(const shell_matrix_type &smat, const World &world, ShellID sid1, ShellID sid2) override
     {
-//        THROW_EXCEPTION(not_implemented, "Not yet implemented");
-
         // Create IV and CoM vectors from particles
         do_transform(world);
 
@@ -645,33 +634,25 @@ public:
         auto D_2D = particle1().D(), D_3D = particle2().D();
         auto radius2D = particle1().radius(), radius3D = particle2().radius();
 
-        // City block distance, to ensure the edges of our cylinder can never overlap with other domains
-        auto search_distance = height + radius;
         particle_surface_dist_ = structure_2d_->distance(pos_3d);
 
+        std::vector<ShellID> ignored_shells = {sid1, sid2};
         std::vector<StructureID> ignored_structures = {particle1().structure_id(), particle1().structure_id(), world.get_def_structure_id()};
-
-        // Check distances to surfaces, ignore def.struct and particle.structure
-        for (auto s : world.get_structures())
-        {
-            if (std::find(ignored_structures.begin(), ignored_structures.end(), s->id()) == ignored_structures.end())    // ignore structures that particle is attached to
-            {
-                auto pos_transposed = world.cyclic_transpose(pos_2d, s->position());
-                double distance = s->distance(pos_transposed);
-                radius = std::min(radius, distance);
-            }
-        }
-
-        // TODO: use actual cylindrical distance check
-        shell_distance_checker sdc(sid1, sid2, pos_2d, search_distance, shell_distance_checker::Construct::SHARE5050);
-        CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, pos_2d);
-        radius = std::min(radius, sdc.distance()) / GfrdCfg.SAFETY;
-
-        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
         auto plane = structure_2d_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = (plane->shape().unit_z() * Vector3::dot(iv(), plane->shape().unit_z())).normal();
+
+        auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
+        auto height_to_surface = get_distance_to_surface();
+        auto static_height = height_through_surface + height_to_surface;
+        auto base_pos = pos_2d - height_through_surface * unit_z;
+        auto max_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
+
+        radius = std::min((max_height - height_through_surface - height_to_surface) * scaling_factor_, max_radius);
+        radius /= GfrdCfg.SAFETY;
+
+        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
 
         if (D_R() == 0.0)
         {
@@ -685,14 +666,8 @@ public:
             a_r_ = std::min(a_r_2D, a_r_3D);
         }
 
-        auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
-        auto height_to_surface = get_distance_to_surface();
-        auto static_height = height_through_surface + height_to_surface;
-        auto base_pos = pos_2d - height_through_surface * unit_z;
-        auto max_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures);
-
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
-        height = (a_r_ / scaling_factor_ + radius3D) + get_distance_to_surface() + (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR);
+        height = (a_r_ / scaling_factor_) + height_through_surface + height_to_surface;
 
         auto cylinder_pos = pos_2d + unit_z * (height/2 - (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR));
 
@@ -826,7 +801,11 @@ public:
         auto radius_2d = particle_2d.radius(), radius_3d = particle_3d.radius();
         auto D_2d = particle_2d.D(), D_3d = particle_3d.D();
 
+        // The distance the cylinder protrudes through the PlanarSurface. We also call this
+        // side of the cylinder the bottom.
         auto z_left = radius_2d * GfrdCfg.SINGLE_SHELL_FACTOR;
+
+        // The distance between the 3D-diffusing particle and the cylinder top cap.
         auto z_right = 2.0 * shell_half_length - get_distance_to_surface() - z_left;
 
         // Partition the space in the protective domain over the IV and the CoM domains
