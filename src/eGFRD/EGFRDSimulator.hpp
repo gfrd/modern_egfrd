@@ -216,8 +216,6 @@ private:
           }
 
          // PlanarSurface & PlanarSurface => PlanarSurfaceTransitionPairtestShell
-         // PlanarSurface & CuboidalRegion => MixedPair2D3DtestShell
-         // CuboidalRegion & PlanarSurface => MixedPair2D3DtestShell
          // PlanarSurface & DiskSurface => MixedPair2DStatictestShell
          // DiskSurface & PlanarSurface  => MixedPair2DStatictestShell
          // CylindricalSurface & DiskSurface => MixedPair1DStatictestShell
@@ -1095,53 +1093,39 @@ private:
       ShellCreateUtils::surface_interaction_check interacting_surfaces(ignored_structures, single.particle(), world_);
       interacting_surfaces.find_interacting_surfaces(world_.get_structures());
 
-      if (interacting_shells.multiple() || interacting_surfaces.multiple() ||
-            (interacting_shells.did() && interacting_surfaces.sid()) )
+      if (interacting_shells.multiple() || interacting_surfaces.multiple())
       {
          // Multiple interacting particles/structures, so we must make a MULTI domain
-         success = form_multi(single.id(), interacting_shells.multi_range());
-      }
-      else if (interacting_surfaces.sid() && interacting_surfaces.sid() != single.pip().second.structure_id())
-      {
-          // First check if we can update the existing domain
-          auto domain = domains_[single.id()].get();
-          auto single_interaction = dynamic_cast<SingleInteraction*>(domain);
-          if (single_interaction != nullptr)
-          {
-              auto surface = *single_interaction->get_interacting_structure().get();
-              if(interacting_surfaces.sid() == surface->sid()) {
-                  // Interacting surface is the same as before, so only update the existing domain
-                  success = update_single(single);
-              }
-          }
-
-          if (!success)
-          {
-              // Make a new SurfaceInteraction domain
-              success = try_interaction(single, interacting_surfaces.sid());
-          }
+         success = form_multi(single, interacting_shells.multi_range());
       }
       else if (interacting_shells.did())
       {
-         // Make a PAIR domain, with this single and interacting_shells.did()
-         success = try_pair(single.id(), interacting_shells.did());
+          // Make a PAIR domain, with this single and interacting_shells.did()
+          success = try_pair(single.id(), interacting_shells.did());
 
-         // When pair failed, try create a Single
-         if (!success)
-         {
-            success = update_single(single);
-         }
+          // When pair failed, try create a Single
+          if (!success)
+          {
+              success = update_single(single);
+          }
       }
-      else
+      else if (interacting_surfaces.sid() && interacting_surfaces.sid() != single.pip().second.structure_id())
       {
-         // No interacting particles/surfaces, just scale and update the Single domain
+          // Make a new SurfaceInteraction domain
+          success = try_interaction(single, interacting_surfaces.sid());
+      }
+
+      if(!success)
+      {
+         // No interacting particles/surfaces nearby, or creating interaction domains failed.
+         // Try to scale and update just this Single domain
          success = update_single(single);
       }
 
       // If nothing else worked, make a multi domain as a fallback
       if (!success)
       {
-         success = form_multi(single.id(), interacting_shells.multi_range());
+         success = form_multi(single, interacting_shells.multi_range());
          THROW_UNLESS_MSG(illegal_state, success, "Failed to make new domain!");
       }
    }
@@ -1240,12 +1224,18 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   bool form_multi(DomainID did, const gi::iteratorRange<std::vector<DomainID>>& neighbors)
+   bool form_multi(Single& single, const gi::iteratorRange<std::vector<DomainID>>& neighbors)
    {
+      auto did = single.id();
       Multi* multi = nullptr;
       std::vector<DomainID> neighbor_list;
 
-      // Copy known neigbors to our neigbor list
+      // Clear volume around the particle to ensure the multi domain won't overlap any other domains
+      auto particle = single.particle();
+      std::vector<DomainID> ignore = {did};
+      burst_volume(Sphere(particle.position(), particle.radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
+
+      // Copy known neighbors to our neighbor list
       std::copy(neighbors.begin(), neighbors.end(), std::back_inserter(neighbor_list));
 
       // loop all neighbor domains, add any init/multi domains whos particles lays within the multi_horizon distance
@@ -1257,19 +1247,19 @@ private:
             std::vector<DomainID> more_neighbors;
             for (auto ndid : check_neighbors)
             {
-               const auto& domain = domains_[ndid];
+               const auto& neighbour_domain = domains_[ndid];
 
-               // is new_neighbor a single(init)?
-               auto single = dynamic_cast<Single*>(domain.get());
-               if (single != nullptr)
+               // is new_neighbor a single_neighbour(init)?
+               auto single_neighbour = dynamic_cast<Single*>(neighbour_domain.get());
+               if (single_neighbour != nullptr)
                {
                   // make room for MSF shell ?        TODO not sure if this is needed, and its also expensive since we also do sic here.
                   // ignore.emplace_back(ndid);
-                  // burst_volume(Sphere(single->particle().position(), single->particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
+                  // burst_volume(Sphere(single_neighbour->particle().position(), single_neighbour->particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
 
                   // add other (init)singles and multies within multi_horizon, that are not yet in the list
-                  ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single->shell_id(), single->particle());
-                  CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single->particle().position());
+                  ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single_neighbour->shell_id(), single_neighbour->particle());
+                  CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single_neighbour->particle().position());
                   for (auto edid : sic.multi_range())
                   {
                      // already in list?
@@ -1283,7 +1273,7 @@ private:
                }
 
                // is new_neighbor a multi?
-               auto multi1 = dynamic_cast<Multi*>(domain.get());
+               auto multi1 = dynamic_cast<Multi*>(neighbour_domain.get());
                if (multi1 != nullptr)
                {
                   if (multi == nullptr || multi1 == multi)      // first multi in list (reuse it), or re-hit the same (remove from list)
@@ -1314,8 +1304,7 @@ private:
       }
 
       // put original Single into Multi
-      auto single = dynamic_cast<Single*>(domains_[did].get());
-      add_to_multi(multi, single->pip());
+      add_to_multi(multi, single.pip());
       remove_domain(did);
 
       // Add our neighbor particles, and merge other multi's.
