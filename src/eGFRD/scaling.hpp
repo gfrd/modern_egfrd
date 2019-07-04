@@ -174,8 +174,7 @@ struct max_height_collector
             other_radius = cylinder.radius();
 
             // Place the base closest to the cylinder, given a cyclic world.
-            auto halfway = 0.5 * start2 + 0.5 * end2;
-            base_position = world.cyclic_transpose(base_position, halfway);
+            base_position = world.cyclic_transpose(base_position, cylinder.position());
         }
 
         double height = find_maximal_cylinder_height_to_segment(base_position, unit_z, height_static, scaling_factor, start2, end2, other_radius);
@@ -242,9 +241,8 @@ struct max_radius_collector
             other_radius = cylinder.radius();
 
             // Place the cylinder closest to the other cylinder, given a cyclic world.
-            auto halfway = 0.5 * start2 + 0.5 * end2;
-            start1 = world.cyclic_transpose(start1, halfway);
-            end1 = world.cyclic_transpose(end1, halfway);
+            start1 = world.cyclic_transpose(start1, cylinder.position());
+            end1 = world.cyclic_transpose(end1, cylinder.position());
 
             distance = std::sqrt(squared_distance::line_segments(start1, end1, start2, end2));
 
