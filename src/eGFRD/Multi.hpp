@@ -84,18 +84,35 @@ public:
 
       double k_max = get_max_rate(species);
       double r_min = get_min_radius(species);
+      reaction_length_ = step_size_factor * r_min;
 
+      // The following gives us the typical timescale to travel the length step_size_factor * r_min,
+      // taking into account all species in the Multi and automatically comparing whether their movement
+      // is dominated by convection or diffusion, respectively. tau_Dv is the upper limit of time step dt.
       auto tau_Dv = get_min_tau_Dv(step_size_factor * r_min, species);
-      auto Pacc_max = 0.1;
 
-      dt_ = k_max > 0 ? std::min(2.0 * Pacc_max * step_size_factor * r_min / k_max, tau_Dv) : tau_Dv;
+      auto Pacc_max = 0.1;  // Maximum allowed value of the acceptance probability. // TESTING was 0.01
+                            // This should be kept very low (max. 0.01), otherwise the approximation of
+                            // treating the reaction as two sequential attempts (first move, then react)
+                            // might break down!
+
+      // Here it is assumed that the reaction length is linear in any dimension,
+      // which requires it to be very small!
+      auto dt_motion = tau_Dv; // timescale of motion
+      auto dt_reaction = k_max > 0 ? 2.0 * Pacc_max * reaction_length_ / k_max : 0; // timescale of reacting
+
+      if(dt_reaction == dt_motion)
+      { Log("GFRD").debug() << "BD time step set by timescale of motion";  }
+      else
+      { Log("GFRD").debug() << "BD time step set by largest reaction rate, k_max = " << k_max << ", r_min = " << r_min;}
+
+      dt_ = dt_reaction > 0 ? std::min(dt_reaction, dt_motion) : dt_motion;
       if (dt_ < dt_min)
       {
          dt_ = dt_min;
-         Log("EGFRD").warn() << "Setting Multi time step to hard-coded minimum, dt = " << dt_;
+         Log("EGFRD").warn() << "Setting Multi time step to hard-coded minimum, dt = " << dt_ << ", to allow continuing the simulation. This breaks detailed balance!";
       }
 
-      reaction_length_ = step_size_factor * r_min;
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -151,20 +168,35 @@ private:
       //}
 
       // bi-molecular reactions:
-      for (auto sid_a : species)
-         for (auto sid_b : species)
-         {
-            const auto& s0 = world_.get_species(sid_a);
-            const auto& s1 = world_.get_species(sid_b);
-            double r01 = s0.radius() + s1.radius();
-            StructureTypeID sdef = world_.get_def_structure_type_id();
+      for (auto sid_a : species) {
+          for (auto sid_b : species) {
+              auto scale = 1.0;
+
+              const auto &s0 = world_.get_species(sid_a);
+              const auto &s1 = world_.get_species(sid_b);
+              double r01 = s0.radius() + s1.radius();
+              StructureTypeID sdef = world_.get_def_structure_type_id();
 
 //            THROW_UNLESS_MSG(not_implemented, s0.structure_type_id() == sdef && s1.structure_type_id() == sdef, "Structures not yet supported!");
-            auto scale = 1.0 / (4 * M_PI * r01 * r01);         // for Cuboidal Surface (world)
 
-            const auto& rules = reactions_.query_reaction_rules(sid_a, sid_b);
-            k_max = std::accumulate(rules.begin(), rules.end(), k_max, [scale](double s, const ReactionRule& rule) { return std::max(s, scale * rule.getK()); });
-         }
+              if(s0.structure_type_id() == sdef || s1.structure_type_id() == sdef)
+              {
+                  // for Cuboidal Surface (world)
+                  scale = 1.0 / (4 * M_PI * r01 * r01); // 4 pi r^2 = Surface of a sphere
+              }
+              else
+              {
+                  // We assume PlanarSurface here
+                  Log("GFRD").info() << "Assuming structure that a BD-simulated particle is attached to is a PlanarSurface. Other types of structures not yet supported.";
+                  scale = 1.0 / (2 * M_PI * r01); // 2 pi r = circumference of a circle
+              }
+
+              const auto &rules = reactions_.query_reaction_rules(sid_a, sid_b);
+              k_max = std::accumulate(rules.begin(), rules.end(), k_max, [scale](double s, const ReactionRule &rule) {
+                  return std::max(s, scale * rule.getK());
+              });
+          }
+      }
 
       return k_max;
    }
