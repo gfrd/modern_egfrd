@@ -99,7 +99,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     particle_surface_dist_ = interacting_structure_.distance(transposed) - particle_radius;
 
     std::vector<ShellID> ignored_shells = {shell_id()};
-    std::vector<StructureID> ignored_structures = {particle.structure_id(), world.get_def_structure_id()};
+    std::vector<StructureID> ignored_structures = {structure_id, particle.structure_id(), world.get_def_structure_id()};
 
 //    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
 
@@ -110,7 +110,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     THROW_UNLESS(not_found, plane != nullptr);
     auto unit_z = plane->shape().unit_z();
 
-    // orient cylinder on correct side of the plane
+    // Orient cylinder on correct side of the plane
     auto orientation = plane->project_point(transposed).second;
     if (orientation.first < 0)
     {
@@ -120,7 +120,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto height_through_surface = particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR;
     auto height_to_surface = get_distance_to_surface();
     auto static_height = height_through_surface + height_to_surface;
-    auto base_pos = transposed - (height_to_surface + height_through_surface) * unit_z;
+    auto base_pos = transposed - static_height * unit_z;
     auto scaling_factor = 1;
     auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height,
             scaling_factor, smat, world, ignored_structures, ignored_shells);
