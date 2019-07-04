@@ -647,12 +647,12 @@ public:
         auto height_to_surface = get_distance_to_surface();
         auto static_height = height_through_surface + height_to_surface;
         auto base_pos = pos_2d - height_through_surface * unit_z;
-        auto max_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
+        auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
 
-        radius = std::min((max_height - height_through_surface - height_to_surface) * scaling_factor_, max_radius);
+        radius = std::min(max_dynamic_height * scaling_factor_, max_radius);
         radius /= GfrdCfg.SAFETY;
 
-        if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+        if (radius < min_radius) return false; // no space for Mixed2D3D domain.. it will be discarded, and a single or multi is created instead!
 
         if (D_R() == 0.0)
         {
