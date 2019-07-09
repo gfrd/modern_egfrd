@@ -1054,6 +1054,98 @@ int main(int argc, char** argv)
           }
               break;
 
+          case 112:
+          {
+              // 2D dissociation
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", sPlane, 1e-13, 1e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", sPlane, 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.001, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 0.30, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.throwInParticles(sAB, 1, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+          }
+              break;
+
+          case 113:
+          {
+              // 3D dissociation
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-13, 1e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", m.get_def_structure_type_id(), 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.1, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 0.1, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.add_particle(sAB, wsid, Vector3(ws.X() / 2, ws.Y() / 2, ws.Z() / 2));
+          }
+              break;
+
+          case 130:
+          {
+              // IL-2/15 simulation
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", sPlane, 1e-13, 1e-8));
+              auto sG = m.add_species_type(SpeciesType("G", sPlane, 1e-13, 1e-8));
+              auto sIL2 = m.add_species_type(SpeciesType("IL2", m.get_def_structure_type_id(), 1e-12, 1e-8));
+              auto sIL15 = m.add_species_type(SpeciesType("IL15", m.get_def_structure_type_id(), 1e-12, 1e-8));
+
+              auto sAIL2 = m.add_species_type(SpeciesType("A-IL2", sPlane, 1e-13, 2e-8));
+              auto sAGIL2 = m.add_species_type(SpeciesType("A-G-IL2", sPlane, 1e-13, 2e-8));
+              auto sBIL2 = m.add_species_type(SpeciesType("B-IL2", sPlane, 1e-13, 2e-8));
+              auto sBGIL2 = m.add_species_type(SpeciesType("B-G-IL2", sPlane, 1e-13, 2e-8));
+              auto sABGIL2 = m.add_species_type(SpeciesType("A-B-G-IL2", sPlane, 1e-13, 2e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", sPlane, 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.1, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 0.1, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+              world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+//              world.throwInParticles(sG, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+//              world.throwInParticles(sIL2, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+//              world.throwInParticles(sIL15, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+          }
+              break;
+
          default: THROW_EXCEPTION(illegal_size, "Demo number out of range.");
 
       }
