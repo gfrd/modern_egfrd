@@ -667,9 +667,9 @@ public:
         }
 
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
-        height = (a_r_ / scaling_factor_) + height_through_surface + height_to_surface;
+        height = (a_r_ / scaling_factor_) + static_height;
 
-        auto cylinder_pos = pos_2d + unit_z * (height/2 - (radius2D * GfrdCfg.SINGLE_SHELL_FACTOR));
+        auto cylinder_pos = pos_2d + unit_z * (height/2 - height_through_surface);
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);

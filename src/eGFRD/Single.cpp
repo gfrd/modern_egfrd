@@ -99,12 +99,15 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     particle_surface_dist_ = interacting_structure_.distance(transposed) - particle_radius;
 
     std::vector<ShellID> ignored_shells = {shell_id()};
-    std::vector<StructureID> ignored_structures = {structure_id, particle.structure_id(), world.get_def_structure_id()};
+    std::vector<StructureID> ignored_structures = {interacting_structure_.id(), particle.structure_id(), world.get_def_structure_id()};
 
-//    THROW_UNLESS_MSG(illegal_state, particle_surface_dist_ >= 0.0, "Particle distance to interacting surface should be positive");
+    if(particle_surface_dist_ < 0.0) {
+        Log("GFRD").warn() << "Particle is touching a surface it is not bound to, BD motion might have been erroneous.";
+    }
 
     double min_radius = particle.radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
     double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+    double max_height = max_radius;                                // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
 
     auto plane = &interacting_structure_;
     THROW_UNLESS(not_found, plane != nullptr);
@@ -124,6 +127,10 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     auto scaling_factor = 1;
     auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height,
             scaling_factor, smat, world, ignored_structures, ignored_shells);
+
+    // Ensure we don't exceed the matrix cell dimensions
+    max_dynamic_height = std::min(max_dynamic_height, max_height - static_height);
+
     auto height = static_height + max_dynamic_height;
     auto radius = max_dynamic_height * scaling_factor;
 

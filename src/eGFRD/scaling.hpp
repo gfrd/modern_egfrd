@@ -111,9 +111,11 @@ inline double find_maximal_cylinder_height_to_segment(Vector3 start1, Vector3 un
             squared_distance = squared_distance::line_segment_point(start1, end1, start2);
         }
 
-        // Needed_radius is the cylinder radius required at given height, as determined by the scaling factor
-        // that ensures isotropic diffusion of IV
+        // Needed_distance is the cylinder radius required at given height, as determined by the scaling factor
+        // that ensures isotropic diffusion of IV, plus the radius of the other object.
         auto needed_distance = height_dynamic * scaling_factor + other_radius;
+
+        // When the squared distance and needed distance^2 are equal, this function passes through zero
         return squared_distance - needed_distance*needed_distance;
     };
 
@@ -323,14 +325,13 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
     matrixSpace.each_neighbor_cyclic(matrixSpace.index(base_pos), col);
     max_dynamic_height = std::min(max_dynamic_height, col.max_height);
 
-    auto max_total_height = max_dynamic_height + height_static;
 
     if(social_scaling && col.is_limited)
     {
-        return social_correction(max_total_height, col.limiting_shell_type);
+        return social_correction(max_dynamic_height, col.limiting_shell_type);
     }
 
-    return max_total_height;
+    return max_dynamic_height;
 }
 
 
