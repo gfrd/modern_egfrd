@@ -906,7 +906,7 @@ int main(int argc, char** argv)
 //              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
 
 //            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
-              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 1e-6, std::vector<SpeciesTypeID>{sC}));
 //              rules.add_reaction_rule(ReactionRule(sB, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
 
               // Reaction Rules bind and unbind to plane
@@ -1135,8 +1135,8 @@ int main(int argc, char** argv)
               auto psid = world.add_structure(plane);
               UNUSED(psid);
 
-              rules.add_reaction_rule(ReactionRule(sA, sB, 0.1, std::vector<SpeciesTypeID>{sAB}));
-              rules.add_reaction_rule(ReactionRule(sAB, 0.1, std::vector<SpeciesTypeID>{sA, sB}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 1e-6, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 3e-4, std::vector<SpeciesTypeID>{sA, sB}));
 
               world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
               world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));

@@ -17,8 +17,10 @@ public:
    using reactants = Reactants<SpeciesTypeID, SpeciesTypeID>;
    using products = std::vector<SpeciesTypeID>;
 
-   explicit ReactionRule(const SpeciesTypeID s1, double k, const products& products) : ReactionRule(reactants(s1), k, products) {}
+    /* Rate constant k has unit second^-1 */
+    explicit ReactionRule(const SpeciesTypeID s1, double k, const products& products) : ReactionRule(reactants(s1), k, products) {}
 
+   /* Rate constant k has unit concentration^-1 second^-1 */
    explicit ReactionRule(const SpeciesTypeID s1, const SpeciesTypeID s2, double k, const products& products) : ReactionRule(reactants(s1, s2), k, products) {}
 
    explicit ReactionRule(const reactants& reactants, double k, const products& products) : id_(), reactants_(reactants), products_(products), k_(k)
