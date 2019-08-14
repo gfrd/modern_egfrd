@@ -20,7 +20,7 @@ struct ME_EXPORT StructureSection final : SectionBase
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    static std::string section_name() { return "StructureType"; }
+    static std::string section_name() { return "Structure"; }
 
     const std::string key_name = "Name";
     const std::string &name() const { return name_; }
@@ -29,10 +29,7 @@ struct ME_EXPORT StructureSection final : SectionBase
     const std::string& structureType() const { return structure_type_; }
 
     const std::string key_pos = "Pos";
-    Vector3 pos() const { return auto_var_value(key_drift_velocity); }
-
-    const std::string key_radius = "r";
-    double r() const { return auto_var_value(key_radius); }
+    Vector3 pos() const { return pos_ }
 
 
     // --------------------------------------------------------------------------------------------------------------------------------
@@ -47,12 +44,18 @@ struct ME_EXPORT StructureSection final : SectionBase
             name_ = format_check(value);
             return true;
         }
+        if (key == key_pos)
+        {
+            bool found;
+            pos_ = get_vec3(value, "Structure position", (bool &) &found);
+            return true;
+        }
         THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    void create_species(Model &model, const VariablesSection &vars) const
+    void create_structure(Model &model, const VariablesSection &vars) const
     {
         auto sid = model.get_def_structure_type_id();
         for (auto name : names_)
@@ -63,12 +66,27 @@ struct ME_EXPORT StructureSection final : SectionBase
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
+    Vector3 get_vec3(const std::string& value, const std::string name, bool& found)
+    {
+        std::smatch match;
+        auto regex = std::regex(R"(\(([^,]+),([^,]+),([^,]+)\))");
+        found = std::regex_search(value, match, regex);
+        if (!found || match.size() != 4) {
+            found = false;
+            return Vector3();
+        }
+
+        auto x = vars_->evaluate_value_expression(match[1].str(), name);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
     void PrintSettings() const override
     {
-        std::cout << std::setw(14) << "species = " << "'" << name_ << "'" << ", D = " << D() << " [m^2*s^-1], r = "
-                  << r() << " [m]";
-        if (v() != 0) std::cout << ", v = " << v();
-        std::cout << "\n";
+//        std::cout << std::setw(14) << "species = " << "'" << name_ << "'" << ", D = " << D() << " [m^2*s^-1], r = "
+//                  << r() << " [m]";
+//        if (v() != 0) std::cout << ", v = " << v();
+//        std::cout << "\n";
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
@@ -103,11 +121,12 @@ private:
 
     std::string name_, structure_type_;
     std::vector<std::string> names_;
+    Vector3 pos_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-inline std::ostream &operator<<(std::ostream &stream, const SpeciesTypeSection &sts)
+inline std::ostream &operator<<(std::ostream &stream, const StructureSection &sts)
 {
     stream << "[" << sts.section_name() << "]" << std::endl;
     stream << sts.key_name << " = " << sts.name() << std::endl;

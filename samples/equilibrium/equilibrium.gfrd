@@ -11,8 +11,8 @@ kd = 2e-2                              ; dissociation constant in s^-1
 N = 100                                ; number of particles A and B
 
 ; Calculate the analytic average number of C particles in equilibrium
-kD = kd / ka
-Nc_th = (2*N+kD*V - sqrt( (2*N+kD*V)^2 - 4*N*N)) / 2
+Kd = kd / ka
+Nc_th = (2*N+Kd*V - sqrt( (2*N+Kd*V)^2 - 4*N*N)) / 2
 
 
 [Simulator]
