@@ -1,0 +1,61 @@
+; eGFRD accuracy test for two 3D diffusing species
+
+[Simulator]
+Seed = 0xdeadbeef
+PrepareTime = 0.1                      ; seconds
+EndTime = 60.0                        ; seconds
+MaintenanceStep = 100000
+MaintenanceFile = sim_state_3D.dat
+
+[Variables]
+World_size = (1e-3 * V) ^ (1/3)        ; Liter to cube-length in meter
+N_A = 6.022e23                         ; Avogadro's constant
+V = 1e-15                              ; 1 femto liter
+N = 10                                 ; amount of particles for A and B
+Conc = N / N_A / V                     ; initial concentration for A and B
+r = 1e-9                               ; m
+D = 1e-12                              ; m^2 s^-1
+sigma = 2 * r                          ; m
+k_D = 4 * pi * sigma * D               ; m^3 s^-1
+K_d = Conc / 2                         ; mol liter^-1
+k_a = k_D                              ; m^3 s^-1
+k_d = K_d / 1000 * k_a                 ; (mol) s^-1
+
+[World]
+;Matrix = 8
+Size = World_size                      ; m
+
+[StructureType]
+Name = plane
+Type = PlanarSurface
+Position = (0.5 * World_size, 0, 0.5 * World_size)
+Vx = (1,0,0)
+Vy = (0,1,0)
+Lx = 0.5 * World_size
+Ly = 0.5 * World_size
+
+[SpeciesType]
+Name = A B C
+Structure = plane
+r = r                               ; m
+D = D                               ; m^2*s^-1
+
+[ReactionRule]
+Rule = A + B <=> C
+ka = k_a
+kd = k_d
+
+[Particles]
+A = 0
+B = 0
+C = N
+
+[CopyNumbers]
+Interval = 1e-1
+File = copy_num_3D.dat
+Type = average
+
+[ParticlePositions]
+Interval = 1e-3; sec
+File = positions_3D.dat
+

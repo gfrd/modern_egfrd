@@ -30,7 +30,8 @@ struct ME_EXPORT SpeciesTypeSection final : SectionBase
    double v() const { return auto_var_value(key_drift_velocity); }
    const std::string key_radius = "r";
    double r() const { return auto_var_value(key_radius); }
-   const std::string key_structure_id = "StructureType";
+   const std::string key_structure_type = "StructureType";
+   const std::string& structureType() const { return structure_type_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -93,7 +94,7 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::string name_;
+   std::string name_, structure_type_;
    std::vector<std::string> names_;
 };
 
@@ -106,7 +107,7 @@ inline std::ostream& operator<<(std::ostream& stream, const SpeciesTypeSection& 
    stream << sts.key_radius << " = " << sts.r() << std::endl;
    stream << sts.key_diffusion << " = " << sts.D() << std::endl;
    if (sts.v() != 0) stream << sts.key_drift_velocity << " = " << sts.v() << std::endl;
-   if (false) stream << sts.key_structure_id << " = " << "world" << std::endl;
+   stream << sts.key_structure_type << " = " << sts.structureType() << std::endl;
    stream << std::endl;
    return stream;
 }

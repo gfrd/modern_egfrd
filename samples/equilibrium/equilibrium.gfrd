@@ -21,7 +21,7 @@ MaintenanceFile = sim_dump.out         ; dump full simulator state to file at ma
 
 
 [World]
-Matrix = 8
+;Matrix = 8
 Size = V^(1/3)                         ; volume in m^3 to cube-length in meter
 
 [SpeciesType]
@@ -41,4 +41,4 @@ C = 0
 
 [CopyNumbers]
 Interval = 1                           ; output particle count every second
-    Type = Average
+Type = Average

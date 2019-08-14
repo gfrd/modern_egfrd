@@ -1,5 +1,5 @@
 set (SRC SectionBase.cpp VariablesSection.cpp SimulatorSettings.cpp)
-set (HDR CopyNumbersSection.hpp ParserExceptions.hpp ParticlePositionsSection.hpp ParticlesSection.hpp ProgressSection.hpp ReactionRecordSection.hpp ReactionRuleSection.hpp SectionBase.hpp SimulatorSection.hpp SimulatorSettings.hpp SpeciesTypeSection.hpp VariablesSection.hpp WorldSection.hpp )
+set (HDR CopyNumbersSection.hpp ParserExceptions.hpp ParticlePositionsSection.hpp ParticlesSection.hpp ProgressSection.hpp ReactionRecordSection.hpp ReactionRuleSection.hpp SectionBase.hpp SimulatorSection.hpp SimulatorSettings.hpp SpeciesTypeSection.hpp StructureTypeSection.hpp VariablesSection.hpp WorldSection.hpp )
 
 add_library(ModelEntry SHARED ${SRC} ${HDR})
 
