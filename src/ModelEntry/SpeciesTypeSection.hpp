@@ -30,7 +30,7 @@ struct ME_EXPORT SpeciesTypeSection final : SectionBase
    double v() const { return auto_var_value(key_drift_velocity); }
    const std::string key_radius = "r";
    double r() const { return auto_var_value(key_radius); }
-   const std::string key_structure_type = "StructureType";
+   const std::string key_structure_type = "Structure";
    const std::string& structureType() const { return structure_type_; }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -38,11 +38,17 @@ struct ME_EXPORT SpeciesTypeSection final : SectionBase
    bool set_keypair(const std::string& key, const std::string& value) override
    {
       if (SectionBase::set_keypair(key,value)) return true;
-      if (key == key_name) 
-      { 
-         THROW_UNLESS_MSG(illegal_section_value, name_.empty(), "Name already set! Use a new SpeciesType section to define a new species type.");
-         name_ = format_check(value); 
-         return true; 
+      if (key == key_name)
+      {
+          THROW_UNLESS_MSG(illegal_section_value, name_.empty(), "Name already set! Use a new SpeciesType section to define a new species type.");
+          name_ = format_check(value);
+          return true;
+      }
+      if (key == key_structure_type)
+      {
+          THROW_UNLESS_MSG(illegal_section_value, structure_type_.empty(), "Structure type already set!");
+          structure_type_ = value;
+          return true;
       }
       THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
    }
@@ -52,6 +58,14 @@ struct ME_EXPORT SpeciesTypeSection final : SectionBase
    void create_species(Model& model, const VariablesSection& vars) const
    {
       auto sid = model.get_def_structure_type_id();
+
+      if(!structure_type_.empty()) {
+          sid = model.get_structure_type_id_by_name(structure_type_);
+          if(sid == StructureTypeID(0)) {
+              THROW_EXCEPTION(illegal_section_value, "Structure type '" << structure_type_ << "' was not previously created, please check the name.")
+          }
+      }
+
       for (auto name : names_)
          model.add_species_type(SpeciesType(name, sid, D(), r(), v()));
    }

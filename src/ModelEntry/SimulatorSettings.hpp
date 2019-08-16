@@ -14,6 +14,7 @@
 #include "ParticlePositionsSection.hpp"
 #include "ReactionRecordSection.hpp"
 #include "ProgressSection.hpp"
+#include "StructureSection.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -113,7 +114,9 @@ private:
       
       if (heading == ReactionRuleSection::section_name()) { reactionRuleSections_.emplace_back(); current_ = &(*reactionRuleSections_.rbegin()); return; }
       if (heading == SpeciesTypeSection::section_name()) { speciesTypeSections_.emplace_back(); current_ = &(*speciesTypeSections_.rbegin()); return; }
-      
+
+      if (heading == StructureSection::section_name()) { structureSections_.emplace_back(); current_ = &(*structureSections_.rbegin()); return; }
+
       THROW_EXCEPTION(illegal_section, "Section '" << heading << "' not recognized!");
    }
 
@@ -126,6 +129,7 @@ public:
    const SimulatorSection& getSimulatorSection() const { return simulatorSection_; }
    const WorldSection& getWorldSection() const { return worldSection_; }
    const std::vector<SpeciesTypeSection>& getSpeciesTypeSections() const { return speciesTypeSections_; }
+   const std::vector<StructureSection>& getStructureSections() const { return structureSections_; }
    const std::vector<ReactionRuleSection>& getReactionRuleSections() const { return reactionRuleSections_; }
    const std::vector<ParticlesSection>& getParticlesSections() const { return particlesSections_; }
    const CopyNumbersSection* getCopyNumbersSection() const { return copyNumbersSection_.get(); }
@@ -142,6 +146,7 @@ private:
    WorldSection worldSection_;
    std::vector<ParticlesSection> particlesSections_;
    std::vector<SpeciesTypeSection> speciesTypeSections_;
+   std::vector<StructureSection> structureSections_;
    std::vector<ReactionRuleSection> reactionRuleSections_;
    std::unique_ptr<CopyNumbersSection> copyNumbersSection_;
    std::unique_ptr<ParticlePositionSection> particlePositionsSection_;

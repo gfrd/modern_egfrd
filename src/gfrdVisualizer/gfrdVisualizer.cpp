@@ -537,6 +537,13 @@ void SetupModel(const std::string& filename, const std::vector < std::string>& a
    auto& vars = settings.getVariablesSection();
 
    Model model;
+
+   {
+       auto& sections = settings.getStructureSections();
+       for (auto& section : sections)
+           section.create_structure_type(model);
+   }
+
    {
       auto& sections = settings.getSpeciesTypeSections();
       for (auto& section : sections)
@@ -548,8 +555,11 @@ void SetupModel(const std::string& filename, const std::vector < std::string>& a
    for (auto& section : settings.getReactionRuleSections())
       section.create_reaction_rule(model, rules);
 
-   for (auto& section : settings.getParticlesSections())
-      section.add_particles_to_world(model, world, rng);
+    for (auto& section : settings.getStructureSections())
+        section.create_structure(model, world);
+
+    for (auto& section : settings.getParticlesSections())
+        section.add_particles_to_world(model, world, rng);
 
 
    // Print !
@@ -906,7 +916,7 @@ int main(int argc, char** argv)
 //              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
 
 //            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
-              rules.add_reaction_rule(ReactionRule(sA, sB, 1e-6, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
 //              rules.add_reaction_rule(ReactionRule(sB, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
 
               // Reaction Rules bind and unbind to plane

@@ -74,6 +74,13 @@ public:
       return (*i).second;
    }
 
+    StructureTypeID get_structure_type_id_by_name(const std::string name) const
+    {
+        auto i = std::find_if(structure_map_.begin(), structure_map_.end(), [name](const structure_map::value_type& n) { return n.second.name() == name; });
+        if (structure_map_.end() == i) { return StructureTypeID(0); }
+        return i->first;
+    }
+
    StructureTypeID get_def_structure_type_id() const { return default_structure_type_id_; }
 
    StructureIteratorRange structures() const { return StructureIteratorRange(structure_map_); }

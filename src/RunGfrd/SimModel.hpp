@@ -121,13 +121,20 @@ protected:
       auto& vars = settings_.getVariablesSection();
 
       {
-         auto& sections = settings_.getSpeciesTypeSections();
-         for (auto& section : sections)
-            section.create_species(model_, vars);
+          auto& sections = settings_.getStructureSections();
+          for (auto& section : sections)
+              section.create_structure_type(model_);
+      }
+
+      {
+          auto& sections = settings_.getSpeciesTypeSections();
+          for (auto& section : sections)
+              section.create_species(model_, vars);
       }
 
       Simulation::SetupSimulation();
       set_reactionrule_section(true);
+      add_structures_section(true);
       add_particles_section(true);
 
       auto cns = settings_.getCopyNumbersSection();
@@ -149,6 +156,7 @@ protected:
       Simulation::PostPreSimulation();
       set_reactionrule_section(false);
       add_particles_section(false);
+      add_structures_section(false);
 
       auto cns = settings_.getCopyNumbersSection();
       if (cns != nullptr && test_mode_setup(false, cns->mode(), true)) set_copynumbers_section(*cns);
@@ -233,14 +241,23 @@ private:
       }
    }
 
-   void add_particles_section(bool first)
-   {
-      for (auto& section : settings_.getParticlesSections())
-      {
-         if (test_mode_setup(first, section.mode()))
-            section.add_particles_to_world(model_, world_, rng_);
-      }
-   }
+    void add_structures_section(bool first)
+    {
+        for (auto& section : settings_.getStructureSections())
+        {
+            if (test_mode_setup(first, section.mode()))
+                section.create_structure(model_, world_);
+        }
+    }
+
+    void add_particles_section(bool first)
+    {
+        for (auto& section : settings_.getParticlesSections())
+        {
+            if (test_mode_setup(first, section.mode()))
+                section.add_particles_to_world(model_, world_, rng_);
+        }
+    }
 
    void set_progress_section(bool first, uint width)
    {

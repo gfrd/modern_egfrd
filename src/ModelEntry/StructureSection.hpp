@@ -14,6 +14,7 @@ struct ME_EXPORT StructureSection final : SectionBase
 {
     explicit StructureSection() : SectionBase()
     {
+        init_auto_vars( { { key_lx, 0.0}, { key_ly, 0.0} } );
     }
 
     ~StructureSection() = default;
@@ -28,8 +29,20 @@ struct ME_EXPORT StructureSection final : SectionBase
     const std::string key_type = "Type";
     const std::string& structureType() const { return structure_type_; }
 
-    const std::string key_pos = "Pos";
-    Vector3 pos() const { return pos_ }
+    const std::string key_pos = "Position";
+    Vector3 pos() const { return pos_; }
+
+    const std::string key_vx = "Vx";
+    Vector3 vx() const { return vx_; }
+
+    const std::string key_vy = "Vy";
+    Vector3 vy() const { return vy_; }
+
+    const std::string key_lx = "Lx";
+    double lx() const { return auto_var_value(key_lx); }
+
+    const std::string key_ly = "Ly";
+    double ly() const { return auto_var_value(key_ly); }
 
 
     // --------------------------------------------------------------------------------------------------------------------------------
@@ -41,13 +54,41 @@ struct ME_EXPORT StructureSection final : SectionBase
         {
             THROW_UNLESS_MSG(illegal_section_value, name_.empty(),
                              "Name already set! Use a new Structure section to define a new structure.");
-            name_ = format_check(value);
+            name_ = value;
+            return true;
+        }
+        if (key == key_type)
+        {
+            THROW_UNLESS_MSG(illegal_section_value, structure_type_.empty(),
+                             "Type already set! Use a new Structure section to define a new structure.");
+            structure_type_ = value;
             return true;
         }
         if (key == key_pos)
         {
             bool found;
-            pos_ = get_vec3(value, "Structure position", (bool &) &found);
+            pos_ = get_vec3(value, "Structure position", found);
+
+            THROW_UNLESS_MSG(illegal_section_value, found,
+                             "Structure position was not recognised. Ensure the format is (x, y, z), where each coordinate can be a value or an expression.");
+            return true;
+        }
+        if (key == key_vx)
+        {
+            bool found;
+            vx_ = get_vec3(value, "Structure Vx", found);
+
+            THROW_UNLESS_MSG(illegal_section_value, found,
+                             "Structure Vx was not recognised. Ensure the format is (x, y, z), where each coordinate can be a value or an expression.");
+            return true;
+        }
+        if (key == key_vy)
+        {
+            bool found;
+            vy_ = get_vec3(value, "Structure Vy", found);
+
+            THROW_UNLESS_MSG(illegal_section_value, found,
+                             "Structure Vy was not recognised. Ensure the format is (x, y, z), where each coordinate can be a value or an expression.");
             return true;
         }
         THROW_EXCEPTION(illegal_section_key, "Key '" << key << "' not recognized.");
@@ -55,13 +96,32 @@ struct ME_EXPORT StructureSection final : SectionBase
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    void create_structure(Model &model, const VariablesSection &vars) const
+    void create_structure_type(Model &model) const
     {
-        auto sid = model.get_def_structure_type_id();
-        for (auto name : names_)
+        if(model.get_structure_type_id_by_name(name_) == StructureTypeID(0))
         {
-//            model.add_species_type(SpeciesType(name, sid, D(), r(), v()));
+            // Only add structure type if it doesn't exist yet
+            model.add_structure_type(StructureType(name_));
         }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+
+    void create_structure(Model &model, World &world) const
+    {
+        auto wsid = world.get_def_structure_id();
+        auto sid = model.get_structure_type_id_by_name(name_);
+
+        THROW_UNLESS_MSG(illegal_section_value, sid != StructureTypeID(0), "Structure type '" << structure_type_ << "' not recognized.")
+
+        if (structure_type_ == "PlanarSurface") {
+            auto plane = Plane(pos_, vx_, vy_, lx(), ly(), false);
+            auto structure = std::make_shared<PlanarSurface>(PlanarSurface(name_, sid, wsid, plane));
+            world.add_structure(structure);
+            return;
+        }
+
+        THROW_EXCEPTION(illegal_section_value, "Structure type '" << structure_type_ << "' not recognized.");
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +137,10 @@ struct ME_EXPORT StructureSection final : SectionBase
         }
 
         auto x = vars_->evaluate_value_expression(match[1].str(), name);
+        auto y = vars_->evaluate_value_expression(match[2].str(), name);
+        auto z = vars_->evaluate_value_expression(match[3].str(), name);
+
+        return Vector3(x, y, z);
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
@@ -93,35 +157,10 @@ struct ME_EXPORT StructureSection final : SectionBase
 
 private:
 
-    std::string format_check(std::string input)
-    {
-        auto regex = std::regex("[^\\s,]+");
-        auto begin = std::sregex_iterator(input.begin(), input.end(), regex);
-        auto end = std::sregex_iterator();
-
-        auto size = std::distance(begin, end);
-        THROW_UNLESS_MSG(illegal_section_value, size > 0, "SpeciesTypeName not valid");
-        names_.reserve(size);
-
-        std::stringstream ss;
-        for (auto i = begin; i != end; ++i)
-        {
-            std::string name = i->str();
-            if (!is_valid_speciestype_name(name)) THROW_EXCEPTION(illegal_section_value,
-                                                                  "SpeciesTypeName '" << name << "'not valid");
-            names_.emplace_back(name);
-            if (i != begin) ss << ", ";
-            ss << name;
-        }
-
-        return ss.str();
-    }
-
     // --------------------------------------------------------------------------------------------------------------------------------
 
     std::string name_, structure_type_;
-    std::vector<std::string> names_;
-    Vector3 pos_;
+    Vector3 pos_, vx_, vy_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -130,10 +169,10 @@ inline std::ostream &operator<<(std::ostream &stream, const StructureSection &st
 {
     stream << "[" << sts.section_name() << "]" << std::endl;
     stream << sts.key_name << " = " << sts.name() << std::endl;
-    stream << sts.key_radius << " = " << sts.r() << std::endl;
-    stream << sts.key_diffusion << " = " << sts.D() << std::endl;
-    if (sts.v() != 0) stream << sts.key_drift_velocity << " = " << sts.v() << std::endl;
-    stream << sts.key_structure_type << " = " << sts.structureType() << std::endl;
+//    stream << sts.key_radius << " = " << sts.r() << std::endl;
+//    stream << sts.key_diffusion << " = " << sts.D() << std::endl;
+//    if (sts.v() != 0) stream << sts.key_drift_velocity << " = " << sts.v() << std::endl;
+//    stream << sts.key_structure_type << " = " << sts.structureType() << std::endl;
     stream << std::endl;
     return stream;
 }
