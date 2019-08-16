@@ -2,7 +2,6 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-#include "SpeciesType.hpp"
 #include "Model.hpp"
 #include "SectionBase.hpp"
 #include <iomanip>
@@ -10,10 +9,11 @@
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-struct ME_EXPORT StructureSection final : SectionBase
+struct ME_EXPORT StructureSection final : SectionModeBase
 {
-    explicit StructureSection() : SectionBase()
+    explicit StructureSection() : SectionModeBase()
     {
+        mode_ = modes::On;
         init_auto_vars( { { key_lx, 0.0}, { key_ly, 0.0} } );
     }
 
