@@ -118,7 +118,7 @@ std::string VariablesSection::evaluate_string_expression(std::string expression,
       if (!parser.compile("dummy := " + expression.substr(1), expr))
          THROW_EXCEPTION(illegal_section_value, "ParseError: " << parser.error() << " in '" << name << " = " << expression << "'\n");
 
-      THROW_UNLESS_MSG(illegal_section_value, std::isnan(expr.value()), "Failed to evaluate expression!")
+      THROW_UNLESS_MSG(illegal_section_value, std::isnan(expr.value()), "Failed to evaluate expression!");
       return dummy_;
    }
       

@@ -555,7 +555,7 @@ public:
          else
          {
             retrycount--;
-            THROW_UNLESS_MSG(no_space, retrycount > 0, "Add particle failed after " << GfrdCfg.ThrowInRetryCount << " attempts (overlaps or out-of-bounds) " << sid)
+            THROW_UNLESS_MSG(no_space, retrycount > 0, "Add particle failed after " << GfrdCfg.ThrowInRetryCount << " attempts (overlaps or out-of-bounds) " << sid);
             if (!warn && retrycount < 4*GfrdCfg.ThrowInRetryCount/5)
             {
                Log("World").warn() << "Particle placement for " << sid << " may take some time due to restricted available space...";

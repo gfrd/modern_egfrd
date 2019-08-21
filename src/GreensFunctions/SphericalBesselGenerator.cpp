@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 #include <fstream>
 #include <gsl/gsl_sf_bessel.h>
 #include "helperFunctionsGf.hpp"
@@ -101,8 +100,9 @@ inline double _j_smalln(uint n, double z)
       const double _15_zsq(15. * z_r * z_r);
       return ((_15_zsq - 6.) * sin(z) * z_r - (_15_zsq - 1) * cos(z)) * z_r;
    }
+   default:
+      throw std::invalid_argument("0 <= n <= 3");
    }
-   throw std::invalid_argument("0 <= n <= 3");
 }
 
 inline double _y_smalln(uint n, double z)
@@ -127,8 +127,9 @@ inline double _y_smalln(uint n, double z)
       const double _15_zsq(15. * z_r * z_r);
       return ((-_15_zsq + 6.) * cos(z) * z_r - (_15_zsq - 1) * sin(z)) * z_r;
    }
+   default:
+      throw std::invalid_argument("0 <= n <= 2");
    }
-   throw std::invalid_argument("0 <= n <= 2");
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -147,7 +148,6 @@ double SphericalBesselGenerator::j(uint n, double z) const
    {
       const uint i = static_cast<uint>((z - table.start) / table.delta);
       ASSERT(i + 1 < table.N);
-
       return hermite_interpolate(z, table.start, table.delta, table.values.get());
    }
 
@@ -167,7 +167,6 @@ double SphericalBesselGenerator::y(const uint n, const double z) const
    {
       const uint i = static_cast<uint>((z - table.start) / table.delta);
       ASSERT(i + 1 < table.N);
-
       return hermite_interpolate(z, table.start, table.delta, table.values.get());
    }
 

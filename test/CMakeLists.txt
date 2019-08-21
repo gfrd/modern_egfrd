@@ -6,5 +6,6 @@ endif ()
 # Add sub-folders
 add_subdirectory(TestGFRD)
 add_subdirectory(TestGreensFunctions)
+add_subdirectory(TestCCD)
 
 

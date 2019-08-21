@@ -51,7 +51,7 @@ void gsl_error_handler(const char* reason, const char* file, int line, int error
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::pair<bool, std::string>> help = 
+std::vector<std::pair<bool, std::string>> help =
 {
    std::make_pair(true, "ESC = exit"),
    std::make_pair(true, "H = show help") ,
@@ -104,89 +104,116 @@ void check_sim()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handleKeyboard(unsigned char cChar, int nMouseX, int nMouseY)
+void handleSpecial(int key, int x, int y)
 {
-   UNUSED(nMouseX, nMouseY);
+   UNUSED(x, y);
+   if (sptr == nullptr) return;
+   auto step = sptr->world().cell_size() / 20;
+   if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) step *= 5;
+   else if (glutGetModifiers() == GLUT_ACTIVE_ALT) step /= 5;
+   // Move selected domain, for collision testing only! it screws up the simulator.
+   switch (key)
+   {
+   case GLUT_KEY_LEFT: sptr->TestMutateShell(Vector3(-step, 0, 0), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_RIGHT: sptr->TestMutateShell(Vector3(step, 0, 0), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_UP: sptr->TestMutateShell(Vector3(0, step, 0), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_DOWN: sptr->TestMutateShell(Vector3(0, -step, 0), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_PAGE_UP: sptr->TestMutateShell(Vector3(0, 0, step), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_PAGE_DOWN: sptr->TestMutateShell(Vector3(0, 0, -step), Vector2(), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_HOME:sptr->TestMutateShell(Vector3(0, 0, 0), Vector2(step, 0), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_END:sptr->TestMutateShell(Vector3(0, 0, 0), Vector2(-step, 0), DomainID(selDomain)); glutPostRedisplay(); break;
+   case GLUT_KEY_INSERT: sptr->TestMutateShell(Vector3(0, 0, 0), Vector2(0, step), DomainID(selDomain)); glutPostRedisplay(); break;
+   case 127:/*GLUT_KEY_DELETE*/ sptr->TestMutateShell(Vector3(0, 0, 0), Vector2(0, -step), DomainID(selDomain)); glutPostRedisplay(); break;
+   default: break;
+   }
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+void handleKeyboard(unsigned char key, int x, int y)
+{
+   UNUSED(x, y);
    try
    {
-      switch (cChar)
+      switch (key)
       {
-         case 27: glutLeaveMainLoop(); break;
-         case 'f': case 'F': glutFullScreenToggle(); break;
-         case 'h': case 'H': showHelp = !showHelp; glutPostRedisplay(); break;
-         case 's': case 'S': drawShells = !drawShells; glutPostRedisplay(); break;
-         case 'd': case 'D': cam.set_demo(!cam.demo()); break;
-         case 'p': case 'P': screenshot(static_cast<int>(sptr ? sptr->num_steps() : extSim.num_steps())); break;
-         case 'o': case 'O': drawOrig = !drawOrig; glutPostRedisplay(); break;
-         case 'i': case 'I': drawPid++; if (drawPid == 3) drawPid = 0; glutPostRedisplay(); break;
+      case 27: glutLeaveMainLoop(); break;
+      case 127: handleSpecial(key, x, y); break;
+      case 'f': case 'F': glutFullScreenToggle(); break;
+      case 'h': case 'H': showHelp = !showHelp; glutPostRedisplay(); break;
+      case 's': case 'S': drawShells = !drawShells; glutPostRedisplay(); break;
+      case 'd': case 'D': cam.set_demo(!cam.demo()); break;
+      case 'p': case 'P': screenshot(static_cast<int>(sptr ? sptr->num_steps() : extSim.num_steps())); break;
+      case 'o': case 'O': drawOrig = !drawOrig; glutPostRedisplay(); break;
+      case 'i': case 'I': drawPid++; if (drawPid == 3) drawPid = 0; glutPostRedisplay(); break;
 
-         case '.': if (sptr) sptr->step(); glutPostRedisplay(); break;
-         case '/': if (sptr) check_sim(); break;
-         case 'a': case 'A': autoSim = !autoSim; autoCheck = (cChar == 'a'); glutPostRedisplay(); break;
-         case 'b': case 'B': if (sptr) sptr->burst_all(); glutPostRedisplay(); break;
+      case '.': if (sptr) sptr->step(); glutPostRedisplay(); break;
+      case '/': if (sptr) check_sim(); break;
+      case 'a': case 'A': autoSim = !autoSim; autoCheck = (key == 'a'); glutPostRedisplay(); break;
+      case 'b': case 'B': if (sptr) sptr->burst_all(); glutPostRedisplay(); break;
 
-         case '>': selStructure++; glutPostRedisplay(); break;
-         case '<': if (selStructure > 0) selStructure--; glutPostRedisplay(); break;
+      case '>': selStructure++; glutPostRedisplay(); break;
+      case '<': if (selStructure > 0) selStructure--; glutPostRedisplay(); break;
 
-         case '+': selParticle++; glutPostRedisplay(); break;
-         case '-': if (selParticle > 0) { selParticle--; glutPostRedisplay(); } break;
-         case 'g': case 'G': std::cout << "Enter ParticleID: ";  std::cin >> selParticle; if (selParticle > 0) { glutPostRedisplay(); } break;
+      case '+': selParticle++; glutPostRedisplay(); break;
+      case '-': if (selParticle > 0) { selParticle--; glutPostRedisplay(); } break;
+      case 'g': case 'G': std::cout << "Enter ParticleID: ";  std::cin >> selParticle; if (selParticle > 0) { glutPostRedisplay(); } break;
 
-         case ']': selDomain++; glutPostRedisplay(); break;
-         case '[': if (selDomain > 0) { selDomain--; glutPostRedisplay(); } break;
-         case 'j': case 'J': std::cout << "Enter DomainID: ";  std::cin >> selDomain; if (selDomain > 0) { glutPostRedisplay(); } break;
+      case ']': selDomain++; glutPostRedisplay(); break;
+      case '[': if (selDomain > 0) { selDomain--; glutPostRedisplay(); } break;
+      case 'j': case 'J': std::cout << "Enter DomainID: ";  std::cin >> selDomain; if (selDomain > 0) { glutPostRedisplay(); } break;
 
-         case '0': selParticle = 0; selDomain = 0;  glutPostRedisplay(); break;
-         case 'c': case 'C': selParticle = 0;
-            if (sptr)
-            {
-               const auto& w = sptr->world();
-               double side = 0.5 / std::max(w.world_size().X(), std::max(w.world_size().Y(), w.world_size().Z()));      // scale largest side to GLunits 1.0
-               cam.lookTo(side * w.world_size());
-            }
-            else
-            {
-               double side = 0.5 / std::max(extSim.world_size().X(), std::max(extSim.world_size().Y(), extSim.world_size().Z()));      // scale largest side to GLunits 1.0
-               cam.lookAt(side * extSim.world_size());
-            }
-            glutPostRedisplay();
-            break;
+      case '0': selParticle = 0; selDomain = 0;  glutPostRedisplay(); break;
+      case 'c': case 'C': selParticle = 0;
+         if (sptr)
+         {
+            const auto& w = sptr->world();
+            double side = 0.5 / std::max(w.world_size().X(), std::max(w.world_size().Y(), w.world_size().Z()));      // scale largest side to GLunits 1.0
+            cam.lookTo(side * w.world_size());
+         }
+         else
+         {
+            double side = 0.5 / std::max(extSim.world_size().X(), std::max(extSim.world_size().Y(), extSim.world_size().Z()));      // scale largest side to GLunits 1.0
+            cam.lookAt(side * extSim.world_size());
+         }
+         glutPostRedisplay();
+         break;
 
-         case 'q': case 'Q': selSection = extSim.SelectSection(--selSection); glutPostRedisplay(); break;
-         case 'w': case 'W': selSection = extSim.SelectSection(++selSection); glutPostRedisplay(); break;
+      case 'q': case 'Q': selSection = extSim.SelectSection(--selSection); glutPostRedisplay(); break;
+      case 'w': case 'W': selSection = extSim.SelectSection(++selSection); glutPostRedisplay(); break;
 
-            //case 'n': case 'j': case 'm': case 'k': case 'l': case ',':    // for overlap checking , move particle1 around!
-            //{
-            //   const double step = 0.05;
-            //   auto& w = sptr->world();
-            //   auto pip = w.get_particle(ParticleID(1));
-            //   if (cChar == 'n') pip.second.position() += Vector3(-step, 0, 0);
-            //   if (cChar == 'j') pip.second.position() += Vector3(+step, 0, 0);
-            //   if (cChar == 'm') pip.second.position() += Vector3(0, -step, 0);
-            //   if (cChar == 'k') pip.second.position() += Vector3(0, +step, 0);
-            //   if (cChar == 'l') pip.second.position() += Vector3(0, 0, -step);
-            //   if (cChar == ',') pip.second.position() += Vector3(0, 0, +step);
-            //   const_cast<World&>(w).update_particle(pip);
-            //   auto s = w.get_structure(StructureID(2));
-            //   auto cyl = dynamic_cast<CylindricalSurface*>(s.get());
-            //   const Cylinder shape = cyl->shape();
-            //   auto ovl = w.check_particle_overlap(shape);
-            //   if (ovl.size() > 0)
-            //      for (auto& i : ovl)
-            //         std::cout << i.first.first << " overlaps " << i.second << " : " << (-i.second > 2 * pip.second.radius() ? "IN" : "OUT") << std::endl;
-            //   else
-            //      std::cout << "no overlaps" << std::endl;
-            //   glutPostRedisplay();
-            //} break;
+         //case 'n': case 'j': case 'm': case 'k': case 'l': case ',':    // for overlap checking , move particle1 around!
+         //{
+         //   const double step = 0.05;
+         //   auto& w = sptr->world();
+         //   auto pip = w.get_particle(ParticleID(1));
+         //   if (cChar == 'n') pip.second.position() += Vector3(-step, 0, 0);
+         //   if (cChar == 'j') pip.second.position() += Vector3(+step, 0, 0);
+         //   if (cChar == 'm') pip.second.position() += Vector3(0, -step, 0);
+         //   if (cChar == 'k') pip.second.position() += Vector3(0, +step, 0);
+         //   if (cChar == 'l') pip.second.position() += Vector3(0, 0, -step);
+         //   if (cChar == ',') pip.second.position() += Vector3(0, 0, +step);
+         //   const_cast<World&>(w).update_particle(pip);
+         //   auto s = w.get_structure(StructureID(2));
+         //   auto cyl = dynamic_cast<CylindricalSurface*>(s.get());
+         //   const Cylinder shape = cyl->shape();
+         //   auto ovl = w.check_particle_overlap(shape);
+         //   if (ovl.size() > 0)
+         //      for (auto& i : ovl)
+         //         std::cout << i.first.first << " overlaps " << i.second << " : " << (-i.second > 2 * pip.second.radius() ? "IN" : "OUT") << std::endl;
+         //   else
+         //      std::cout << "no overlaps" << std::endl;
+         //   glutPostRedisplay();
+         //} break;
 
-         case '1': cam.set_angles(0.0, M_PI / 2); glutPostRedisplay(); break;      // TOP
-         case '2': cam.set_angles(0.0, -M_PI / 2); glutPostRedisplay(); break;     // BOTTOM
-         case '3': cam.set_angles(0.0, 0.0); glutPostRedisplay(); break;         // FRONT
-         case '4': cam.set_angles(M_PI / 2, 0.0); glutPostRedisplay(); break;      // LEFT
-         case '5': cam.set_angles(M_PI, 0.0); glutPostRedisplay(); break;        // BACK
-         case '6': cam.set_angles(-M_PI / 2, 0.0); glutPostRedisplay(); break;     // RIGHT
+      case '1': cam.set_angles(0.0, M_PI / 2); glutPostRedisplay(); break;      // TOP
+      case '2': cam.set_angles(0.0, -M_PI / 2); glutPostRedisplay(); break;     // BOTTOM
+      case '3': cam.set_angles(0.0, 0.0); glutPostRedisplay(); break;         // FRONT
+      case '4': cam.set_angles(M_PI / 2, 0.0); glutPostRedisplay(); break;      // LEFT
+      case '5': cam.set_angles(M_PI, 0.0); glutPostRedisplay(); break;        // BACK
+      case '6': cam.set_angles(-M_PI / 2, 0.0); glutPostRedisplay(); break;     // RIGHT
 
-         default: break;
+      default: break;
       }
    }
    catch (const std::exception&)
@@ -281,13 +308,13 @@ void drawOrigin()
    drawArrow(pos, pos + Vector3::multiply(Vector3::uz, scale), 0x000000FF, scale / 8);
 
    glColor3ub((color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF);
-   auto x1 = pos + Vector3::multiply(Vector3::ux, 1.1* scale);
+   auto x1 = pos + Vector3::multiply(Vector3::ux, 1.1 * scale);
    glRasterPos3d(x1.X(), x1.Y(), x1.Z());
    glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>("X"));
-   auto y1 = pos + Vector3::multiply(Vector3::uy, 1.1* scale);
+   auto y1 = pos + Vector3::multiply(Vector3::uy, 1.1 * scale);
    glRasterPos3d(y1.X(), y1.Y(), y1.Z());
    glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>("Y"));
-   auto z1 = pos + Vector3::multiply(Vector3::uz, 1.1* scale);
+   auto z1 = pos + Vector3::multiply(Vector3::uz, 1.1 * scale);
    glRasterPos3d(z1.X(), z1.Y(), z1.Z());
    glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>("Z"));
 
@@ -351,7 +378,7 @@ void handleDisplay()
                Vector3 look(0, 0, 0);
                if (d.multiplicity() == Domain::Multiplicity::MULTI)
                {
-                  for (auto &s : d.get_shell_list())
+                  for (auto& s : d.get_shell_list())
                      look += s.second.get().position();
                   look /= static_cast<double>(d.num_shells());
                }
@@ -431,7 +458,7 @@ void handleDisplay()
             if (help_width == 0) help_width = get_help_width();
             for (auto& txt : help)
             {
-               if (txt.first || sptr != nullptr) 
+               if (txt.first || sptr != nullptr)
                {
                   glRasterPos2i(viewport[2] - static_cast<GLint>(help_width), y - glutBitmapHeight(GLUT_BITMAP_9_BY_15) + viewport[3]);
                   glutBitmapString(GLUT_BITMAP_9_BY_15, reinterpret_cast<const unsigned char*>(txt.second.c_str()));
@@ -520,7 +547,7 @@ void SetupModel(const std::string& filename, const std::vector < std::string>& a
    stream.close();
 
    {
-      auto &section = settings.getSimulatorSection();
+      auto& section = settings.getSimulatorSection();
       if (section.seed()) rng.seed(section.seed());
    }
 
@@ -750,141 +777,141 @@ int main(int argc, char** argv)
       Model m;
       switch (localDemoInit)
       {
-         case 1:           // model file
+      case 1:           // model file
          SetupModel(modelfile, model_arguments, world, rng, rules);
          break;
 
-         case 2:
+      case 2:
+      {
+         std::cout << std::setw(14) << "state file = " << modelfile << "\n";
+         Persistence p;
+         if (p.retreive(modelfile)) p.retreive_egfrd(*sptr);
+         else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
+      } break;
+
+      case 3:
+      {
+         std::cout << std::setw(14) << "crash file = " << modelfile << "\n";
+         extSim.readSimFile(modelfile.c_str());     // try ASCII dump file (crash dump)
+         if (extSim.active()) sptr = nullptr;            // render logic uses extSim when sptr == null!
+         else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
+      } break;
+
+
+      case 0:
+      case 101: // Init GFRD (with three particle types in a box, cycling A -> B -> C -> A)
+      {
+         auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
+         auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
+         auto s3 = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-12, 0.25e-9));
+
+         world.initialize(1e-7, m);
+         world.throwInParticles(s1, 24, rng, false);
+         world.throwInParticles(s2, 14, rng, false);
+
+         rules.add_reaction_rule(ReactionRule(s1, 1.0E-6, std::vector < SpeciesTypeID > {s2}));
+         rules.add_reaction_rule(ReactionRule(s2, 1.0E-6, std::vector < SpeciesTypeID > {s3}));
+         rules.add_reaction_rule(ReactionRule(s3, 1.0E-6, std::vector < SpeciesTypeID > {s1}));
+      }
+      break;
+
+      case 102:            // demo DNA string, just for the fun
+      {
+         auto sG = m.add_structure_type(StructureType("Guanine"));
+         auto sC = m.add_structure_type(StructureType("Cytosine"));
+         auto sA = m.add_structure_type(StructureType("Adenine"));
+         auto sT = m.add_structure_type(StructureType("Thymine"));
+         auto sD = m.add_structure_type(StructureType("Helix"));
+         std::map<StructureTypeID, StructureTypeID> complement = { {sG, sT}, {sT, sG}, {sA, sC} ,{sC, sA} };
+         std::vector<StructureTypeID> sequence = { sG, sA, sT, sA, sA, sA, sT, sC, sT, sG, sG, sT, sC, sT, sT, sA, };
+
+         auto sX = m.add_species_type(SpeciesType("X", m.get_def_structure_type_id(), 1e-12, 3e-9));
+
+         world.initialize(1E-6, m);
+         auto ws = world.world_size();
+         auto wsid = world.get_def_structure_id();
+
+         double turns = 0.75;
+         double length = ws.X() / 8, radius = ws.X() / 80;
+         for (size_t i = 0; i < sequence.size(); i++)
          {
-            std::cout << std::setw(14) << "state file = " << modelfile << "\n";
-            Persistence p;
-            if (p.retreive(modelfile)) p.retreive_egfrd(*sptr);
-            else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
-         } break;
+            double f = static_cast<double>(i) / (sequence.size() - 1);
+            Vector3 posY = Vector3(ws.X() / 2, f * ws.Y(), ws.Z() / 2);
+            double phi = f * turns * 2 * M_PI;
+            double arclength = std::sqrt(std::pow(M_PI * 2 * length * turns, 2) + std::pow(ws.Y(), 2)) / (2 * (sequence.size() - 1));
+            Vector3 strand = length * Vector3(std::cos(phi), 0, std::sin(phi));
+            Vector3 vz = Vector3::transformVector(Vector3::ux, Matrix4::createRotationY(phi));
+            auto sID = sequence[i];
+            double alpha = std::atan2(ws.Y() / turns, 2 * M_PI * length);
 
-         case 3:
-         {
-            std::cout << std::setw(14) << "crash file = " << modelfile << "\n";
-            extSim.readSimFile(modelfile.c_str());     // try ASCII dump file (crash dump)
-            if (extSim.active()) sptr = nullptr;            // render logic uses extSim when sptr == null!
-            else THROW_EXCEPTION(std::runtime_error, "Could not loaded file.");
-         } break;
+            world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("", sID, wsid, Cylinder(posY - 0.5 * strand, radius, vz, length / 2))));
+            world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("", complement[sID], wsid, Cylinder(posY + 0.5 * strand, radius, vz, length / 2))));
 
-
-         case 0:
-         case 101: // Init GFRD (with three particle types in a box, cycling A -> B -> C -> A)
-         {
-            auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
-            auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
-            auto s3 = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-12, 0.25e-9));
-
-            world.initialize(1e-7, m);
-            world.throwInParticles(s1, 24, rng, false);
-            world.throwInParticles(s2, 14, rng, false);
-
-            rules.add_reaction_rule(ReactionRule(s1, 1.0E-6, std::vector < SpeciesTypeID > {s2}));
-            rules.add_reaction_rule(ReactionRule(s2, 1.0E-6, std::vector < SpeciesTypeID > {s3}));
-            rules.add_reaction_rule(ReactionRule(s3, 1.0E-6, std::vector < SpeciesTypeID > {s1}));
+            Vector3 vh = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(-alpha));
+            Vector3 vhh1 = Vector3::transformVector(vh, Matrix4::createRotationY(phi));
+            world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("Helix1", sD, wsid, Cylinder(posY - strand, 1.5 * radius, vhh1, arclength))));
+            Vector3 vhh2 = Vector3::transformVector(vh, Matrix4::createRotationY(phi + M_PI));
+            world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("Helix2", sD, wsid, Cylinder(posY + strand, 1.5 * radius, vhh2, arclength))));
          }
-         break;
 
-         case 102:            // demo DNA string, just for the fun
+         world.throwInParticles(sX, 20, rng, false);
+         //rules.add_interaction_rule(InteractionRule(sX, sD, 0.2, std::vector < SpeciesTypeID > {sX}));
+      }
+      break;
+
+      case 103:        // Init GFRD (with PlanarSurfaces, not functional yet)
+      {
+         auto sPlane = m.add_structure_type(StructureType("plane"));
+
+         auto sA = m.add_species_type(SpeciesType("A", sPlane, 2e-12, 1e-9));
+         auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-9));
+
+         world.initialize(6e-6, m);
+         auto ws = world.world_size();
+         auto wsid = world.get_def_structure_id();
+
+         auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
+         auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.3 * ws.X(), 0.3 * ws.Y(), false)));
+         auto psid = world.add_structure(plane);
+         UNUSED(psid);
+
+         for (int i = 0; i < 3; ++i)
          {
-            auto sG = m.add_structure_type(StructureType("Guanine"));
-            auto sC = m.add_structure_type(StructureType("Cytosine"));
-            auto sA = m.add_structure_type(StructureType("Adenine"));
-            auto sT = m.add_structure_type(StructureType("Thymine"));
-            auto sD = m.add_structure_type(StructureType("Helix"));
-            std::map<StructureTypeID, StructureTypeID> complement = { {sG, sT}, {sT, sG}, {sA, sC} ,{sC, sA} };
-            std::vector<StructureTypeID> sequence = { sG, sA, sT, sA, sA, sA, sT, sC, sT, sG, sG, sT, sC, sT, sT, sA, };
-
-            auto sX = m.add_species_type(SpeciesType("X", m.get_def_structure_type_id(), 1e-12, 3e-9));
-
-            world.initialize(1E-6, m);
-            auto ws = world.world_size();
-            auto wsid = world.get_def_structure_id();
-
-            double turns = 0.75;
-            double length = ws.X() / 8, radius = ws.X() / 80;
-            for (size_t i = 0; i < sequence.size(); i++)
-            {
-               double f = static_cast<double>(i) / (sequence.size() - 1);
-               Vector3 posY = Vector3(ws.X() / 2, f * ws.Y(), ws.Z() / 2);
-               double phi = f * turns * 2 * M_PI;
-               double arclength = std::sqrt(std::pow(M_PI * 2 * length*turns, 2) + std::pow(ws.Y(), 2)) / (2 * (sequence.size() - 1));
-               Vector3 strand = length * Vector3(std::cos(phi), 0, std::sin(phi));
-               Vector3 vz = Vector3::transformVector(Vector3::ux, Matrix4::createRotationY(phi));
-               auto sID = sequence[i];
-               double alpha = std::atan2(ws.Y() / turns, 2 * M_PI*length);
-
-               world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("", sID, wsid, Cylinder(posY - 0.5*strand, radius, vz, length / 2))));
-               world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("", complement[sID], wsid, Cylinder(posY + 0.5*strand, radius, vz, length / 2))));
-
-               Vector3 vh = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(-alpha));
-               Vector3 vhh1 = Vector3::transformVector(vh, Matrix4::createRotationY(phi));
-               world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("Helix1", sD, wsid, Cylinder(posY - strand, 1.5 * radius, vhh1, arclength))));
-               Vector3 vhh2 = Vector3::transformVector(vh, Matrix4::createRotationY(phi + M_PI));
-               world.add_structure(std::make_shared<CylindricalSurface>(CylindricalSurface("Helix2", sD, wsid, Cylinder(posY + strand, 1.5 * radius, vhh2, arclength))));
-            }
-
-            world.throwInParticles(sX, 20, rng, false);
-            //rules.add_interaction_rule(InteractionRule(sX, sD, 0.2, std::vector < SpeciesTypeID > {sX}));
+            auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2 * i * ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2 * ws.Y(), false)));
+            world.add_structure(plane2);
          }
-         break;
 
-         case 103:        // Init GFRD (with PlanarSurfaces, not functional yet)
+         world.throwInParticles(sA, 2, rng, false, 0.2 * ws, 0.8 * ws);
+         world.throwInParticles(sB, 1, rng, false);
+
+         // Reaction Rules bind and unbind to plane
+         rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
+         rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.2, std::vector < SpeciesTypeID > {sB}));
+      }
+      break;
+
+      case 104:
+      {
+         auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
+         auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
+
+         world.initialize(1e-7, m);
+
+         // Test Multi construction
+         world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(-3e-9, 0, 1e-8));
+         world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(0, 1.5e-9, 1e-8));
+         world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(3e-9, 0, 1e-8));
+         world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(-6e-9, -1.5e-9, 1e-8));
+         world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(6e-9, -1.5e-9, 1e-8));
+
+         // Test Pair construction1
+         const int particles = 8;
+         for (int i = 0; i < particles; ++i)
          {
-            auto sPlane = m.add_structure_type(StructureType("plane"));
-
-            auto sA = m.add_species_type(SpeciesType("A", sPlane, 2e-12, 1e-9));
-            auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-9));
-
-            world.initialize(6e-6, m);
-            auto ws = world.world_size();
-            auto wsid = world.get_def_structure_id();
-
-            auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 3.0));
-            auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(ws / 2, Vector3::ux, vy, 0.3 * ws.X(), 0.3 * ws.Y(), false)));
-            auto psid = world.add_structure(plane);
-            UNUSED(psid);
-
-            for (int i = 0; i < 3; ++i)
-            {
-               auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface(make_string() << "plane" << i, sPlane, wsid, Plane(0.25 * ws + Vector3(0.2*i*ws.X(), 0, 0), Vector3::uz, Vector3::uy, 0.2 * ws.X(), 0.2*ws.Y(), false)));
-               world.add_structure(plane2);
-            }
-
-            world.throwInParticles(sA, 2, rng, false, 0.2 * ws, 0.8 * ws);
-            world.throwInParticles(sB, 1, rng, false);
-
-            // Reaction Rules bind and unbind to plane
-            rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
-            rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.2, std::vector < SpeciesTypeID > {sB}));
+            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3((-particles / 2 + i) * world.world_size().X() / (particles + 2), 0, -1e-8));
+            world.add_particle(s2, world.get_def_structure_id(), world.world_size() / 2 + Vector3((-particles / 2 + i) * world.world_size().X() / (particles + 2), 4e-9, -1e-8));
          }
-         break;
-
-         case 104:
-         {
-            auto s1 = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 1e-9));
-            auto s2 = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 0.5e-9));
-
-            world.initialize(1e-7, m);
-
-            // Test Multi construction
-            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(-3e-9, 0, 1e-8));
-            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(0, 1.5e-9, 1e-8));
-            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(3e-9, 0, 1e-8));
-            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(-6e-9, -1.5e-9, 1e-8));
-            world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3(6e-9, -1.5e-9, 1e-8));
-
-            // Test Pair construction1
-            const int particles = 8;
-            for (int i = 0; i < particles; ++i)
-            {
-               world.add_particle(s1, world.get_def_structure_id(), world.world_size() / 2 + Vector3((-particles / 2 + i) * world.world_size().X() / (particles + 2), 0, -1e-8));
-               world.add_particle(s2, world.get_def_structure_id(), world.world_size() / 2 + Vector3((-particles / 2 + i) * world.world_size().X() / (particles + 2), 4e-9, -1e-8));
-            }
-         } break;
+      } break;
 
           case 105:
           {
@@ -1188,6 +1215,7 @@ int main(int argc, char** argv)
    glutPassiveMotionFunc(handlePassiveMouseMotion);
    glutMouseWheelFunc(handleMouseWheel); // Only works on Windows, workaround implemented in handleMouse()
    glutKeyboardFunc(handleKeyboard);
+   glutSpecialFunc(handleSpecial);
    glutDisplayFunc(handleDisplay);
    glutReshapeFunc(handleReshape);
    glutIdleFunc(handleIdle);

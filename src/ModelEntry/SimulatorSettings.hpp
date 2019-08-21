@@ -55,7 +55,7 @@ public:
       bool is_match = get_name_value(line, key, value);
       if (is_match)
       {
-         THROW_UNLESS_MSG(illegal_section_key, current_, "Key without section: " << line)
+         THROW_UNLESS_MSG(illegal_section_key, current_, "Key without section: " << line);
          current_->set_keypair(key, value);
       }
       else
@@ -63,7 +63,7 @@ public:
          std::smatch match;
          auto regex = std::regex(R"(^\s*([\w<>\$\(\)\^\']+[^;]*).*)");
          bool is_match = std::regex_match(line, match, regex);
-         THROW_UNLESS_MSG(illegal_section_value, !is_match, "Invalid line encountered: " << line)
+         THROW_UNLESS_MSG(illegal_section_value, !is_match, "Invalid line encountered: " << line);
       }
    }
 
@@ -75,7 +75,7 @@ public:
       auto value = std::string();
       bool is_match = get_name_value(line, key, value);
       if (is_match) variablesSection_.add_variable(key, value, true);
-      else THROW_EXCEPTION(illegal_argument, "Unexpected assignment in '" << line << "'.")
+      else THROW_EXCEPTION(illegal_argument, "Unexpected assignment in '" << line << "'.");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------

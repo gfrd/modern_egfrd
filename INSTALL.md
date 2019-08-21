@@ -47,8 +47,7 @@
 4. Execute the sample:
 
    ```
-   > cd bin
-   > ./RunGfrd ../../samples/simple/simple.gfrd
+   > ./bin/RunGfrd ../samples/simple/simple.gfrd
    ```
 
 5. Build and execute tests
@@ -67,8 +66,7 @@
    build the project:
    ```
    > make gfrdVisualizer
-   > cd bin
-   > ./gfrdVisualizer
+   > ./bin/gfrdVisualizer
    ```
    When running press keys f, d, i, s and a for some action, press h for help.
 
@@ -98,7 +96,7 @@
    ```
    > SET VCPKG_ROOT=<your vcpkg path>
    ```
-   or for a more permanent setting, open 'Advanced System Settings' and set the _VCPKG_ROOT_ environment here. Then also check that 'vcpkg' directory and 'CMake' are in the PATH environment variable.
+   or for a more permanent solution, open the Windows 'Advanced System Settings' and set the environment variable _VCPKG_ROOT_ there. Then also check that 'vcpkg' directory and 'CMake' are in the PATH environment variable.
    
 
 3. Get source codes:
@@ -120,16 +118,17 @@
    ```
    > mkdir build
    > cd build
-   > cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
+   > cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
    > cmake --build . --config Release --target RunGfrd
    > 	
    ```
-
+   NOTE: for VS2019 you need to install CMake version 3.14, and include it in your PATH environment before the VS path. (The CMake version 3.13 installed with VS2019 does not include the right generator).
+   
+   
 5. Execute the sample:
 
    ```
-   > cd bin\Release
-   > RunGfrd.exe ..\..\..\samples\simple\simple.gfrd
+   > .\bin\Release\RunGfrd.exe ..\samples\simple\simple.gfrd
    ```
 
 6. Build and execute tests
@@ -144,8 +143,7 @@
    build the project:
    ```
    > cmake --build . --config Release --target gfrdVisualizer
-   > cd bin/Release
-   > gfrdVisualizer
+   > .\bin\Release\gfrdVisualizer
    ```
    When running press keys f, d, i, s and a for some action, press h for help.
    
@@ -156,7 +154,7 @@
 		
 4. Configure and build:
 
-   Start Visual Studio 2017 and choose 'File', 'Open', 'Folder', select 'modern_egfrd' root folder.
+   Start Visual Studio and choose 'File', 'Open', 'Folder', select 'modern_egfrd' root folder.
 
    Visual Studio will process the CMakeList.txt and CMakeSettings.json configuration files and generate the projects.
    
@@ -226,8 +224,7 @@
 4. Execute the sample:
 
    ```
-   > cd bin
-   > ./RunGfrd ../../samples/simple/simple.gfrd
+   > ./bin/RunGfrd ../samples/simple/simple.gfrd
    ```
 
 5. Build and execute tests
@@ -253,8 +250,7 @@
    It should now find 'OpenGL' and 'FreeGlut' so you can build the visualizer:
    ```
    > make gfrdVisualizer
-   > cd bin
-   > ./gfrdVisualizer
+   > ./bin/gfrdVisualizer
    ```
    When running press keys f, d, i, s and a for some action, press h for help.
 
@@ -280,6 +276,7 @@
    | CentOS 6.6           |           | g++ v4.9.2    | v1.13   |
    | Win7 / VS2017        | v3.7      | MSVC v19.10   | v1.16   |
    | Win10 / VS2017       | v3.7      | MSVC v19.10   | v2.3    |
+   | Win10 / VS2019       | v3.14.2   | MSVC v19.20   | v2.3    |
    | macOS Mojave 10.14.1 | v3.13     | LLVM v10.0.0  | v2.5    |
 
    

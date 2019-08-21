@@ -5,6 +5,8 @@
 // --------------------------------------------------------------------------------------------------------------------------------
 
 #include "ShellID.hpp"
+#include <ccd/ccd.h>
+#include "../Common/ccdSupport.h"
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -259,13 +261,13 @@ struct ShellCreateUtils
 
    // The shell_overlap_check is a MatrixSpace each_neighbor_xx processor that checks for overlapping shells (return domain list).
    template<typename TMatrixSpace>
-   class shell_overlap_check
+   class shell_overlap_check_sphere
    {
       typedef typename TMatrixSpace::const_iterator         const_iterator;
 
    public:
 
-      shell_overlap_check(const Sphere& sphere) : sphere_(sphere), overlap_domains_() { }
+      shell_overlap_check_sphere(const Sphere& sphere) : sphere_(sphere) { }
 
       void operator()(const_iterator i, const Vector3& offset)
       {
@@ -290,6 +292,59 @@ struct ShellCreateUtils
       std::vector<DomainID>      overlap_domains_;
    };
 
+
+   // The shell_overlap_check is a MatrixSpace each_neighbor_xx processor that checks for overlapping shells (return domain list).
+   template<typename TMatrixSpace>
+   class shell_overlap_check_cylinder
+   {
+      typedef typename TMatrixSpace::const_iterator         const_iterator;
+
+   public:
+
+      shell_overlap_check_cylinder(const Cylinder& cylinder, double scale) : cylinder_(cylinder), scale_(scale)
+      {
+         // Since LibCCD does not handle small positions/sizes very well (< 1E-5, regadless of tollerance settings)
+         // we scale our world up to the 1e0..1e1 range (for cell size)
+
+         CCD_INIT(&ccd);
+         ccd.support1 = ccdSupport;
+         ccd.support2 = ccdSupport;
+         ccdSetCyclinder(&c1, cylinder, scale);
+      }
+
+      void operator()(const_iterator i, const Vector3& offset)
+      {
+         const Shell& shell = (*i).second;
+         if (shell.shape() == Shell::Shape::SPHERE)
+         {
+            auto sphere = shell.get_sphere().offset(offset);
+#if 0       // we could use libCCD
+            ccd_sphere_t s2;
+            ccdSetSphere(&s2, sphere, scale);
+            if (ccdGJKIntersect(&c1, &s2, &ccd)) ovelap_domains_.emplace_back(shell.did());
+#else       // but this is easier and faster
+            double distance = cylinder_.distance(sphere.position());
+            if (distance < sphere.radius()) ovelap_domains_.emplace_back(shell.did());
+#endif
+         }
+         else if (shell.shape() == Shell::Shape::CYLINDER)
+         {
+            auto cylinder = shell.get_cylinder().offset(offset);
+            ccd_cyl_t c2;
+            ccdSetCyclinder(&c2, cylinder, scale_);
+            if (ccdGJKIntersect(&c1, &c2, &ccd)) ovelap_domains_.emplace_back(shell.did());
+         }
+      }
+
+      std::vector<DomainID> overlap() { return std::move(ovelap_domains_); }     // move, so only call once
+
+   private:
+      const Cylinder& cylinder_;
+      std::vector<DomainID> ovelap_domains_;
+      double scale_;
+      ccd_t ccd;
+      ccd_cyl_t c1;
+   };
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
