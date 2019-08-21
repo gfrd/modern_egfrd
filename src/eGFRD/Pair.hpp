@@ -524,6 +524,12 @@ public:
         auto height = 2 * min_radius;
         auto D_r = D_tot();
 
+        // Prevent domain creation if neither particle can move, since no events will be possible
+        if (D_r == 0.0)
+        {
+            return false;
+        }
+
         auto plane = structure_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();

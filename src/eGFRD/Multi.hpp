@@ -186,6 +186,7 @@ private:
               }
               else
               {
+                  // TODO: look up structure in World and verify it's a PlanarSurface
                   // We assume PlanarSurface here
                   Log("GFRD").info() << "Assuming structure that a BD-simulated particle is attached to is a PlanarSurface. Other types of structures not yet supported.";
                   scale = 1.0 / (2 * M_PI * r01); // 2 pi r = circumference of a circle

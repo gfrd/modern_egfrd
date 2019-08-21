@@ -1,11 +1,12 @@
 ; eGFRD accuracy test for two 3D diffusing species
+; Version: 1.0.0
 
 [Simulator]
 Seed = 0xdeadbeef
 PrepareTime = 0.1                      ; seconds
 EndTime = 60.0                         ; seconds
 MaintenanceStep = 100000
-MaintenanceFile = sim_state_3D.dat
+MaintenanceFile = sim_state_3D_v1_0_0.dat
 
 [Variables]
 N_A = 6.022e23                         ; Avogadro's constant
@@ -17,9 +18,9 @@ D_A = 1e-12                            ; m^2 s^-1
 D_B = 0                                ; m^2 s^-1
 sigma = 2 * r                          ; m
 k_D = 4 * pi * sigma * (D_A + D_B)     ; m^3 s^-1
-;K_d = Conc / 2.0 * 1000                ; mol m^-3
-K_d = 144e-9 * 1000.0                  ; mol m^-3
-;K_d = 2e17 * 1000.0                    ; mol m^-3
+K_d = Conc / 2.0 * N_A * 1000                ; m^-3
+;K_d = 144e-9 * N_A * 1000.0            ; m^-3
+;K_d = 2e17 * 1000.0                    ; m^-3
 k_a = k_D                              ; m^3 s^-1
 k_d = K_d * k_a                        ; (mol) s^-1
 
@@ -51,10 +52,10 @@ C = 0
 
 [CopyNumbers]
 Interval = 1e-1
-;File = copy_num_3D.dat
+File = copy_num_3D_v1_0_0.dat
 Type = average
 
 [ParticlePositions]
 Interval = 1e-3; sec
-File = positions_3D.dat
+File = positions_3D_v1_0_0.dat
 

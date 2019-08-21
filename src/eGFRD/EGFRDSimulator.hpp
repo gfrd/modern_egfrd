@@ -1,3 +1,5 @@
+#include <random>
+
 #pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -465,6 +467,8 @@ private:
       # A(any structure) -> B(same structure) + C(same structure or 3D)
       */
 
+      auto world_id = world().get_def_structure_id();
+
       switch (reaction_rule.get_products().size())
       {
       case 0: // decay to zero
@@ -480,15 +484,39 @@ private:
 
          std::vector<Vector3> product_pos_list;
          StructureID product_structure_id;
-         if (reactant_species.structure_type_id() != product_species.structure_type_id())
+         if(reactant_species.structure_type_id() == product_species.structure_type_id())
          {
-            THROW_EXCEPTION(not_implemented, "Structure change not available.");
+             // no change in position
+             product_pos_list.emplace_back(reactant.second.position());
+             product_structure_id = world_.get_structure(reactant.second.structure_id())->id();
+         }
+         else if(product_species.structure_type_id() == world_id)
+         {
+             auto prev_structure = world_.get_structure(reactant.second.structure_id());
+             auto plane = dynamic_cast<PlanarSurface *>(prev_structure.get());
+             if(plane != nullptr) {
+                 // Tom: this was (GfrdCfg.MINIMAL_SEPARATION_FACTOR - 1), but this is likely wrong because the particle
+                 // would then intersect the structure.
+                 auto vector_length = product_species.radius() * (GfrdCfg.MINIMAL_SEPARATION_FACTOR);
+
+                 // An exit position in the direction of the plane's unit vector
+                 product_pos_list.emplace_back(reactant.second.position() + vector_length * plane->shape().unit_z() * 1);
+
+                 if (!plane->shape().is_one_sided()) {
+                     // An exit position in the direction opposite of the plane's unit vector
+                     product_pos_list.emplace_back(reactant.second.position() + vector_length * plane->shape().unit_z() * -1);
+                 }
+             } else {
+                 THROW_EXCEPTION(not_implemented, "Structure type of reaction product not yet implemented.");
+             }
+
+             product_structure_id = world_id;
+             // Shuffle the position candidates to randomise where the particle ends up
+             std::shuffle(product_pos_list.begin(), product_pos_list.end(), std::mt19937(std::random_device()()));
          }
          else
          {
-            // no change in position
-            product_pos_list.emplace_back(reactant.second.position());
-            product_structure_id = world_.get_structure(reactant.second.structure_id())->id();
+             THROW_EXCEPTION(not_implemented, "Structure change not available.");
          }
 
          // make room, when particle relocates or radius is increased
@@ -526,43 +554,111 @@ private:
          const SpeciesType& product2_species = world_.get_species(reaction_rule.get_products()[1]);
          double r01 = product1_species.radius() + product2_species.radius();
 
-         if (reactant_species.structure_type_id() != product1_species.structure_type_id() || product1_species.structure_type_id() != product2_species.structure_type_id())
-         {
+         const auto same_struct_species = product1_species.structure_type_id() == reactant_species.structure_type_id() ? product1_species : product2_species;
+         const auto other_species = same_struct_species == product1_species ? product2_species : product1_species;
+         const auto D1 = same_struct_species.D();
+         const auto D2 = other_species.D();
+
+         if (reactant_species.structure_type_id() != same_struct_species.structure_type_id() ||
+         (same_struct_species.structure_type_id() != other_species.structure_type_id() &&
+         other_species.structure_type_id() != world_id)) {
             THROW_EXCEPTION(not_implemented, "Structure change not available.");
          }
 
          // when fire_single-reaction is called from within a Pair domain, the pair-partner particle may be in the way of two products, so try 4 random placements
          for (int retry = 4; retry > 0; --retry)
          {
-            // calculate a random vector in the structure with unit length
-            auto reactant_structure = world_.get_structure(reactant.second.structure_id());
-            Vector3 iv = GfrdCfg.MINIMAL_SEPARATION_FACTOR * reactant_structure->random_vector(r01, rng_);
+             if(product1_species.structure_type_id() == reactant_species.structure_type_id() &&
+                product2_species.structure_type_id() == reactant_species.structure_type_id())
+             {
+                 /* Reaction: A (structure) -> B (same structure) + C (same structure) */
 
-            double Dtot = product1_species.D() + product2_species.D();
-            Vector3 pos1 = reactant.second.position() - iv * (Dtot != 0.0 ? product1_species.D() / Dtot : 0.5);
-            Vector3 pos2 = reactant.second.position() + iv * (Dtot != 0.0 ? product2_species.D() / Dtot : 0.5);
+                 // calculate a random vector in the structure with unit length
+                 auto reactant_structure = world_.get_structure(reactant.second.structure_id());
+                 Vector3 iv = GfrdCfg.MINIMAL_SEPARATION_FACTOR * reactant_structure->random_vector(r01, rng_);
 
-            StructureID product1_structure_id = reactant_structure->id();     // no change in structure
-            StructureID product2_structure_id = reactant_structure->id();
+                 double Dtot = product1_species.D() + product2_species.D();
+                 Vector3 pos1 = reactant.second.position() - iv * (Dtot != 0.0 ? product1_species.D() / Dtot : 0.5);
+                 Vector3 pos2 = reactant.second.position() + iv * (Dtot != 0.0 ? product2_species.D() / Dtot : 0.5);
 
-            pos1 = world_.apply_boundary(pos1);
-            pos2 = world_.apply_boundary(pos2);
+                 StructureID product1_structure_id = reactant_structure->id();     // no change in structure
+                 StructureID product2_structure_id = reactant_structure->id();
 
-            auto ol1 = world_.test_particle_overlap(Sphere(pos1, product1_species.radius()), reactant.first);
-            auto ol2 = world_.test_particle_overlap(Sphere(pos2, product2_species.radius()), reactant.first);
-            if (!ol1 && !ol2)     // no overlap
-            {
-               double radius = std::max(world_.distance(reactant.second.position(), pos1) + product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
-                  world_.distance(reactant.second.position(), pos2) + product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
-               burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+                 pos1 = world_.apply_boundary(pos1);
+                 pos2 = world_.apply_boundary(pos2);
 
-               world_.remove_particle(reactant.first);
-               auto newparticle1 = world_.add_particle(product1_species.id(), product1_structure_id, pos1);
-               auto newparticle2 = world_.add_particle(product2_species.id(), product2_structure_id, pos2);
-               if (rrec_) rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first, newparticle2.first);
-               return std::vector<particle_id_pair>({ newparticle1, newparticle2 });
-            }
-            //Log("GFRD").info("single reaction %d: placing product(s) failed, retry %d, iv: %g,%g,%g l=%g", reactant.first, retry, iv.X(), iv.Y(), iv.Z(), iv.length());
+                 auto ol1 = world_.test_particle_overlap(Sphere(pos1, product1_species.radius()), reactant.first);
+                 auto ol2 = world_.test_particle_overlap(Sphere(pos2, product2_species.radius()), reactant.first);
+                 if (!ol1 && !ol2)     // no overlap
+                 {
+                     double radius = std::max(world_.distance(reactant.second.position(), pos1) +
+                                              product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
+                                              world_.distance(reactant.second.position(), pos2) +
+                                              product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
+                     burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+
+                     world_.remove_particle(reactant.first);
+                     auto newparticle1 = world_.add_particle(product1_species.id(), product1_structure_id, pos1);
+                     auto newparticle2 = world_.add_particle(product2_species.id(), product2_structure_id, pos2);
+                     if (rrec_)
+                         rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first,
+                                                       newparticle2.first);
+                     return std::vector<particle_id_pair>({newparticle1, newparticle2});
+                 }
+                 //Log("GFRD").info("single reaction %d: placing product(s) failed, retry %d, iv: %g,%g,%g l=%g", reactant.first, retry, iv.X(), iv.Y(), iv.Z(), iv.length());
+             }
+             else if (same_struct_species.structure_type_id() == reactant_species.structure_type_id() &&
+                        other_species.structure_type_id() == world_id) {
+                 /* Reaction: A (plane) -> B (plane) + C (world / 3D) */
+
+                 auto plane = dynamic_cast<PlanarSurface *>(world_.get_structure(reactant.second.structure_id()).get());
+                 if (plane != nullptr) {
+                     // The scaling factor is needed to make the anisotropic diffusion problem
+                     // of the IV into an isotropic one.
+                     auto scaling_factor = sqrt((D1 + D2) / D2);
+                     auto pos1 = reactant.second.position();
+                     auto distance = r01 * scaling_factor * GfrdCfg.MINIMAL_SEPARATION_FACTOR;
+
+                     auto offset = Vector3::random(rng_) * distance;
+
+                     // Make sure the particle is placed on the correct side of the plane, if it is single-sided
+                     if (plane->shape().is_one_sided() && Vector3::dot(plane->shape().unit_z(), offset) < 0)
+                     {
+                         offset *= -1;
+                     }
+
+                     // Put second particle at the edge of the first particle's shell
+                     // TODO: previously positions were determined from Mixed2D3D.do_back_transform(), with
+                     // reactant_pos as CoM and (r1 + r2) * random unit vector. This does not keep the first product
+                     // on the structure, however, and seems erroneous. "eGFRD in all dimensions", supplementary
+                     // information, section S1.2.1 mentions that one product should be placed at reactant_pos, and the
+                     // other product should be put at contact with the first at a random orientation.
+                     auto pos2 = pos1 + offset;
+                     auto ol1 = world_.test_particle_overlap(Sphere(pos1, same_struct_species.radius()), reactant.first);
+                     auto ol2 = world_.test_particle_overlap(Sphere(pos2, other_species.radius()), reactant.first);
+                     if (!ol1 && !ol2)     // no overlap
+                     {
+                         double radius = std::max(world_.distance(reactant.second.position(), pos1) +
+                                                  product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
+                                                  world_.distance(reactant.second.position(), pos2) +
+                                                  product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
+                         burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+
+                         world_.remove_particle(reactant.first);
+                         auto newparticle1 = world_.add_particle(same_struct_species.id(), reactant.second.structure_id(), pos1);
+                         auto newparticle2 = world_.add_particle(other_species.id(), world_id, pos2);
+                         if (rrec_)
+                             rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first,
+                                                           newparticle2.first);
+                         return std::vector<particle_id_pair>({newparticle1, newparticle2});
+                     }
+                 }
+                 else
+                 {
+                     /* Reaction: A (some structure) -> B (same structure) + C (world / 3D) */
+                     THROW_EXCEPTION(not_implemented, "Structure type of reaction product not yet implemented.");
+                 }
+             }
          }
 
          // Process (the lack of) change
