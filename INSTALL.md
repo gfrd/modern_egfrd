@@ -13,11 +13,11 @@
 
    If you use Fedora or any other RedHat lines of distributions: 
    ```
-   > sudo yum install gcc-c++ cmake gsl gsl-devel
+   > sudo yum install gcc-c++ cmake gsl gsl-devel libccd libccd-devel
    ```
    or on Ubuntu Linux and some other Debian families, install the following:
    ```
-   > sudo apt-get install gcc-c++ cmake gsl-bin libgsl0-dev
+   > sudo apt-get install gcc-c++ cmake gsl-bin libgsl0-dev libccd2 libccd-dev
    ```
 2. Get source codes: 
 
@@ -89,7 +89,7 @@
    
    Get and build the required packages:
    ```
-   > vcpkg install gsl:x64-windows freeglut:x64-windows
+   > vcpkg install gsl:x64-windows freeglut:x64-windows ccd:x64-windows
    ```
    
    Setup a VCPKG_ROOT environment variable:
@@ -194,7 +194,7 @@
 
    Assuming 'Command Line Tools or Xcode' and 'HomeBrew' are installed: 
    ```
-   > brew install cmake gsl
+   > brew install cmake gsl libccd
    ```
 2. Get source codes: 
 
