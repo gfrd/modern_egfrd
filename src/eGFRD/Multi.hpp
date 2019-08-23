@@ -107,6 +107,9 @@ public:
       { Log("GFRD").debug() << "BD time step set by largest reaction rate, k_max = " << k_max << ", r_min = " << r_min;}
 
       dt_ = dt_reaction > 0 ? std::min(dt_reaction, dt_motion) : dt_motion;
+      if (dt_ < 1e-9) {
+          Log("EGFRD").warn() << "BD timestep was calculated as " << dt_ << ". This is a very small number, and might cause the simulation to freeze.";
+      }
       if (dt_ < dt_min)
       {
          dt_ = dt_min;
@@ -188,7 +191,7 @@ private:
               {
                   // TODO: look up structure in World and verify it's a PlanarSurface
                   // We assume PlanarSurface here
-                  Log("GFRD").info() << "Assuming structure that a BD-simulated particle is attached to is a PlanarSurface. Other types of structures not yet supported.";
+//                  Log("GFRD").info() << "Assuming structure that a BD-simulated particle is attached to is a PlanarSurface. Other types of structures not yet supported.";
                   scale = 1.0 / (2 * M_PI * r01); // 2 pi r = circumference of a circle
               }
 

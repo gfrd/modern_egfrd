@@ -54,11 +54,13 @@ public:
    static double draw_r_wrapper(RandomNumberGenerator& rng, const GreensFunction& gf, double dt, double a, double sigma = -1)
    {
       double r;
+      unsigned long count = 0;
       do
       {
          double rnd = rng.uniform(0, 1);
          r = gf.drawR(rnd, dt);
          LOGDRAW(Logger("CHECK").info("drawR: %s, rnd=%.16g, dt=%.16g, %s => r=%.16g", gf.type_name(), rnd, dt, gf.dump().c_str(), r));
+         THROW_UNLESS_MSG(propagation_error, count++ < 1e5, "draw_r_wrapper() stuck in a loop, can't continue.");
       } while (r > a || (sigma >= 0 && r <= sigma));   // redraw; shouldn't happen often
       return r;
    }

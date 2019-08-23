@@ -943,7 +943,7 @@ int main(int argc, char** argv)
 //              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
 
 //            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
-              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 2.5e-21, std::vector<SpeciesTypeID>{sC}));
 //              rules.add_reaction_rule(ReactionRule(sB, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
 
               // Reaction Rules bind and unbind to plane

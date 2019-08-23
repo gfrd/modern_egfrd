@@ -109,6 +109,8 @@ namespace squared_distance
         double D = a*c - b*b;
 
         /*
+         * (N is numerator, D is denominator)
+         *
          * lambda = (be - cd) / (ac - b^2)
          *        = (be - cd) / D
          *        = N_lambda / D_lambda
@@ -191,8 +193,8 @@ namespace squared_distance
         }
 
         // Finally do the division to get lambda and mu
-        lambda = (feq(fabs(N_lambda), 0) ? 0.0 : N_lambda / D_lambda);
-        mu = (feq(fabs(N_mu), 0) ? 0.0 : N_mu / D_mu);
+        lambda = (feq(fabs(N_lambda), 0, 0.0, 1e-20) ? 0.0 : N_lambda / D_lambda);
+        mu = (feq(fabs(N_mu), 0, 0.0, 1e-20) ? 0.0 : N_mu / D_mu);
 
         // w is the vector between the two points on the two segments, that has the/a minimal length
         Vector3 w = w0 + (lambda * u) - (mu * v);
