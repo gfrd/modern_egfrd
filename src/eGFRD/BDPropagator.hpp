@@ -343,7 +343,8 @@ private:
       }
 
       auto overlap = world_.check_particle_overlap(Sphere(new_pos, radius + reaction_length_), pid);
-      bool bounced = std::any_of(overlap.begin(), overlap.end(), [&](const particle_id_pair_and_distance& e) {return e.second < -reaction_length_; });
+      bool bounced = std::any_of(overlap.begin(), overlap.end(), [&](const particle_id_pair_and_distance& e) {return e.second < -reaction_length_; }) ||
+              world_.test_surface_overlap(Sphere(new_pos, radius), old_pos, old_struct_id, 0);
 
       if (bounced)
       {
