@@ -301,7 +301,7 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
                                              const std::vector<ShellID>& ignored_shells,
                                              bool social_scaling)
 {
-    double max_dynamic_height = 10e6;
+    double max_dynamic_height = 1e6;
     auto structures = world.get_structures();
 
     for(const auto& structure : structures)
@@ -326,7 +326,7 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
     max_dynamic_height = std::min(max_dynamic_height, col.max_height);
 
 
-    if(social_scaling && max_dynamic_height != 10e6)
+    if(social_scaling && max_dynamic_height != 1e6)
     {
         return social_correction(max_dynamic_height, col.limiting_shell_type);
     }
@@ -341,7 +341,7 @@ double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const
                                              const std::vector<StructureID>& ignored_structures,
                                              const std::vector<ShellID>& ignored_shells,
                                              bool social_scaling) {
-    double max_radius = 10e6;
+    double max_radius = 1e6;
     auto structures = world.get_structures();
 
     for (const auto &structure : structures) {
@@ -367,7 +367,7 @@ double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const
     matrixSpace.each_neighbor_cyclic(matrixSpace.index(start1), col);
     max_radius = std::min(max_radius, col.max_radius);
 
-    if(social_scaling && max_radius < 10e6)
+    if(social_scaling && max_radius < 1e6)
     {
         return social_correction(max_radius, col.limiting_shell_type);
     }

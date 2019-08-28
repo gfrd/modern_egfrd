@@ -116,7 +116,7 @@ struct WorldNoBounds;
 
 // Specify customized Matrix Cell grid on build command line (e.q. make -DMATRIXSIZE=4)
 #ifndef MATRIXSIZE
-#define MATRIXSIZE 4
+#define MATRIXSIZE 8
 #endif
 
 // Specify build configuration of world/simulator types (changing these needs rebuild of sources, only one kind of simulator per build is supported)

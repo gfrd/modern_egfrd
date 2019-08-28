@@ -91,7 +91,7 @@ public:
       // is dominated by convection or diffusion, respectively. tau_Dv is the upper limit of time step dt.
       auto tau_Dv = get_min_tau_Dv(step_size_factor * r_min, species);
 
-      auto Pacc_max = 0.1;  // Maximum allowed value of the acceptance probability. // TESTING was 0.01
+      auto Pacc_max = 0.01; // Maximum allowed value of the acceptance probability. // TESTING was 0.01
                             // This should be kept very low (max. 0.01), otherwise the approximation of
                             // treating the reaction as two sequential attempts (first move, then react)
                             // might break down!
