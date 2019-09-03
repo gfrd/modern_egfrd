@@ -47,7 +47,7 @@ inline double social_correction(double size, const Shell::Code shell_type)
             return size / 1.1;
         case Shell::Code::NORMAL:
             // TODO: add a globally tweakable distance divider, that gets optimised in equilibration phase of simulation
-            return size;
+            return size / 1.1;
         default:
             THROW_EXCEPTION(illegal_argument, "Shell is not of init, multi, or normal type");
             break;
