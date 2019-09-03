@@ -1,28 +1,31 @@
 ; eGFRD equilibrium simulation
-;
-; help
-;
 
 
 [Variables]
-V  = 40e-18                            ; 40 femto liter = 40 atto m^3
+C = 1E-9                               ; concentration in Molar (1 nanoMolar)
 ka = 1e-19                             ; association constant in m^3*s^-1
-kd = 2e-2                              ; dissociation constant in s^-1
+kd = 1e-1                              ; dissociation constant in s^-1
 N = 100                                ; number of particles A and B
+V = N / (C * 1E3 * NA)                 ; volume in m^3
+seed = 0x8B7B8918                      ; pseudo random number generator start seed
+cnfile = $fmt('equi_%0.0e.dat', C)     ; copy number output file
+sfile = $'simstate.bin'                ; name of simulator state dump file
 
 ; Calculate the analytic average number of C particles in equilibrium
-Kd = kd / ka
-Nc_th = (2*N+Kd*V - sqrt( (2*N+Kd*V)^2 - 4*N*N)) / 2
+kD = kd / ka
+Nc_th = (2*N+kD*V - sqrt( (2*N+kD*V)^2 - 4*N*N)) / 2
 
 
 [Simulator]
-MaintenanceStep = 100000               ; check simulator internal consistency every N steps
-MaintenanceFile = sim_dump.out         ; dump full simulator state to file at maintenance cycle
-
+Seed = seed
+MaintenanceStep = 1E6                  ; check simulator internal consistency every N steps
+MaintenanceFile = $sfile               ; dump full simulator state to file at maintenance cycle
+    PrepareTime = 100
+        EndTime = 1000
 
 [World]
-;Matrix = 8
-Size = V^(1/3)                         ; volume in m^3 to cube-length in meter
+Matrix = 8
+  Size = V^(1/3)                         ; volume in m^3 to cube-length in meter
 
 [SpeciesType]
 Name = A B C
@@ -39,6 +42,11 @@ A = N                                  ; insert A & B particles no C particles
 B = N
 C = 0
 
+[Progress]
+Width = 20
+
 [CopyNumbers]
-Interval = 1                           ; output particle count every second
-Type = Average
+Interval = 50                          ; output particle count
+;Interval = 0.1
+File = $cnfile
+    Type = Average

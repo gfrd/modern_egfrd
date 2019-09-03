@@ -1,15 +1,15 @@
 ; eGFRD accuracy test for two 2D diffusing species
 
 [Simulator]
-Seed = 0xdeadbeef
-PrepareTime = 0.1                      ; seconds
-EndTime = 60.0                         ; seconds
+Seed = 0xdead1eaf
+PrepareTime = 10                      ; seconds
+EndTime = 100.0                         ; seconds
 
 [Variables]
 N_A = 6.022e23                         ; Avogadro's constant
 V = 1e-15                              ; 1 femto liter
 World_size = (1e-3 * V) ^ (1/3)        ; Liter to cube-length in m
-N = 10                                 ; number of particles for A and B
+N = 20                                 ; number of particles for A and B
 Conc = N / N_A / V                     ; initial concentration for A and B, mol liter^-1
 r = 1e-9                               ; m
 D = 1e-13                              ; m^2 s^-1
@@ -33,8 +33,8 @@ Type = PlanarSurface
 Position = (0.5 * World_size, 0, 0.5 * World_size)
 Vx = (1,0,0)
 Vy = (0,0,1)
-Lx = 0.5 * World_size
-Ly = 0.5 * World_size
+Lx = 0.5 * World_size * 1.1
+Ly = 0.5 * World_size * 1.1
 
 [SpeciesType]
 Name = A
@@ -63,6 +63,9 @@ kd = k_d
 A = N
 B = N
 C = 0
+
+[Progress]
+Width=20
 
 [CopyNumbers]
 Interval = 1e-1
