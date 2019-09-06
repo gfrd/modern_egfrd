@@ -65,12 +65,20 @@ inline double find_maximal_cylinder_height_to_plane(Vector3 start1, Vector3 unit
     auto f = [start1, unit_z, height_static, scaling_factor, plane, start2](double height_dynamic) {
         Vector3 end1 = start1 + unit_z * (height_static + height_dynamic);
         auto end2 = plane->project_point(end1).first;
-        auto squared_distance = squared_distance::line_segments(start1, end1, start2, end2);
+        double sq_distance;
+
+        if(start2 == end2) {
+            sq_distance = squared_distance::line_segment_point(start1, end1, start2);
+        }
+        else
+        {
+            sq_distance = squared_distance::line_segments(start1, end1, start2, end2);
+        }
 
         // needed_distance is the cylinder radius required at given height, as determined by the scaling factor
         // that ensures isotropic diffusion of IV
         auto needed_distance = height_dynamic * scaling_factor;
-        return squared_distance - needed_distance*needed_distance;
+        return sq_distance - needed_distance*needed_distance;
     };
 
     if(f(upper_limit) > 0.0) {
@@ -82,7 +90,7 @@ inline double find_maximal_cylinder_height_to_plane(Vector3 start1, Vector3 unit
     root_fsolver_wrapper solver;
     solver.set(&F, 0, upper_limit);
     try {
-        return solver.findRoot(1e-18, 1e-12, "scaling::find_maximal_cylinder_height_to_plane");
+        return solver.findRoot(1e-22, 1e-12, "scaling::find_maximal_cylinder_height_to_plane");
     }
     catch(const gfrd_exception& e)
     {
@@ -100,7 +108,7 @@ inline double find_maximal_cylinder_height_to_segment(Vector3 start1, Vector3 un
 
     auto f = [start1, unit_z, height_static, scaling_factor, start2, end2, other_radius](double height_dynamic) {
         Vector3 end1 = start1 + unit_z * (height_static + height_dynamic);
-        auto squared_distance = 0.0;
+        double squared_distance;
 
         if(start2 != end2)
         {
@@ -314,10 +322,10 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
             }
 
             auto transposed_base = world.cyclic_transpose(base_pos, plane->position());
-            auto calculated_max_height = find_maximal_cylinder_height_to_plane(base_pos, unit_z,
+            auto calculated_max_height = find_maximal_cylinder_height_to_plane(transposed_base, unit_z,
                                                                                height_static,
                                                                                scaling_factor, plane);
-            max_dynamic_height = std::min(max_dynamic_height, calculated_max_height);
+            max_dynamic_height = std::min(max_dynamic_height, calculated_max_height / GfrdCfg.SAFETY);
         }
     }
 
@@ -326,7 +334,10 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
     max_dynamic_height = std::min(max_dynamic_height, col.max_height);
 
 
-    if(social_scaling && max_dynamic_height != 1e6)
+    // If we are limited by another domain, and not by a structure, apply social scaling corrections
+    // to prevent neighbouring particles from greedily taking too much space, which would cause suboptimal
+    // domain sizes and propagation times.
+    if(social_scaling && max_dynamic_height != 1e6 && max_dynamic_height == col.max_height)
     {
         return social_correction(max_dynamic_height, col.limiting_shell_type);
     }
@@ -358,7 +369,16 @@ double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const
 
             auto start2 = plane->project_point(transposed_start1).first;
             auto end2 = plane->project_point(transposed_end1).first;
-            auto distance = std::sqrt(squared_distance::line_segments(transposed_start1, transposed_end1, start2, end2));
+            double distance;
+
+            if(start2 == end2) {
+                distance = std::sqrt(squared_distance::line_segment_point(start1, end1, start2));
+            }
+            else
+            {
+                distance = std::sqrt(squared_distance::line_segments(transposed_start1, transposed_end1, start2, end2));
+            }
+
             max_radius = std::min(max_radius, distance);
         }
     }

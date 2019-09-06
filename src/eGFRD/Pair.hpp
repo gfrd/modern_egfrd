@@ -412,55 +412,122 @@ public:
 
    void determine_radii(const double shell_size)
    {
-       auto radius1 = particle1().radius(), radius2 = particle2().radius();
-       auto D1 = particle1().D(), D2 = particle2().D();
-       auto D_geometric = std::sqrt(D1 * D2);
-
-       // a_r_max is the maximum size of a_r for a given maximum ratio of l/delta
-       auto a_r_max = LD_MAX_ * (r0() - sigma()) + sigma();
-
-       // Make sure that D1 != 0 to avoid division by zero.
-       if (D1 == 0)
-       {
-           auto Dtmp = D1;
-           D1 = D2;
-           D2 = Dtmp;
-
-           auto radiustmp = radius1;
-           radius1 = radius2;
-           radius2 = radiustmp;
-       }
-
-       auto Da = D1, Db = D2, radiusa = radius1, radiusb = radius2;
-
-       // TODO: find meaning behind comment: "equalize expected mean t_r and t_R"
-       if ((((D_geometric - D2) * r0()) / D_tot() + shell_size + std::sqrt(D2 / D1) * (radius1 - shell_size) - radius2) >= 0)
-       {
-           Da = D2, Db = D1, radiusa = radius2, radiusb = radius1;
-       }
-
-       a_R_ = (D_geometric * (Db * (shell_size - radiusa) + Da * (shell_size - r0() - radiusa))) /
-               (Da * Da + Da * Db + D_geometric * D_tot());
-
-       a_r_ = (D_geometric * r0() + D_tot() * (shell_size - radiusa)) / (Da + D_geometric);
-
-       // Now if the planned domainsize for r is too large for proper convergence of the Green's
-       // functions, make it the maximum allowed size
-       if (a_r_ > a_r_max)
-       {
-           a_r_ = a_r_max;
-           a_R_ = shell_size - radiusa - a_r_ * Da / D_tot();
-           Logger::get_logger("EGFRD").warn() << "Domainsize changed for convergence: a_r = a_r_max = " << a_r_ << ", a_R = " << a_R_;
-       }
-
-       // TODO: investigate why these two checks were originally needed, because I don't understand why
-       // they should be true (Tom).
-//       THROW_UNLESS(illegal_argument, (a_R() + (a_r() * Da / D_tot()) + radiusa) >= (a_R() + (a_r() * Db / D_tot()) + radiusb));
+//       auto radius1 = particle1().radius(), radius2 = particle2().radius();
+//       auto D1 = particle1().D(), D2 = particle2().D();
+//       auto D_geometric = std::sqrt(D1 * D2);
+//
+//       // a_r_max is the maximum size of a_r for a given maximum ratio of l/delta
+//       auto a_r_max = LD_MAX_ * (r0() - sigma()) + sigma();
+//
+//       // Make sure that D1 != 0 to avoid division by zero.
+//       if (D1 == 0)
+//       {
+//           auto Dtmp = D1;
+//           D1 = D2;
+//           D2 = Dtmp;
+//
+////           auto radiustmp = radius1;
+////           radius1 = radius2;
+////           radius2 = radiustmp;
+//       }
+//
+//       auto Da = D1, Db = D2, radiusa = radius1, radiusb = radius2;
+//
+//       // TODO: find meaning behind comment: "equalize expected mean t_r and t_R"
+//       if ((((D_geometric - D2) * r0()) / D_tot() + shell_size + std::sqrt(D2 / D1) * (radius1 - shell_size) - radius2) < 0)
+//       {
+//           Da = D2, Db = D1, radiusa = radius2, radiusb = radius1;
+//       }
+//
+//       a_R_ = (D_geometric * (Db * (shell_size - radiusa) + Da * (shell_size - r0() - radiusa))) /
+//               (Da * Da + Da * Db + D_geometric * D_tot());
+//
+//       a_r_ = (D_geometric * r0() + D_tot() * (shell_size - radiusa)) / (Da + D_geometric);
+//
+//       // Now if the planned domainsize for r is too large for proper convergence of the Green's
+//       // functions, make it the maximum allowed size
+//       if (a_r_ > a_r_max)
+//       {
+//           a_r_ = a_r_max;
+//           a_R_ = shell_size - radiusa - a_r_ * Da / D_tot();
+//           Logger::get_logger("EGFRD").warn() << "Domainsize changed for convergence: a_r = a_r_max = " << a_r_ << ", a_R = " << a_R_;
+//       }
+//
+//       // TODO: investigate why these two checks were originally needed, because I don't understand why
+//       // they should be true (Tom).
+////       THROW_UNLESS(illegal_argument, (a_R() + (a_r() * Da / D_tot()) + radiusa) >= (a_R() + (a_r() * Db / D_tot()) + radiusb));
+//       THROW_UNLESS(illegal_argument, a_R_ + a_r_ <= shell_size);
 //       THROW_UNLESS(illegal_argument, std::fabs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size)  < 1e-12 * shell_size);
+//
+//       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
+//       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
+//       THROW_UNLESS(illegal_argument, (fgreater(a_R_, 0, radiusa)) || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
+    // Determine a_r_ and a_R_ from the size of the protective domain.
 
-       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
-       THROW_UNLESS(illegal_argument, fgreater(a_r_, 0, radiusa));
-       THROW_UNLESS(illegal_argument, (fgreater(a_R_, 0, radiusa)) || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
+    double radius1 = pid_pair1_.second.radius();
+    double radius2 = pid_pair2_.second.radius();
+
+    double D1 = pid_pair1_.second.D();
+    double D2 = pid_pair2_.second.D();
+
+    //double LD_MAX = INFINITY; // TODO was turned off (never greater than inf)
+    //double a_r_max = LD_MAX * (r0 - sigma()) + sigma();
+    // a_r_max is the maximum size of a_r_ for a given maximum ratio of l / delta
+
+    // Make sure that D1 != 0 to avoid division by zero in the followings.
+    //if D1 == 0:
+//D1, D2 = D2, D1     // FIXME shouldn't we also here swap the particle radii if we're swapping diffusion contants ?
+    //if __debug__ :
+    //log.info('Swapping D1 and D2 because D1==0 (to avoid division by zero).')
+
+
+    ASSERT(r0() >= sigma());        // '%s;  r0 %g < sigma %g' % (self, r0, self.sigma)
+
+    double Da = D1;
+    double Db = D2;
+    double radiusa = radius1;
+    double radiusb = radius2;
+
+    // OLDCODE shell_size /= 1.01;     // for compare with old code
+
+    // equalize expected mean t_r and t_R.
+    if ((D_geom() - D2) * r0() / D_tot() + shell_size + std::sqrt(D2 / D1) * (radius1 - shell_size) - radius2 < 0)
+    {
+        Da = D2;
+        Db = D1;
+        radiusa = radius2;
+        radiusb = radius1;
+    }
+
+    a_R_ = (D_geom() * (Db * (shell_size - radiusa) + Da * (shell_size - r0() - radiusa))) / (Da * Da + Da * Db + D_geom() * D_tot());
+    a_r_ = (D_geom() * r0() + D_tot() * (shell_size - radiusa)) / (Da + D_geom());
+
+    // Now if the planned domainsize for r is too large for proper convergence of the Greenfunctions, make it the maximum allowed size
+    //if (a_r_ > a_r_max)
+    //{
+    //   a_r_ = a_r_max;
+    //   a_R_ = shell_size - radiusa - a_r_ * Da / D_tot();
+    //   Logger::get_logger("EGFRD").info("Domainsize changed for convergence: a_r_ = a_r_max = %.16g, a_R_ = %.16g", a_r_, a_R_);
+    //}
+
+    ASSERT(a_R_ + a_r_ * Da / D_tot() + radiusa >= a_R_ + a_r_ * Db / D_tot() + radiusb);
+    ASSERT(std::abs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size) < 1e-12 * shell_size);                        // here the shell_size is the relevant scale
+
+    //   if __debug__:
+    //log.debug('shell_size = %g, a_r_ = %g, a_R_ = %g r0 = %g' %
+    //   (shell_size, a_r_, a_R_, r0))
+    //   if __debug__ :
+    //      tr = ((a_r_ - r0)**2) / (6 * self.D_r)       // the expected escape time of the IV
+    //      if self.D_R == 0 :
+    //         tR = numpy.inf
+    //      else :
+    //         tR = (a_R_**2) / (6 * self.D_R)          // the expected escape time of the CoM
+    //         log.debug('tr = %g, tR = %g' % (tr, tR))
+
+
+    ASSERT(a_r_ > 0);
+    ASSERT(a_r_ > r0());
+    ASSERT(a_R_ > 0 || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
    }
 
     const PairGreensFunction& choose_pair_greens_function() const override

@@ -18,7 +18,16 @@ Size = World_size                      ; m
 [Structure]
 Name = plane
 Type = PlanarSurface
-Position = (0.5 * World_size, 0, 0.5 * World_size)
+Position = (0.5 * World_size, World_size - 5 * r, 0.5 * World_size)
+Vx = (1,0,0)
+Vy = (0,0,1)
+Lx = 0.5 * World_size
+Ly = 0.5 * World_size
+
+[Structure]
+Name = plane
+Type = PlanarSurface
+Position = (0.5 * World_size, 30 * r, 0.5 * World_size)
 Vx = (1,0,0)
 Vy = (0,0,1)
 Lx = 0.5 * World_size
@@ -30,5 +39,5 @@ r = r                               ; m
 D = D                               ; m^2*s^-1
 
 [Particles]
-A = (World_size / 2 + r*n*4, r * 1.001, World_size / 2), 2
+A = ( 0.09*World_size*(n%10), World_size-3*r, 0.1*World_size*floor(n/10) ), 50
 

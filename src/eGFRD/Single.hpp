@@ -416,7 +416,7 @@ public:
         // z_displacement is now relative to the particle center, but draw_new_position() requires it relative to
         // the center of the shell.
         auto offset = center_particle_offset(shell.half_length());
-        z_displacement += offset;
+        z_displacement -= offset;
 
         // Express the vector_z in the unit vectors of the surface to prevent the particle from
         // leaving the surface due to numerical problem.
@@ -460,7 +460,7 @@ public:
     {
         auto particle_radius = pid_pair_.second.radius();
         // Distance between the particle center and cylinder center
-        return (half_length - get_distance_to_escape(half_length) - particle_radius);
+        return (half_length - get_distance_to_escape(half_length));
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------

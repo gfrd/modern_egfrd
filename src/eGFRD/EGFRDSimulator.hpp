@@ -1168,7 +1168,10 @@ private:
    particle_id_pair fire_move(particle_id_pair pip, position_structid_pair pos_struct) const
    {
       // check if there is enough space
-      auto ol = world_.test_particle_overlap(Sphere(pos_struct.first, pip.second.radius()), pip.first);     // check location of new position, ignore old location
+      bool x = pos_struct.first.Y() > 30e-9 && pos_struct.first.Y() < (1e-6 - 5e-9);
+      auto sphere = Sphere(pos_struct.first, pip.second.radius());
+      auto ol = world_.test_particle_overlap(sphere, pip.first);     // check location of new position, ignore old location
+      auto ols = world_.test_surfaces_overlap(sphere, pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first);
       return move_particle(pip, pos_struct);
    }
@@ -1178,7 +1181,9 @@ private:
    particle_id_pair fire_move_pair(particle_id_pair pip, position_structid_pair pos_struct, const ParticleID partner_id) const
    {
       // check if there is enough space
-      auto ol = world_.test_particle_overlap(Sphere(pos_struct.first, pip.second.radius()), std::vector<ParticleID>{ pip.first, partner_id });     // check location of new position, ignore old location and partner particle
+      auto sphere = Sphere(pos_struct.first, pip.second.radius());
+      auto ol = world_.test_particle_overlap(sphere, std::vector<ParticleID>{ pip.first, partner_id });     // check location of new position, ignore old location and partner particle
+      auto ols = world_.test_surfaces_overlap(sphere, pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first << " partner:" << partner_id);
       return move_particle(pip, pos_struct);
    };

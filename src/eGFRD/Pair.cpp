@@ -159,6 +159,7 @@ GFRD_EXPORT void PairSpherical::determine_radii(double r0, double shell_size)
    ASSERT(a_r_ > 0);
    ASSERT(a_r_ > r0);
    ASSERT(a_R_ > 0 || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
+//   ASSERT(a_r_ + a_R_ <= shell_size)
 }
 
 
