@@ -342,22 +342,28 @@ private:
          new_structure_id = pos_structid.second;
       }
 
-      bool is_overlapping = world_.test_surfaces_overlap(Sphere(old_pos, radius), old_pos, 0,
-              std::vector<StructureID>({world_.get_def_structure_id(), old_struct_id}));
-      if(is_overlapping)
-      {
-          Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
-          // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
-      }
-
       auto overlap = world_.check_particle_overlap(Sphere(new_pos, radius + reaction_length_), pid);
       bool bounced = std::any_of(overlap.begin(), overlap.end(), [&](const particle_id_pair_and_distance& e) {return e.second < -reaction_length_; });
       bool bounced_struct = world_.test_surfaces_overlap(Sphere(new_pos, radius), old_pos, 0,
               std::vector<StructureID>({world_.get_def_structure_id(), new_structure_id}));
 
+       bool is_overlapping = world_.test_surfaces_overlap(Sphere(old_pos, radius), old_pos, 0,
+                                                          std::vector<StructureID>({world_.get_def_structure_id(), old_struct_id}));
+       if(is_overlapping)
+       {
+           Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
+           // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
+
+           //TODO: remove super hack
+           new_pos = world_.apply_boundary(old_pos + Vector3(0,1,0) * radius);
+           // Force particle move
+           bounced = false;
+           bounced_struct = false;
+       }
+
       if(bounced_struct)
       {
-          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
+//          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
       }
 
       if (bounced || bounced_struct)
