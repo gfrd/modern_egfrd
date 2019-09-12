@@ -347,18 +347,34 @@ private:
       bool bounced_struct = world_.test_surfaces_overlap(Sphere(new_pos, radius), old_pos, 0,
               std::vector<StructureID>({world_.get_def_structure_id(), new_structure_id}));
 
-       bool is_overlapping = world_.test_surfaces_overlap(Sphere(old_pos, radius), old_pos, 0,
-                                                          std::vector<StructureID>({world_.get_def_structure_id(), old_struct_id}));
-       if(is_overlapping)
-       {
-           Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
-           // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
+       auto structures = world_.get_structures();
+       for(const auto& structure : structures) {
+           if (structure.get()->id() == world_.get_def_structure_id() || structure.get()->id() == new_structure_id) {
+               continue;
+           }
 
-           //TODO: remove super hack
-           new_pos = world_.apply_boundary(old_pos + Vector3(0,1,0) * radius);
-           // Force particle move
-           bounced = false;
-           bounced_struct = false;
+           auto distance = structure.get()->distance(old_pos);
+           if(fabs(distance) < radius) {
+               // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
+               Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
+
+               auto plane = dynamic_cast<PlanarSurface*>(structure.get());
+               if(plane == nullptr) {
+                   THROW_EXCEPTION(unsupported, "Particle overlaps a structure that is not a PlanarSurface. This is not yet supported.");
+               }
+
+               // Move particle back to the side of the
+               auto projected = plane->project_point(old_pos);
+               auto z_distance = projected.second.first / GfrdCfg.SAFETY;
+               auto to_move = z_distance >= 0 ? radius - z_distance : -radius - z_distance;
+               new_pos = world_.apply_boundary(old_pos + plane->shape().unit_z() * to_move);
+
+               // Force particle move, which would not happen if we say a bounce occurred
+               bounced = false;
+               bounced_struct = false;
+
+               break;
+           }
        }
 
       if(bounced_struct)

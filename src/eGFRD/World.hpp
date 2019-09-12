@@ -389,18 +389,31 @@ public:
       return nc.result();
    }
 
-   bool test_surfaces_overlap(const Sphere& s, const Vector3& old_pos, double sigma, std::vector<StructureID> ignore)
-   {
-       ParticleContainerUtils::flag_collector<std::vector<StructureID>> nc(ignore);
-       auto structures = get_structures();
-       for(const auto& structure : structures) {
-           surface_overlap_checker(s, old_pos, structure.get()->id(), sigma, nc);
-           if (nc.result()) {
-               return true;
-           }
-       }
-       return false;
-   }
+    bool get_surface_overlap(const Sphere& s, const Vector3& old_pos, double sigma, std::vector<StructureID> ignore)
+    {
+        ParticleContainerUtils::flag_collector<std::vector<StructureID>> nc(ignore);
+        auto structures = get_structures();
+        for(const auto& structure : structures) {
+            surface_overlap_checker(s, old_pos, structure.get()->id(), sigma, nc);
+            if (nc.result()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool test_surfaces_overlap(const Sphere& s, const Vector3& old_pos, double sigma, std::vector<StructureID> ignore)
+    {
+        ParticleContainerUtils::flag_collector<std::vector<StructureID>> nc(ignore);
+        auto structures = get_structures();
+        for(const auto& structure : structures) {
+            surface_overlap_checker(s, old_pos, structure.get()->id(), sigma, nc);
+            if (nc.result()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
    bool test_surface_overlap(const Sphere& s, const Vector3& old_pos, const StructureID sid, double sigma) const
    {

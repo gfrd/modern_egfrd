@@ -172,6 +172,20 @@ public:
             // note that we need to make sure that the shell.shape.position and displacement vector
             // are in the structure to prevent the particle leaving the structure due to numerical errors
             newpos = shell().position() + displacement;
+
+            if(shell().shape() == Shell::Shape::SPHERE) {
+                THROW_UNLESS_MSG(illegal_state, displacement.length() < shell().get_sphere().radius(), "Single position was drawn outside shell");
+            }
+            else if(shell().shape() == Shell::Shape::CYLINDER)
+            {
+                auto cylinder = shell().get_cylinder();
+                auto inner = cylinder.to_internal(newpos);
+                auto radial_component = inner.X();
+                auto axial_component = inner.Y();
+                bool reaches_walls = fgreater(fabs(radial_component), cylinder.radius(), fabs(radial_component));
+                bool reaches_caps = fgreater(fabs(axial_component), cylinder.half_length(), fabs(axial_component));
+                THROW_UNLESS_MSG(illegal_state, !reaches_walls && !reaches_caps, "Single position was drawn outside shell");
+            }
         }
 
         return std::make_pair(newpos, particle().structure_id());
@@ -313,9 +327,9 @@ public:
         switch(type)
         {
             case GreensFunction::EventKind::IV_ESCAPE:
-                return EventType::SINGLE_ESCAPE;
-            case GreensFunction::EventKind::IV_REACTION:
-                return EventType::SINGLE_INTERACTION;
+                return EventType::IV_ESCAPE;
+            case GreensFunction::EventKind::IV_REACTION: // Note REACTION -> INTERACTION
+                return EventType::IV_INTERACTION;
             default:
                 THROW_EXCEPTION(not_implemented, " Unknown IV event type");
         }
@@ -397,12 +411,7 @@ public:
         auto z_absorb = get_distance_to_escape(half_length); // Distance from particle to disk away from planar surface
         double z_displacement = 0;
 
-        if (eventType_ != EventType::IV_EVENT)
-        {
-            // Normal escape event, z_displacement is drawn from 1D IV Green's function
-            z_displacement = GreenFunctionHelper::draw_r_wrapper(rng, *gf_iv_, dt_, z_absorb, z_surface); // last two args= a, sigma
-        }
-        else if (iv_event_kind_ == EventKind::IV_ESCAPE)
+        if (iv_event_kind_ == EventKind::IV_ESCAPE)
         {
             // IV escape event
             z_displacement = z_absorb;
@@ -412,11 +421,16 @@ public:
             // Interaction event
             z_displacement = z_surface;
         }
+        else
+        {
+            // Normal escape event, z_displacement is drawn from 1D IV Green's function
+            z_displacement = GreenFunctionHelper::draw_r_wrapper(rng, *gf_iv_, dt_, z_absorb, z_surface); // last two args= a, sigma
+        }
 
         // z_displacement is now relative to the particle center, but draw_new_position() requires it relative to
         // the center of the shell.
         auto offset = center_particle_offset(shell.half_length());
-        z_displacement -= offset;
+        z_displacement += offset;
 
         // Express the vector_z in the unit vectors of the surface to prevent the particle from
         // leaving the surface due to numerical problem.
@@ -425,6 +439,9 @@ public:
         // The new position is relative to the center of the shell
         // note that we need to make sure that vector_r and vector_z
         // are correct (in the structure) to prevent the particle leaving the structure due to numerical errors
+        THROW_UNLESS_MSG(illegal_state, fabs(z_displacement) <= half_length, "SinglePlanarInteraction escape length in Z-direction is longer than cylinder");
+//        THROW_UNLESS_MSG(illegal_state, z_displacement > 0, "test");
+
         return vector_r + vector_z;
     }
 

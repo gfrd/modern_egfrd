@@ -441,6 +441,8 @@ private:
       auto& domain = domains_[did];
       std::vector<DomainID> ignore;
 
+//       Log("GFRD").info() << "Domain " << domain.get()->id() << " (" << domain.get()->type_name() << "): " << (int)domain.get()->eventType();
+
       switch (domain->multiplicity())
       {
       case Domain::Multiplicity::SINGLE:
@@ -815,13 +817,20 @@ private:
             eventType = single.draw_iv_event_type(rng_);
 
          ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE ||
-                  eventType == Domain::EventType::SINGLE_INTERACTION || eventType == Domain::EventType::BURST);
+                  eventType == Domain::EventType::SINGLE_INTERACTION || eventType == Domain::EventType::BURST ||
+                  eventType == Domain::EventType::IV_ESCAPE || eventType == Domain::EventType::IV_INTERACTION);
 
          ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule::empty();
 
          // Get the (new) position and structure on which the particle is located.
          position_structid_pair pos_struct = single.draw_new_position(rng_);
          pos_struct = world_.apply_boundary(pos_struct);
+
+         auto ols = world_.test_surfaces_overlap(Sphere(pos_struct.first, pid_pair.second.radius()),
+                                                  pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
+         if(ols) {
+             Log("GFRD").warn() << single.type_name() << " move resulted in overlap with surface";
+         }
 
          // newpos now hold the new position of the particle (not yet committed to the world)
          // if we would here move the particles and make new shells, then it would be similar to a propagate
@@ -830,6 +839,7 @@ private:
          switch (eventType) // possible actions for Single domains
          {
          case Domain::EventType::SINGLE_REACTION:
+         case Domain::EventType::IV_INTERACTION:
          {
              // Particle underwent a single-molecular reaction
              remove_domain(single.id());      // single does not exist after this!!!
@@ -855,13 +865,15 @@ private:
          }
 
          case Domain::EventType::SINGLE_ESCAPE:
+         case Domain::EventType::IV_ESCAPE:
          case Domain::EventType::BURST:
          {
             // Particle was burst or escaped its protective domain
             remove_domain(single.id());      // single does not exist after this!!!
             auto new_pid = fire_move(pid_pair, pos_struct);
             new_particles.emplace_back(new_pid);
-         }  break;
+            break;
+         }
 
          default:
             THROW_EXCEPTION(illegal_state, "unexpected eventType")
@@ -923,7 +935,22 @@ private:
          pos_struct1 = world_.apply_boundary(pos_struct1);
          pos_struct2 = world_.apply_boundary(pos_struct2);
 
-         //world_.check_overlap();
+
+         auto ol1 = world_.test_particle_overlap(Sphere(pos_struct1.first, pid_pair1.second.radius()), std::vector<ParticleID>{ pid_pair1.first, pid_pair2.first });
+         auto ol2 = world_.test_particle_overlap(Sphere(pos_struct2.first, pid_pair2.second.radius()), std::vector<ParticleID>{ pid_pair1.first, pid_pair2.first });
+         if(ol1 || ol2) {
+             Log("GFRD").warn() << pair.type_name() << " move resulted in overlap with another particle";
+         }
+
+
+          //world_.check_overlap();
+         auto ols1 = world_.test_surfaces_overlap(Sphere(pos_struct1.first, pid_pair1.second.radius()),
+                                                  pos_struct1.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct1.second}));
+         auto ols2 = world_.test_surfaces_overlap(Sphere(pos_struct2.first, pid_pair2.second.radius()),
+                                                  pos_struct2.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct2.second}));
+         if(ols1 || ols2) {
+             Log("GFRD").warn() << pair.type_name() << " move resulted in overlap with surface";
+         }
       }
       else
       {
@@ -1168,10 +1195,8 @@ private:
    particle_id_pair fire_move(particle_id_pair pip, position_structid_pair pos_struct) const
    {
       // check if there is enough space
-      bool x = pos_struct.first.Y() > 30e-9 && pos_struct.first.Y() < (1e-6 - 5e-9);
       auto sphere = Sphere(pos_struct.first, pip.second.radius());
       auto ol = world_.test_particle_overlap(sphere, pip.first);     // check location of new position, ignore old location
-      auto ols = world_.test_surfaces_overlap(sphere, pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first);
       return move_particle(pip, pos_struct);
    }
@@ -1183,7 +1208,6 @@ private:
       // check if there is enough space
       auto sphere = Sphere(pos_struct.first, pip.second.radius());
       auto ol = world_.test_particle_overlap(sphere, std::vector<ParticleID>{ pip.first, partner_id });     // check location of new position, ignore old location and partner particle
-      auto ols = world_.test_surfaces_overlap(sphere, pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first << " partner:" << partner_id);
       return move_particle(pip, pos_struct);
    };
