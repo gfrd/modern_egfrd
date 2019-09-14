@@ -88,9 +88,9 @@ static struct GlobalGfrdConfig
                                                    // Make sure that DEFAULT_STEP_SIZE_FACTOR < MULTI_SHELL_FACTOR, or else the
                                                    // reaction volume sticks out of the multi.
    const double BD_DT_HARDCORE_MIN = -1e-9;        // This is to define a hardcore lower bound for the timestep that will be
-                                                   // dynamically determined by the new BD scheme.It will prevent the algorithm
+                                                   // dynamically determined by the new BD scheme. It will prevent the algorithm
                                                    // to calculate ridiculously small timesteps, but will break detail balance.
-                                                   // Take care : This is for testing only!Keep this at a negative value for normal sims!
+                                                   // Take care : This is for testing only! Keep this at a negative value for normal sims!
    const uint ThrowInRetryCount = 500000;          // When randomly inserting particles, stop after N failed placements per particle (due to overlap or out-of-bounds error)
 
 } GfrdCfg;
@@ -116,7 +116,7 @@ struct WorldNoBounds;
 
 // Specify customized Matrix Cell grid on build command line (e.q. make -DMATRIXSIZE=4)
 #ifndef MATRIXSIZE
-#define MATRIXSIZE 4
+#define MATRIXSIZE 8
 #endif
 
 // Specify build configuration of world/simulator types (changing these needs rebuild of sources, only one kind of simulator per build is supported)

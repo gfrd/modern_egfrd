@@ -103,6 +103,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
 
     if(particle_surface_dist_ < 0.0) {
         Log("GFRD").warn() << "Particle is touching a surface it is not bound to, BD motion might have been erroneous.";
+        return false;
     }
 
     double min_radius = particle.radius() * GfrdCfg.SINGLE_SHELL_FACTOR;

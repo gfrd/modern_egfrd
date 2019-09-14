@@ -1603,7 +1603,7 @@ private:
             auto cylinder = shell.get_cylinder();
             ShellCreateUtils::shell_overlap_check_cylinder<shell_matrix_type> soc(cylinder, 1.0 / world_.cell_size());
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
-            ovl = std::move(soc.overlap());
+            overlap = std::move(soc.overlap());
          }
 
          auto multi = dynamic_cast<Multi*>(domain.get());

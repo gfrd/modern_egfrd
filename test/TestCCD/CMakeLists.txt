@@ -1,4 +1,4 @@
-find_package(ccd CONFIG REQUIRED)
+#find_package(ccd CONFIG REQUIRED)
 
 set (SRC LibCCD_test.cpp tinytest.cpp ../common/tinytest_specific.cpp)
 set (HDR LibCCD_test.hpp ../common/tinytest.h)

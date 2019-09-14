@@ -517,7 +517,7 @@ public:
         THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 
 
-        auto pos = particle1().position();
+        auto pos = com_ ;
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
         double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
