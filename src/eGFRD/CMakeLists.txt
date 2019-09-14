@@ -11,4 +11,6 @@ target_link_libraries (eGFRD PUBLIC GreensFunctions ccd)
 
 target_compile_features (eGFRD PUBLIC cxx_strong_enums cxx_noexcept cxx_deleted_functions cxx_nullptr cxx_auto_type cxx_range_for cxx_rvalue_references cxx_override cxx_lambdas cxx_alias_templates )
 
-set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
+if(!APPLE)
+    set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
+endif()
