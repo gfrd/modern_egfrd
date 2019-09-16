@@ -353,7 +353,7 @@ private:
                continue;
            }
 
-           auto distance = structure.get()->distance(old_pos);
+           auto distance = structure.get()->distance(world_.cyclic_transpose(old_pos, structure.get()->position()));
            if(fabs(distance) < radius) {
                // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
                Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
@@ -379,7 +379,7 @@ private:
 
       if(bounced_struct)
       {
-//          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
+          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
       }
 
       if (bounced || bounced_struct)
@@ -411,7 +411,7 @@ private:
          }
       }
 
-      if (!bounced && !bounced_struct)
+      if(!bounced)
       {
          auto update = std::make_pair(pid, Particle(species.id(), Sphere(new_pos, radius), new_structure_id, species.D(), species.v()));
          if (vc_.check_move(update.second.shape(), pid)) world_.update_particle(update);

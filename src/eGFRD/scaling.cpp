@@ -265,5 +265,8 @@ double scaling::dist_to_plane_edge(const Vector3 pos, const StructureID plane_id
 
     auto projected = plane->project_point(pos).first;
     auto half_extent = plane->shape().half_extent();
-    return std::min(half_extent.X() - fabs(projected.X()), half_extent.Y() - fabs(projected.Y()));
+    auto plane_pos = plane->shape().position();
+    auto offset_x = fabs(projected.X() - plane_pos.X());
+    auto offset_y = fabs(projected.Z() - plane_pos.Z()); // Z-axis and X-axis form a basis for the plane
+    return std::max(0.0, std::min(half_extent.X() - offset_x, half_extent.Y() - offset_y));
 }

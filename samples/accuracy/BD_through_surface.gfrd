@@ -1,7 +1,7 @@
 ; eGFRD test that verifies BD motion does not permit particles to move through surfaces
 
 [Simulator]
-Seed = 0xdeadbeef
+Seed = 0xdead1eaf
 PrepareTime = 0.1                      ; seconds
 EndTime = 60.0                         ; seconds
 

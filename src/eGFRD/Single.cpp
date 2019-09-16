@@ -109,7 +109,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
 
     double min_radius = particle.radius() * GfrdCfg.SINGLE_SHELL_FACTOR;
     double max_radius = std::min(smat.cell_size() / std::sqrt(8.0),                       // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-                                 scaling::dist_to_plane_edge(pos, structure_id, world));  // and not exceed its plane edges
+                                 scaling::dist_to_plane_edge(pos, interacting_structure_.id(), world));  // and not exceed its plane edges
     double max_height = smat.cell_size() / std::sqrt(8.0);                                // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
 
     auto plane = &interacting_structure_;
