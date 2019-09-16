@@ -11,8 +11,6 @@
 
 namespace scaling
 {
-    double test();
-
     template <typename TMatrixSpace>
     double find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, double height_static,
                                                  double scaling_factor, const TMatrixSpace& matrixSpace,
@@ -27,6 +25,8 @@ namespace scaling
                                                  const std::vector<StructureID>& ignored_structures,
                                                  const std::vector<ShellID>& ignored_shells,
                                                  bool social_scaling=true);
+
+    double dist_to_plane_edge(Vector3 pos, StructureID plane_id, const World& world);
 }
 
 
@@ -345,7 +345,6 @@ double scaling::find_maximal_cylinder_height(Vector3 base_pos, Vector3 unit_z, d
     return max_dynamic_height;
 }
 
-
 template <typename TMatrixSpace>
 double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const TMatrixSpace& matrixSpace,
                                              const World& world,
@@ -394,3 +393,4 @@ double scaling::find_maximal_cylinder_radius(Vector3 start1, Vector3 end1, const
 
     return max_radius;
 }
+

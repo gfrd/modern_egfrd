@@ -1,6 +1,6 @@
 //
 //
-//#include "scaling.hpp"
+#include "scaling.hpp"
 //
 //inline double find_maximal_cylinder_height_to_plane(Vector3 start1, Vector3 unit_z, double height_static,
 //                                                    double scaling_factor, PlanarSurface* plane)
@@ -245,3 +245,25 @@
 //
 //    return max_radius;
 //}
+
+
+/***
+ * Finds the minimal distance from a point in a plane to one of its edges, either in its X or Y directions.
+ * @param pos Vector in the plane
+ * @param plane_id StructureID of the plane
+ * @param world The world object the structure resides in
+ * @return double, the minimal orthogonal distance to an edge of the plane
+ */
+double scaling::dist_to_plane_edge(const Vector3 pos, const StructureID plane_id, const World& world)
+{
+    auto structure = world.get_structure(plane_id);
+    auto plane = dynamic_cast<PlanarSurface*>(structure.get());
+    if (plane == nullptr) {
+        // Structure is not a plane
+        THROW_EXCEPTION(illegal_argument, "Structure given in dist_to_plane_edge() is not a plane");
+    }
+
+    auto projected = plane->project_point(pos).first;
+    auto half_extent = plane->shape().half_extent();
+    return std::min(half_extent.X() - fabs(projected.X()), half_extent.Y() - fabs(projected.Y()));
+}

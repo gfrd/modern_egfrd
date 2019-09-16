@@ -587,7 +587,8 @@ public:
         auto pos = com_ ;
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
-        double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+        double max_radius = std::min(smat.cell_size() / std::sqrt(8.0),                       // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+                                     scaling::dist_to_plane_edge(pos, structure_.get()->id(), world));  // and not exceed its plane edges
         auto height = 2 * min_radius;
         auto D_r = D_tot();
 
@@ -700,7 +701,10 @@ public:
         auto pos_3d = world.cyclic_transpose(particle2().position(), pos_2d);
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
         double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
-        double max_radius = smat.cell_size() / std::sqrt(8.0);         // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+
+        //TODO: cylinder should be centered around CoM, not 2D particle
+        double max_radius = std::min(smat.cell_size() / std::sqrt(8.0),                       // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
+                                     scaling::dist_to_plane_edge(pos_2d, structure_2d_.get()->id(), world));  // and not exceed its plane edges
         auto radius = max_radius;
         auto height = 2 * min_radius;
         auto D_r = D_tot();
@@ -742,6 +746,7 @@ public:
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
         height = (a_r_ / scaling_factor_) + static_height;
 
+        //TODO: cylinder should be centered around CoM, not 2D particle
         auto cylinder_pos = pos_2d + unit_z * (height/2 - height_through_surface);
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
