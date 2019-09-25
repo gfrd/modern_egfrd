@@ -15,7 +15,7 @@ public:
    {
       log_.set_stream(std::clog);
       log_.set_flags(Logger::logflags::Name | Logger::logflags::Separator);
-      log_.set_postfix(nullptr);
+      log_.set_postfix("\r");
    }
 
    void do_action(double time) override
@@ -35,7 +35,7 @@ private:
       for (int i = 0; i < stars; i++) line << "*";
       for (int i = stars; i < length_; i++) line << ".";
       line << "] " << std::fixed << std::setprecision(1) << progress * 100.0 << " %\t";
-      line << "(steps: " << simulator_->num_steps() << std::setprecision(12) << ", dt per step: " << double(simulator_->time()) / simulator_->num_steps() << ")\r";
+      line << "(steps: " << simulator_->num_steps() << std::setprecision(12) << ", dt per step: " << double(simulator_->time()) / simulator_->num_steps() << ")";
       log_.info() << line.str();
    }
 
