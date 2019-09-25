@@ -82,7 +82,7 @@ public:
 
    double a_r() const { return a_r_; }
 
-   double sigma() const { return pid_pair1_.second.radius() + pid_pair2_.second.radius(); }
+    virtual double sigma() const { return pid_pair1_.second.radius() + pid_pair2_.second.radius(); }
 
    double D_tot() const { return pid_pair1_.second.D() + pid_pair2_.second.D(); }
 
@@ -873,6 +873,32 @@ public:
 
         auto particle_to_right_boundary = cylinder_right - particle_surface_dist_ - particle_radius;
         return particle_to_right_boundary;
+    }
+
+    double sigma() const override {
+        // Rescale sigma to correct for the rescaling of the coordinate system.
+        // This is the sigma that is used for the evaluation of the Green's function and is in this case
+        // slightly different from the sums of the radii of the particles. We rescale sigma in a way
+        // that the total flux over the reactive surface of the prolate spheroidal boundary with greater radius
+        // sigma is equal to the total flux over a spherical reactive surface with radius = rescaled sigma.
+        auto xi = scaling_factor_;
+        auto sigma = particle1().radius() + particle2().radius();
+
+        double rescaled_sigma;
+
+        if (feq(xi, 1.0, 1.0)) {
+            // If the scaling factor happens to be equal to one (i.e. no rescaling) alpha and sin(alpha)
+            // in the rescaling formula for sigma below will be zero and cause zero-division problems.
+            // However, if xi=1 we know that we do not have to rescale sigma at all.
+            // The case xi=1 usually means that the 2D particle is static (D_2D=0).
+            rescaled_sigma = sigma;
+        } else {
+            auto xi_inverse = 1.0/xi;
+            auto alpha = acos(xi_inverse);
+            rescaled_sigma = fabs(sigma * sqrt(0.5 + (alpha * xi/(2.0*sin(alpha)))));
+        }
+
+        return rescaled_sigma;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------
