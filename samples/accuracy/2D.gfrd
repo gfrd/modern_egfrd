@@ -16,11 +16,11 @@ D = 1e-13                              ; m^2 s^-1
 sigma = 2 * r                          ; m
 k_D = 4 * pi * sigma * D               ; m^3 s^-1
 ;K_d = Conc / 2                         ; mol liter^-1
-K_d = 144e-9 * N_A * 1000.0            ; m^3 s^-1
+K_d = 10e-9 * N_A * 1000.0            ; m^3 s^-1
 k_a = k_D                              ; m^3 s^-1
 k_d = K_d * k_a                        ; s^-1
 
-; Likely not valid for 2D/3D interactions
+; Likely not valid for 2D interactions
 Nc_th = (2*N+K_d/1000*V - sqrt( (2*N+K_d/1000*V)^2 - 4*N*N)) / 2
 
 [World]
@@ -71,8 +71,8 @@ Width=20
 Interval = 1e-1
 Type = average
 
-[ReactionRecord]
-File = reactions.dat
+;[ReactionRecord]
+;File = reactions.dat
 
 ;[ParticlePositions]
 ;Interval = 1e-3; sec

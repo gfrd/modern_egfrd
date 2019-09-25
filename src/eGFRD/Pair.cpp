@@ -133,6 +133,7 @@ GFRD_EXPORT void PairSpherical::determine_radii(double r0, double shell_size)
    a_R_ = (D_geom() * (Db * (shell_size - radiusa) + Da * (shell_size - r0 - radiusa))) / (Da * Da + Da * Db + D_geom() * D_tot());
    a_r_ = (D_geom() * r0 + D_tot() * (shell_size - radiusa)) / (Da + D_geom());
 
+
    // Now if the planned domainsize for r is too large for proper convergence of the Greenfunctions, make it the maximum allowed size
    //if (a_r_ > a_r_max)
    //{
@@ -141,25 +142,26 @@ GFRD_EXPORT void PairSpherical::determine_radii(double r0, double shell_size)
    //   Logger::get_logger("EGFRD").info("Domainsize changed for convergence: a_r_ = a_r_max = %.16g, a_R_ = %.16g", a_r_, a_R_);
    //}
 
+
+   auto sum_length = a_R_ + a_r_ + radiusa;
+
+//   if (shell_size < sum_length) {
+//       // Calculation of the radii for the IV and CoM vectors was erroneous, and they exceed the shell.
+//       // We'll rescale them both to ensure they fit in the shell, with an extra safety margin to prevent
+//       // still exceeding the shell due to numerical errors.
+////       Log("GFRD").warn() << "Reducing PairSpherical a_R and a_r because their sum exceeds the shell size";
+//       auto factor = (sum_length / shell_size) + (GfrdCfg.SAFETY - 1.0);
+//       a_R_ /= factor;
+//       a_r_ /= factor;
+//   }
+
    ASSERT(a_R_ + a_r_ * Da / D_tot() + radiusa >= a_R_ + a_r_ * Db / D_tot() + radiusb);
    ASSERT(std::abs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size) < 1e-12 * shell_size);                        // here the shell_size is the relevant scale
-
-   //   if __debug__:
-   //log.debug('shell_size = %g, a_r_ = %g, a_R_ = %g r0 = %g' %
-   //   (shell_size, a_r_, a_R_, r0))
-   //   if __debug__ :
-   //      tr = ((a_r_ - r0)**2) / (6 * self.D_r)       // the expected escape time of the IV
-   //      if self.D_R == 0 :
-   //         tR = numpy.inf
-   //      else :
-   //         tR = (a_R_**2) / (6 * self.D_R)          // the expected escape time of the CoM
-   //         log.debug('tr = %g, tR = %g' % (tr, tR))
-
 
    ASSERT(a_r_ > 0);
    ASSERT(a_r_ > r0);
    ASSERT(a_R_ > 0 || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
-//   ASSERT(a_r_ + a_R_ <= shell_size)
+//   ASSERT(shell_size >= a_r_ + a_R_)
 }
 
 

@@ -379,7 +379,7 @@ private:
 
       if(bounced_struct)
       {
-          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
+//          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
       }
 
       if (bounced || bounced_struct)
