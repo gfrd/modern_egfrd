@@ -21,8 +21,8 @@ Type = PlanarSurface
 Position = (0.5 * World_size, World_size - 5 * r, 0.5 * World_size)
 Vx = (1,0,0)
 Vy = (0,0,1)
-Lx = 0.5 * World_size
-Ly = 0.5 * World_size
+Lx = 0.55 * World_size
+Ly = 0.55 * World_size
 
 [Structure]
 Name = plane
@@ -30,8 +30,8 @@ Type = PlanarSurface
 Position = (0.5 * World_size, 30 * r, 0.5 * World_size)
 Vx = (1,0,0)
 Vy = (0,0,1)
-Lx = 0.5 * World_size
-Ly = 0.5 * World_size
+Lx = 0.55 * World_size
+Ly = 0.55 * World_size
 
 [SpeciesType]
 Name = A

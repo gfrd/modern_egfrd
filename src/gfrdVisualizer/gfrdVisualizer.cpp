@@ -1006,8 +1006,8 @@ int main(int argc, char** argv)
               // PairPlanar test
               auto sPlane = m.add_structure_type(StructureType("plane"));
 
-              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
-              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 1e-9));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 1e-13, 2e-9));
 
               world.initialize(6e-6, m);
               auto ws = world.world_size();
@@ -1016,14 +1016,14 @@ int main(int argc, char** argv)
               auto origin = Vector3(0, 0, 0);
               auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
               auto uz = Vector3::uz;
-              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.55 * ws.X(), 0.55 * ws.Z(), false)));
               auto psid = world.add_structure(plane);
               UNUSED(psid);
 
               for (int i = 0; i < 3; i++)
               {
                   world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2 - (1e-6 * i)));
-                  world.add_particle(sA, psid, Vector3(ws.X() / 2 - 2e-7, 0.0, ws.Z() / 2 - (1e-6 * i)));
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2 + 5e-9, 0.0, ws.Z() / 2 - (1e-6 * i)));
               }
 
               rules.add_reaction_rule(ReactionRule(sA, sA, 0.21, std::vector<SpeciesTypeID>{sC}));
