@@ -10,7 +10,8 @@
 class Progress : public CustomAction
 {
 public:
-   Progress(double end_time, int length = 40) : CustomAction(end_time / (end_time > 0.1 ? 1000.0 : 200.0)), log_(Log("Progress")), end_time_(end_time), length_(length)
+   Progress(const std::unique_ptr<EGFRDSimulator>& simulator, double end_time, int length = 40) :
+   CustomAction(end_time / (end_time > 0.1 ? 1000.0 : 200.0)), simulator_(simulator), log_(Log("Progress")), end_time_(end_time), length_(length)
    {
       log_.set_stream(std::clog);
       log_.set_flags(Logger::logflags::Name | Logger::logflags::Separator);
@@ -33,13 +34,15 @@ private:
       line << "[";
       for (int i = 0; i < stars; i++) line << "*";
       for (int i = stars; i < length_; i++) line << ".";
-      line << "] " << std::fixed << std::setprecision(1) << progress * 100.0 << " %";
+      line << "] " << std::fixed << std::setprecision(1) << progress * 100.0 << " %\t";
+      line << "(steps: " << simulator_->num_steps() << std::setprecision(12) << ", dt per step: " << double(simulator_->time()) / simulator_->num_steps() << ")\r";
       log_.info() << line.str();
    }
 
    Logger log_;
    double end_time_;
    int length_;
+   const std::unique_ptr<EGFRDSimulator>& simulator_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------

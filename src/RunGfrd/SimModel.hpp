@@ -144,7 +144,9 @@ protected:
       auto rrs = settings_.getReactionRecordSection();
       if (rrs != nullptr && test_mode_setup(true, rrs->mode())) set_reactionrecord_section(*rrs);
       auto ps = settings_.getProgressSection();
-      if (ps != nullptr && test_mode_setup(true, ps->mode())) set_progress_section(true, ps->column_width());
+      if (ps != nullptr && test_mode_setup(true, ps->mode())) {
+          set_progress_section(true, ps->column_width());
+      }
 
       return true;
    }
@@ -263,13 +265,13 @@ private:
    {
       if (first && (end_time_ > 0 || prep_time_ > 0))
       {
-         progress_ = std::make_unique<Progress>(Progress(prep_time_ > 0 ? prep_time_ : end_time_, width));
+         progress_ = std::make_unique<Progress>(Progress(simulator_, prep_time_ > 0 ? prep_time_ : end_time_, width));
          simulator_->add_external_event(0, progress_.get());
       }
       // Need to redo the progressbar (or other external events) since simulator is reset after pre-simulation phase.
       if (!first && end_time_ > 0)
       {
-         progress_ = std::make_unique<Progress>(Progress(end_time_, width));
+         progress_ = std::make_unique<Progress>(Progress(simulator_, end_time_, width));
          simulator_->add_external_event(0, progress_.get());
       }
    }
