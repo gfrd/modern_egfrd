@@ -249,6 +249,7 @@
 
 /***
  * Finds the minimal distance from a point in a plane to one of its edges, either in its X or Y directions.
+ * If the point is outside of the plane, a distance of 0.0 is returned.
  * @param pos Vector in the plane
  * @param plane_id StructureID of the plane
  * @param world The world object the structure resides in
@@ -267,6 +268,7 @@ double scaling::dist_to_plane_edge(const Vector3 pos, const StructureID plane_id
     auto half_extent = plane->shape().half_extent();
     auto plane_pos = plane->shape().position();
     auto offset_x = fabs(projected.X() - plane_pos.X());
-    auto offset_y = fabs(projected.Z() - plane_pos.Z()); // Z-axis and X-axis form a basis for the plane
-    return std::max(0.0, std::min(half_extent.X() - offset_x, half_extent.Y() - offset_y));
+    auto offset_y = fabs(projected.Y() - plane_pos.Z()); // Z-axis and X-axis form a basis for the plane
+    auto distance = std::max(0.0, std::min(half_extent.X() - offset_x, half_extent.Y() - offset_y));
+    return distance;
 }
