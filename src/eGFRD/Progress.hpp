@@ -15,7 +15,7 @@ public:
    {
       log_.set_stream(std::clog);
       log_.set_flags(Logger::logflags::Name | Logger::logflags::Separator);
-      log_.set_postfix("\r");
+      log_.set_postfix(nullptr);
    }
 
    void do_action(double time) override
