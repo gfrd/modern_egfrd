@@ -529,6 +529,12 @@ public:
             return false;
         }
 
+        // Prevent domain creation if the inter-particle vector is almost as small as the sum of particle radii
+//        if (r0() <= (particle1().radius() + particle2().radius()) * GfrdCfg.SAFETY)
+//        {
+//            return false;
+//        }
+
         auto plane = structure_;
         THROW_UNLESS(not_found, plane != nullptr);
         auto unit_z = plane->shape().unit_z();

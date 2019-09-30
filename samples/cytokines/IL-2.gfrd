@@ -14,7 +14,8 @@ k_D_3D = 4 * pi * sigma * D_3D         ; m^3 s^-1
 k_D_2D = 4 * pi * sigma * D_2D         ; m^3 s^-1
 
 ; Changed by parameter sweep of cluster run
-Conc_IL = 0.1e-12                      ; Concentration of interleukins, mol liter^-1
+;Conc_IL = 0.1e-12                      ; Concentration of interleukins, mol liter^-1
+Conc_IL = 0.1e-9                      ; Concentration of interleukins, mol liter^-1
 N_IL = 1                               ; Particles of interleukin in simulation
 N_R_PC = 5000                          ; Full-complex receptors per cell
 T_CR = 4e-6                            ; T cell radius, m

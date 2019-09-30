@@ -12,11 +12,13 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
 {
    auto pos = pid_pair_.second.position();
    double min_radius = particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR;
-   double max_radius = smat.cell_size() / 2.0;      // assure spheres cannot overlap
+   double max_radius = smat.cell_size() / 2.0 / GfrdCfg.SAFETY;      // assure spheres cannot overlap
    auto radius = max_radius;
 
    // when not defusing, use minimal shell (we're not going anywhere, lease space for all others)
-   if (pid_pair_.second.D() == 0.0 && pid_pair_.second.v() == 0.0) radius = min_radius;
+   if (pid_pair_.second.D() == 0.0 && pid_pair_.second.v() == 0.0) {
+       radius = min_radius;
+   }
    
    // check distances to surfaces, ignore def.struct and particle.structure
    for (auto s : world.get_structures())
@@ -39,9 +41,14 @@ GFRD_EXPORT bool SingleSpherical::create_updated_shell(const shell_matrix_type& 
    sudc.measure_distances(world.get_structures());
    radius = std::min(radius, sudc.distance());
 
-   radius /= GfrdCfg.SAFETY;
+   // If there is space, decrease the radius by the safety margin to prevent overlaps due to numerical errors
+   if (radius > min_radius) {
+       radius /= GfrdCfg.SAFETY;
+   }
 
-   if (radius < min_radius) return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+   if (radius < min_radius) {
+       return false;             // no space for Single domain.. it will be discarded, and a Multi is created instead!
+   }
 
    sid_pair_.second = Shell(domainID_, Sphere(pos, radius), Shell::Code::NORMAL);
    gf_ = std::make_unique<GreensFunction3DAbsSym>(GreensFunction3DAbsSym(pid_pair_.second.D(), get_inner_a()));

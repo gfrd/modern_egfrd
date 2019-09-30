@@ -130,7 +130,7 @@ inline double find_maximal_cylinder_height_to_segment(Vector3 start1, Vector3 un
     if(f(upper_limit) > 0.0) {
         // Even maximal height does not reach the plane, so return it directly
         return upper_limit;
-    } else if(f(0) <= other_radius) {
+    } else if(f(0) <= 0.0) {
         return 0.0;
     }
 

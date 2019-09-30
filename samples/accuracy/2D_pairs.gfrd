@@ -8,20 +8,21 @@ EndTime = 100.0                         ; seconds
 [Variables]
 N_A = 6.022e23                         ; Avogadro's constant
 V = 1e-15                              ; 1 femto liter
-World_size = (1e-3 * V) ^ (1/3)        ; Liter to cube-length in m
-N = 100                                 ; number of particles for A and B
-Conc = N / N_A / V                     ; initial concentration for A and B, mol liter^-1
-r = 1e-9                               ; m
-D = 1e-13                              ; m^2 s^-1
-sigma = 2 * r                          ; m
-k_D = 4 * pi * sigma * D               ; m^3 s^-1
-;K_d = Conc / 2                         ; mol liter^-1
-K_d = 144e-9 * N_A * 1000.0            ; m^3 s^-1
-k_a = k_D                              ; m^3 s^-1
+World_size = ((1e-3 * V) ^ (1/3)) / 1e-6        ; Liter to cube-length in um
+N = 20                                 ; number of particles for A and B
+Conc = N / N_A / 1                     ; initial concentration for A and B, mol um^-2
+Surf = World_size ^ 2                  ; um^2
+r = 1e-3                               ; um
+D = 1                              ; um^2 s^-1
+sigma = 2 * r                          ; um
+k_D = 4 * pi * sigma * D               ; um^2 s^-1
+K_d = Conc / 2.0 * N_A                         ; molecules um^-2
+;K_d = (10e-9 * N_A * 1000.0) * 1e18            ; um^-3
+;k_a = k_D                              ; um^3 s^-1
+k_a = 1e-3                             ; um^2 s^-1
 k_d = K_d * k_a                        ; s^-1
 
-; Likely not valid for 2D/3D interactions
-Nc_th = (2*N+K_d/1000*V - sqrt( (2*N+K_d/1000*V)^2 - 4*N*N)) / 2
+Nc_th = (2*N+K_d*Surf - sqrt( (2*N+K_d*Surf)^2 - 4*N*N)) / 2
 
 [World]
 ;Matrix = 8
@@ -60,7 +61,8 @@ ka = k_a
 kd = k_d
 
 [Particles]
-A = ( 0.09*World_size*(n%10), 0, 0.1*World_size*floor(n/10) ), N
+A = ( rnd()*World_size, 0, 0.1*World_size*floor(n/10) ), N
+;A = ( 0.09*World_size*(n%10), 0, 0.1*World_size*floor(n/10) ), N
 B =( 0.09*World_size*(n%10)+5*r, 0, 0.1*World_size*floor(n/10) ), N
 C = 0
 
