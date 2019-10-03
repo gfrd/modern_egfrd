@@ -1,7 +1,7 @@
 ; eGFRD accuracy test for 2D and 3D diffusing species
 
 [Variables]
-seed = 0x1337c0de5
+seed = 0x1337c0de
 cnfile = $'copynumbers.bin'            ; copy number output file
 sfile = $'simstate.bin'                ; name of simulator state dump file
 N_A = 6.022e23                         ; Avogadro's constant
