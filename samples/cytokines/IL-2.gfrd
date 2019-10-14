@@ -3,8 +3,9 @@
 [Variables]
 ; Changed by parameter sweep of cluster run
 Conc_IL = 1e-9                         ; Concentration of interleukins, mol liter^-1
-N_IL = 1                               ; Particles of interleukin in simulation
-N_R_PC = 5000                          ; Full-complex receptors per cell
+N_IL = 3                               ; Particles of interleukin in simulation
+N_R_PC = 5000                          ; Receptor chains per cell for B and G chains
+RATIO_A = 0.2                          ; The ratio compared to B and G chains at which the A chain is present
 T_CR = 4e-6                            ; T cell radius, m
 T_CS = 4 * pi * T_CR^2                 ; T cell surface area, m^2
 
@@ -173,7 +174,7 @@ kd = k_d_8                              ; s^-1
 
 [Particles]
 IL_2 = N_IL
-IL_2RA = N_R
+IL_2RA = N_R * RATIO_A
 IL_2RB = N_R
 IL_2RG = N_R
 
