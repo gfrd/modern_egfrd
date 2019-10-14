@@ -1008,29 +1008,34 @@ void Persistence::retreive_greensfunction(std::unique_ptr<GreensFunction>& gf)
        gf = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D, a));
    }
    else
-      THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
+       THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
 void Persistence::store_greensfunction(const std::unique_ptr<PairGreensFunction>& gf)
 {
-   std::string rtti = gf != nullptr ? gf->type_name() : "NULL";
-   store_string(rtti);
-   if (gf == nullptr) return;
+    std::string rtti = gf != nullptr ? gf->type_name() : "NULL";
+    store_string(rtti);
+    if (gf == nullptr) return;
 
-   write(gf->getD());
-   write(gf->getkf());
-   write(gf->getr0());
-   write(gf->getSigma());
+    write(gf->getD());
+    write(gf->getkf());
+    write(gf->getr0());
+    write(gf->getSigma());
 
-   if (rtti == "GreensFunction3DRadAbs")
-   {
-      auto gf2 = reinterpret_cast<GreensFunction3DRadAbs*>(gf.get());
-      write(gf2->geta());
-   }
-   else
-      THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
+    if (rtti == "GreensFunction3DRadAbs")
+    {
+        auto gf2 = reinterpret_cast<GreensFunction3DRadAbs*>(gf.get());
+        write(gf2->geta());
+    }
+    else if (rtti == "GreensFunction2DRadAbs")
+    {
+        auto gf2 = reinterpret_cast<GreensFunction2DRadAbs*>(gf.get());
+        write(gf2->geta());
+    }
+    else
+        THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
 }
 
 void Persistence::retreive_greensfunction(std::unique_ptr<PairGreensFunction>& gf)
@@ -1048,6 +1053,11 @@ void Persistence::retreive_greensfunction(std::unique_ptr<PairGreensFunction>& g
    {
       double a = read<double>();
       gf = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D, kf, r0, sigma, a));
+   }
+   else if (rtti == "GreensFunction2DRadAbs")
+   {
+       double a = read<double>();
+       gf = std::make_unique<GreensFunction2DRadAbs>(GreensFunction2DRadAbs(D, kf, r0, sigma, a));
    }
    else
       THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
