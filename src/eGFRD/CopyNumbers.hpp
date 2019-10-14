@@ -34,13 +34,26 @@ public:
    void set_output(std::ostream& stream) const { log_.set_stream(stream); }
 
 private:
-   void print_header() const
+   void print_header()
    {
       std::stringstream line;
-      line << std::setw(12) << "Time";
+       max_name_length_ = 1;
+
+       // Determine the column size based on the maximal species name length
+       for (auto& s : world_.get_species())
+       {
+           auto size = s.second.name().length() + 1;
+           if (size > max_name_length_)
+           {
+               max_name_length_ = size;
+           }
+       }
+
+       line << std::setw(12) << "Time";
       for (auto& s : world_.get_species())
-         line << std::setw(8) << s.second.name();
+         line << std::setw(12) << s.second.name();
       log_.info() << line.str();
+       log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
    void print_row(double time) const
@@ -48,13 +61,15 @@ private:
       std::stringstream line;
       line << std::scientific << std::setprecision(6) << std::setw(12) << time << std::fixed;
       for (auto& s : world_.get_species())
-         line << std::setw(8) << world_.get_particle_ids(s.first).size();
+         line << std::setw(max_name_length_) << world_.get_particle_ids(s.first).size();
       log_.info() << line.str();
+       log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
 protected:
    const World& world_;
    Logger& log_;
+   int max_name_length_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -144,15 +159,29 @@ private:
    void print_header()
    {
       std::stringstream line;
-      line << std::setw(12) << "Time";
+      max_name_length_ = 1;
+
+      // Determine the column size based on the maximal species name length
       for (auto& s : world_.get_species())
       {
-         line << std::setw(10) << s.second.name();
+          auto size = s.second.name().length() + 1;
+          if (size > max_name_length_)
+          {
+              max_name_length_ = size;
+          }
+      }
+
+       line << std::setw(12) << "Time";
+
+       for (auto& s : world_.get_species())
+       {
+         line << std::setw(max_name_length_) << s.second.name();
 
          size_t count = world_.get_particle_ids(s.first).size();
          avg_map_[s.first].reset(count);
       }
       log_.info() << line.str();
+      log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
    void print_row(double time)
@@ -160,8 +189,9 @@ private:
       std::stringstream line;
       line << std::scientific << std::setprecision(6) << std::setw(12) << time << std::fixed;
       for (auto& s : world_.get_species())
-         line << std::setw(10) << std::fixed << std::setprecision(3) << avg_map_[s.first].update_time(time);
+         line << std::setw(max_name_length_) << std::fixed << std::setprecision(3) << avg_map_[s.first].update_time(time);
       log_.info() << line.str();
+      log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
 protected:
@@ -169,6 +199,7 @@ protected:
    const World& world_;
    const ReactionRuleCollection& reaction_rules_;
    Logger& log_;
+   int max_name_length_;
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -209,6 +240,7 @@ private:
          log_.info() << std::fixed << std::setw(8) << pip.first() << std::setw(8) << pip.second.sid()() << 
                         std::scientific << std::setprecision(6) << std::setw(16) << pip.second.position().X() << std::setw(16) << pip.second.position().Y() << std::setw(16) << pip.second.position().Z();
       log_.info();
+      log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
 protected:
