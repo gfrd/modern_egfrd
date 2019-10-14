@@ -1,21 +1,8 @@
-; eGFRD accuracy test for 2D and 3D diffusing species
+; Model for binding dynamics of interleukin-2 to receptor subcomplexes. See MSc thesis of Tom Clement (AMOLF, 2019) for details.
 
 [Variables]
-; TODO: swap for actual values
-r = 1e-9                               ; m
-r_2 = 1e-9                             ; m
-r_2RA = 1e-9                           ; m
-r_2RB = 1e-9                           ; m
-r_2RG = 1e-9                           ; m
-D_3D = 1e-12                           ; m^2 s^-1
-D_2D = 1e-13                           ; m^2 s^-1
-sigma = 2 * r                          ; m
-k_D_3D = 4 * pi * sigma * D_3D         ; m^3 s^-1
-k_D_2D = 4 * pi * sigma * D_2D         ; m^3 s^-1
-
 ; Changed by parameter sweep of cluster run
-;Conc_IL = 0.1e-12                      ; Concentration of interleukins, mol liter^-1
-Conc_IL = 0.1e-9                      ; Concentration of interleukins, mol liter^-1
+Conc_IL = 1e-9                         ; Concentration of interleukins, mol liter^-1
 N_IL = 1                               ; Particles of interleukin in simulation
 N_R_PC = 5000                          ; Full-complex receptors per cell
 T_CR = 4e-6                            ; T cell radius, m
@@ -23,15 +10,46 @@ T_CS = 4 * pi * T_CR^2                 ; T cell surface area, m^2
 
 ; Static parameters
 seed = 0xdead1eaf
+rrfile = $'reactions.bin'              ; reactions record file
 cnfile = $'copynumbers.bin'            ; copy number output file
 sfile = $'simstate.bin'                ; name of simulator state dump file
 N_A = 6.022e23                         ; Avogadro's constant
 V = N_IL / (Conc_IL * N_A)             ; Volume necessary to have exactly N_IL interleukin particles in the simulation, liter
 N_T_PV = 2e9 * V                       ; Number of T-cells per volume, https://assets.thermofisher.com/TFS-Assets/LSG/brochures/I-076357%20cell%20count%20table%20topp_WEB.pdf
 World_size = (1e-3 * V) ^ (1/3)        ; Liter to cube-length in meter
-N_R_PM = N_R_PC / (T_CS * N_T_PV)      ; Full-complex receptors per m^2
-;N_R = N_R_PM * (World_size^2)          ; Full-complex receptors in simulation
-N_R = 20          ; Full-complex receptors in simulation
+N_R_PM = N_R_PC / T_CS                 ; Full-complex receptors per m^2
+N_R = N_R_PM * (World_size^2)          ; Full-complex receptors in simulation
+
+r_2 = 2.5e-9                           ; m (max diameter 49.678 A, Chimera + http://www.rcsb.org/structure/2B5I, https://science.sciencemag.org/content/sci/310/5751/1159.full.pdf)
+r_2RA = 2.8e-9                         ; m (max diameter 56.849 A, Chimera + http://www.rcsb.org/structure/2B5I, https://science.sciencemag.org/content/sci/310/5751/1159.full.pdf)
+r_2RB = 3.6e-9                         ; m (max diameter 73.204 A, Chimera + http://www.rcsb.org/structure/2B5I, https://science.sciencemag.org/content/sci/310/5751/1159.full.pdf)
+r_2RG = 3.9e-9                         ; m (max diameter 78.339 A, Chimera + http://www.rcsb.org/structure/2B5I, https://science.sciencemag.org/content/sci/310/5751/1159.full.pdf)
+D_3D = 1e-12                           ; m^2 s^-1
+D_2D = 1e-13                           ; m^2 s^-1
+K_d_1 = 10.39e-9 * 1e3 * N_A                                         ; molecules m^-3 (from mol liter-3)
+K_d_2 = 62.46e-9 * 1e3 * N_A * (2 * (r_2 + r_2RA + r_2RB))           ; molecules m^-2 (from mol liter-3, corrected for 2D diffusion)
+K_d_3 = 11.71e-9 * 1e3 * N_A * (2 * (r_2 + r_2RA + r_2RB + r_2RG))   ; molecules m^-2 (from mol liter-3, corrected for 2D diffusion)
+K_d_4 = 231.04e-9 * 1e3 * N_A * (2 * (r_2RA + r_2RB))                ; molecules m^-2 (from mol liter-3, corrected for 2D diffusion)
+K_d_5 = 2.81e-9 * 1e3 * N_A                                          ; molecules m^-3 (from mol liter-3)
+K_d_6 = 144.10e-9 * 1e3 * N_A                                        ; molecules m^-3 (from mol liter-3)
+K_d_7 = 0.80e-9 * 1e3 * N_A  * (2 * (r_2 + r_2RB + r_2RG))           ; molecules m^-2 (from mol liter-3, corrected for 2D diffusion)
+K_d_8 = 66.29e-9 * 1e3 * N_A * (2 * (r_2 + r_2RA + r_2RB + r_2RG))   ; molecules m^-2 (from mol liter-3, corrected for 2D diffusion)
+k_D_1 = 4 * pi * (r_2 + r_2RA) * (D_3D + D_2D)                 ; m^3 s^-1
+k_D_2 = 4 * pi * (r_2 + r_2RA + r_2RB) * (D_2D + D_2D)         ; m^3 s^-1
+k_D_3 = 4 * pi * (r_2 + r_2RA + r_2RB + r_2RG) * (D_2D + D_2D) ; m^3 s^-1
+k_D_4 = 4 * pi * (r_2RA + r_2RB) * (D_2D + D_2D)               ; m^3 s^-1
+k_D_5 = 4 * pi * (r_2 + r_2RA + r_2RB) * (D_3D + D_2D)         ; m^3 s^-1
+k_D_6 = 4 * pi * (r_2 + r_2RB) * (D_3D + D_2D)                 ; m^3 s^-1
+k_D_7 = 4 * pi * (r_2 + r_2RB + r_2RG) * (D_2D + D_2D)         ; m^3 s^-1
+k_D_8 = 4 * pi * (r_2 + r_2RA + r_2RB + r_2RG) * (D_2D + D_2D) ; m^3 s^-1
+k_a_1 = k_D_1                                                  ; m^3 s^-1
+k_d_2 = 0.1                                                    ; s^-1 (k_d set instead of k_a because no reasoning is known for estimating k_a in 2D)
+k_d_3 = 0.1                                                    ; s^-1 (k_d set instead of k_a because no reasoning is known for estimating k_a in 2D)
+k_d_4 = 0.1                                                    ; s^-1 (k_d set instead of k_a because no reasoning is known for estimating k_a in 2D)
+k_a_5 = k_D_5                                                  ; m^3 s^-1
+k_a_6 = k_D_6                                                  ; m^3 s^-1
+k_d_7 = 0.1                                                    ; s^-1 (k_d set instead of k_a because no reasoning is known for estimating k_a in 2D)
+k_d_8 = 0.1                                                    ; s^-1 (k_d set instead of k_a because no reasoning is known for estimating k_a in 2D)
 
 [World]
 ;Matrix = 8
@@ -48,110 +66,110 @@ Ly = 0.6 * World_size
 
 [SpeciesType]
 Name = IL_2
-r = r                               ; m
-D = D_3D                            ; m^2*s^-1
+r = r_2                                ; m
+D = D_3D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2RA
 Structure = plane
-r = r                               ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2RA                              ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2RB
 Structure = plane
-r = r                               ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2RB                              ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2RA_2RB
 Structure = plane
-r = r                               ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2RA + r_2RB                      ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2RG
 Structure = plane
-r = r                               ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2RG                              ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2_2RA
 Structure = plane
-r = 2*r                             ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2 + r_2RA                        ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2_2RB
 Structure = plane
-r = 2*r                             ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2 + r_2RB                        ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2_2RA_2RB
 Structure = plane
-r = 3*r                             ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2 + r_2RA + r_2RB                ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2_2RB_2RG
 Structure = plane
-r = 3*r                             ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2 + r_2RB + r_2RG                ; m
+D = D_2D                               ; m^2*s^-1
 
 [SpeciesType]
 Name = IL_2_2RA_2RB_2RG
 Structure = plane
-r = 4*r                             ; m
-D = D_2D                             ; m^2*s^-1
+r = r_2 + r_2RA + r_2RB + r_2RG        ; m
+D = D_2D                               ; m^2*s^-1
 
 ; v1
 [ReactionRule]
 Rule = IL_2 + IL_2RA <=> IL_2_2RA
-ka = k_D_2D + k_D_3D
-kd = (10.4e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_a_1
+kd = K_d_1 * k_a_1    ; s^-1
 
 ; v2
 [ReactionRule]
 Rule = IL_2_2RA + IL_2RB <=> IL_2_2RA_2RB
-ka = k_D_2D + k_D_2D
-kd = (62.5e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_d_2 / K_d_2                      ; m^2 s^-1
+kd = k_d_2                              ; s^-1
 
 ; v3
 [ReactionRule]
 Rule = IL_2_2RA_2RB + IL_2RG <=> IL_2_2RA_2RB_2RG
-ka = k_D_2D + k_D_2D
-kd = (11.7e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_d_3 / K_d_3                      ; m^2 s^-1
+kd = k_d_3                              ; s^-1
 
 ; v4
 [ReactionRule]
 Rule = IL_2RA + IL_2RB <=> IL_2RA_2RB
-ka = k_D_2D + k_D_2D
-kd = (231.0e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_d_4 / K_d_4                      ; m^2 s^-1
+kd = k_d_4                              ; s^-1
 
 ; v5
 [ReactionRule]
 Rule = IL_2 + IL_2RA_2RB <=> IL_2_2RA_2RB
-ka = k_D_2D + k_D_3D
-kd = (2.8e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_a_5
+kd = K_d_5 * k_a_5                      ; s^-1
 
 ; v6
 [ReactionRule]
 Rule = IL_2 + IL_2RB <=> IL_2_2RB
-ka = k_D_2D + k_D_3D
-kd = (144.1e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_a_6
+kd = K_d_6 * k_a_6                      ; s^-1
 
 ; v7
 [ReactionRule]
 Rule = IL_2_2RB + IL_2RG <=> IL_2_2RB_2RG
-ka = k_D_2D + k_D_2D
-kd = (1.5e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_d_7 / K_d_7                      ; m^2 s^-1
+kd = k_d_7                              ; s^-1
 
 ; v8
 [ReactionRule]
 Rule = IL_2_2RB_2RG + IL_2RA <=> IL_2_2RA_2RB_2RG
-ka = k_D_2D + k_D_2D
-kd = (66.3e-9 * N_A * 1000.0) * k_D_2D + k_D_3D         ; (K_d * ka), s^-1
+ka = k_d_8 / K_d_8                      ; m^2 s^-1
+kd = k_d_8                              ; s^-1
 
 [Particles]
 IL_2 = N_IL
@@ -165,11 +183,14 @@ Width = 20
 [CopyNumbers]
 Interval = 0.1
 Type = average
-;File = $cnfile
+File = $cnfile
+
+[ReactionRecord]
+File = $rrfile
 
 [Simulator]
 Seed = seed
-PrepareTime = 10                        ; seconds
+PrepareTime = 0.1                        ; seconds
 EndTime = 100.0                         ; seconds
 MaintenanceFile = $sfile
 
