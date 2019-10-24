@@ -610,7 +610,6 @@ public:
             : Pair(did, pid_pair_2d, pid_pair_3d, sid_pair, reactions),
             pid_pair_2d_(pid_pair_2d), pid_pair_3d_(pid_pair_3d), structure_3d_(structure_3d), world_(world)
     {
-//        THROW_UNLESS(illegal_state, sid_pair.second.shape() == Shell::Shape::CYLINDER);
         THROW_UNLESS(illegal_state, structure_2d.get()->id() == pid_pair_2d.second.structure_id());
         THROW_UNLESS(illegal_state, structure_3d.get()->id() == pid_pair_3d.second.structure_id());
 
@@ -637,18 +636,20 @@ public:
         auto pos_2d = particle1().position();
         auto pos_3d = world.cyclic_transpose(particle2().position(), pos_2d);
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
-        double min_radius = max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR;
+        double min_radius = std::max(max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR, iv_.length());
+        
+        auto com_2d = structure_2d_.get()->project_point(com_).first;
 
         //TODO: cylinder should be centered around CoM, not 2D particle
         double max_radius = std::min(smat.cell_size() / std::sqrt(8.0),                       // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-                                     scaling::dist_to_plane_edge(pos_2d, structure_2d_.get()->id(), world));  // and not exceed its plane edges
+                                     scaling::dist_to_plane_edge(com_2d, structure_2d_.get()->id(), world));  // and not exceed its plane edges
         auto radius = max_radius;
         auto height = 2 * min_radius;
         auto D_r = D_tot();
         auto D_2D = particle1().D(), D_3D = particle2().D();
         auto radius2D = particle1().radius(), radius3D = particle2().radius();
 
-        particle_surface_dist_ = structure_2d_->distance(pos_3d);
+        particle_surface_dist_ = structure_2d_->distance(com_);
 
         std::vector<ShellID> ignored_shells = {sid1, sid2};
         std::vector<StructureID> ignored_structures = {particle1().structure_id(), particle1().structure_id(), world.get_def_structure_id()};
@@ -660,7 +661,7 @@ public:
         auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
         auto height_to_surface = get_distance_to_surface();
         auto static_height = height_through_surface + height_to_surface;
-        auto base_pos = pos_2d - height_through_surface * unit_z;
+        auto base_pos = com_ - (height_through_surface + height_to_surface) * unit_z;
         auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
 
         radius = std::min(max_dynamic_height * scaling_factor_, max_radius);
@@ -683,8 +684,7 @@ public:
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
         height = (a_r_ / scaling_factor_) + static_height;
 
-        //TODO: cylinder should be centered around CoM, not 2D particle
-        auto cylinder_pos = pos_2d + unit_z * (height/2 - height_through_surface);
+        auto cylinder_pos = com_ + unit_z * (height/2 - height_through_surface);
 
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius, height/2);
