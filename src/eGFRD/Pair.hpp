@@ -636,20 +636,15 @@ public:
         auto pos_2d = particle1().position();
         auto pos_3d = world.cyclic_transpose(particle2().position(), pos_2d);
         auto max_part_radius = gsl_max(particle1().radius(), particle2().radius());
-        double min_radius = std::max(max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR, iv_.length());
-        
-        auto com_2d = structure_2d_.get()->project_point(com_).first;
+        double min_radius = std::max(max_part_radius * GfrdCfg.MULTI_SHELL_FACTOR, r0());
 
-        //TODO: cylinder should be centered around CoM, not 2D particle
         double max_radius = std::min(smat.cell_size() / std::sqrt(8.0),                       // any angle cylinder must fit into cell-matrix! 2*sqrt(2)
-                                     scaling::dist_to_plane_edge(com_2d, structure_2d_.get()->id(), world));  // and not exceed its plane edges
-        auto radius = max_radius;
-        auto height = 2 * min_radius;
+                                     scaling::dist_to_plane_edge(com_, structure_2d_.get()->id(), world));  // and not exceed its plane edges
         auto D_r = D_tot();
         auto D_2D = particle1().D(), D_3D = particle2().D();
         auto radius2D = particle1().radius(), radius3D = particle2().radius();
 
-        particle_surface_dist_ = structure_2d_->distance(com_);
+        particle_surface_dist_ = structure_2d_->distance(pos_3d);
 
         std::vector<ShellID> ignored_shells = {sid1, sid2};
         std::vector<StructureID> ignored_structures = {particle1().structure_id(), particle1().structure_id(), world.get_def_structure_id()};
@@ -661,11 +656,10 @@ public:
         auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
         auto height_to_surface = get_distance_to_surface();
         auto static_height = height_through_surface + height_to_surface;
-        auto base_pos = com_ - (height_through_surface + height_to_surface) * unit_z;
+        auto base_pos = com_ - (height_through_surface * unit_z);
         auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
 
-        radius = std::min(max_dynamic_height * scaling_factor_, max_radius);
-        radius /= GfrdCfg.SAFETY;
+        auto radius = std::min(max_dynamic_height * scaling_factor_, max_radius) / GfrdCfg.SAFETY;
 
         if (radius < min_radius) return false; // no space for Mixed2D3D domain.. it will be discarded, and a single or multi is created instead!
 
@@ -682,7 +676,7 @@ public:
         }
 
         // Height is set to a ratio of the radius, such that diffusion of the IV becomes isotropic
-        height = (a_r_ / scaling_factor_) + static_height;
+        auto height = (a_r_ / scaling_factor_) + static_height;
 
         auto cylinder_pos = com_ + unit_z * (height/2 - height_through_surface);
 
@@ -818,10 +812,10 @@ public:
 
         // The distance the cylinder protrudes through the PlanarSurface. We also call this
         // side of the cylinder the bottom.
-        auto z_left = radius_2d * GfrdCfg.SINGLE_SHELL_FACTOR;
+        auto height_through_surface = radius_2d * GfrdCfg.SINGLE_SHELL_FACTOR;
 
         // The distance between the 3D-diffusing particle and the cylinder top cap.
-        auto z_right = 2.0 * shell_half_length - get_distance_to_surface() - z_left;
+        auto z_right = 2.0 * shell_half_length - get_distance_to_surface() - height_through_surface;
 
         // Partition the space in the protective domain over the IV and the CoM domains
         // The outer bound of the interparticle vector is set by the particle diffusing in 3D via:
@@ -883,21 +877,6 @@ public:
 
     // --------------------------------------------------------------------------------------------------------------------------------
 
-    double get_distance_to_escape(double half_length) const
-    {
-        // This calculates the distance from the particle to the flat boundary away from the surface.
-        // Note that this is the distance from the hull of the particle, not its center.
-        auto cylinder_length = half_length*2;
-        auto particle_radius = particle2().radius();
-        // Portion of cylinder behind planar surface
-        auto cylinder_left = (particle_radius * GfrdCfg.SINGLE_SHELL_FACTOR);
-        // Portion of cylinder in front of planar surface
-        auto cylinder_right = cylinder_length - cylinder_left;
-
-        auto particle_to_right_boundary = cylinder_right - particle_surface_dist_ - particle_radius;
-        return particle_to_right_boundary;
-    }
-
     double sigma() const override {
         // Rescale sigma to correct for the rescaling of the coordinate system.
         // This is the sigma that is used for the evaluation of the Green's function and is in this case
@@ -922,15 +901,6 @@ public:
         }
 
         return rescaled_sigma;
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------------
-
-    double center_particle_offset(double half_length) const
-    {
-        auto particle_radius = particle2().radius();
-        // Distance between the particle center and cylinder center
-        return (half_length - get_distance_to_escape(half_length) - particle_radius);
     }
 
 private:
