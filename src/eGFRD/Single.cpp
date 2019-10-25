@@ -110,7 +110,7 @@ GFRD_EXPORT bool SinglePlanarInteraction::create_updated_shell(const shell_matri
     std::vector<StructureID> ignored_structures = {interacting_structure_.id(), particle.structure_id(), world.get_def_structure_id()};
 
     if(particle_surface_dist_ < 0.0) {
-        Log("GFRD").warn() << "Particle " << pid_pair_.first << " is touching a surface it is not bound to, BD motion might have been erroneous.";
+        Log("GFRD").warn() << "Particle " << pid_pair_.first << " is touching a surface it is not bound to, particle movement might have been erroneous.";
         return false;
     }
 
