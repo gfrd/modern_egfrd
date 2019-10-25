@@ -55,7 +55,7 @@ File = $cnfile
 [Simulator]
 Seed = seed
 PrepareTime = 10                        ; seconds
-EndTime = 100                           ; seconds
+EndTime = 20                           ; seconds
 MaintenanceStep = 100000
 MaintenanceFile = $sfile
 

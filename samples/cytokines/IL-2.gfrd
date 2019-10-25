@@ -3,7 +3,7 @@
 [Variables]
 ; Changed by parameter sweep of cluster run
 Conc_IL = 1e-9                         ; Concentration of interleukins, mol liter^-1
-N_IL = 3                               ; Particles of interleukin in simulation
+N_IL = 1                               ; Particles of interleukin in simulation
 N_R_PC = 5000                          ; Receptor chains per cell for B and G chains
 RATIO_A = 0.2                          ; The ratio compared to B and G chains at which the A chain is present
 T_CR = 4e-6                            ; T cell radius, m
@@ -11,8 +11,9 @@ T_CS = 4 * pi * T_CR^2                 ; T cell surface area, m^2
 
 ; Static parameters
 seed = 0xdead1eaf
-rrfile = $'reactions.bin'              ; reactions record file
-cnfile = $'copynumbers.bin'            ; copy number output file
+rrfile = $'reactions.bin'              ; reactions over time file
+cnfile = $'copynumbers.bin'            ; copy numbers over time file
+posfile = $'positions.bin'             ; particle positions over time file
 sfile = $'simstate.bin'                ; name of simulator state dump file
 N_A = 6.022e23                         ; Avogadro's constant
 V = N_IL / (Conc_IL * N_A)             ; Volume necessary to have exactly N_IL interleukin particles in the simulation, liter
@@ -189,9 +190,13 @@ File = $cnfile
 [ReactionRecord]
 File = $rrfile
 
+[ParticlePositions]
+Interval = 1                             ; seconds
+File = $posfile
+
 [Simulator]
 Seed = seed
-PrepareTime = 0.1                        ; seconds
-EndTime = 100.0                         ; seconds
+PrepareTime = 10                         ; seconds
+EndTime = 100                            ; seconds
 MaintenanceFile = $sfile
 
