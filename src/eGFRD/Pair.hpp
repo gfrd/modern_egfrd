@@ -655,7 +655,7 @@ public:
 
         auto height_through_surface = radius2D * GfrdCfg.SINGLE_SHELL_FACTOR;
         auto height_to_surface = get_distance_to_surface();
-        auto static_height = height_through_surface + height_to_surface;
+        auto static_height = height_through_surface + height_to_surface + radius3D;
         auto base_pos = com_ - (height_through_surface * unit_z);
         auto max_dynamic_height = scaling::find_maximal_cylinder_height<shell_matrix_type>(base_pos, unit_z, static_height, scaling_factor_, smat, world, ignored_structures, ignored_shells);
 
@@ -763,6 +763,18 @@ public:
         // Do the reverse scaling in z-direction
         auto iv_z_length_backtransform = iv_z_length * z_backtransform;
 
+        // Check for membrane overlap
+        if (iv_z_length_backtransform < radius2)
+        {
+            // IV is too short in the direction orthogonal to the membrane, and would thus cause a collision with the membrane.
+            // We replace the movement into the membrane by a bounce of the same magnitude. For example, if the particle
+            // would protrude through the membrane with 1/3 of its radius, we will make the new IV z-length (radius + 1/3 * radius),
+            // such that there is now (1/3 * radius) space between the membrane and the particle hull.
+            Log("GFRD").debug() << "PairMixed2D3D back_transform causes 3D particle to touch plane, bouncing it in the direction orthogonal to the plane.";
+            auto protrusion = radius2 - iv_z_length_backtransform;
+            iv_z_length_backtransform = (radius2 + protrusion);
+        }
+
         // The following is to avoid overlaps in case that the z-component of the IV is scaled down
         // so much that it would cause a particle overlap.
         // This can happen because the inner boundary in the space of transformed coordinates is not a
@@ -781,8 +793,6 @@ public:
 
             iv_z_length_backtransform = sqrt(z_safety_factor_sq) * iv_z_length_backtransform;
         }
-
-        // TODO: also check for membrane overlapping?
 
         // Construct the z-vector-component and the new position vectors
         auto iv_z = unit * iv_z_length_backtransform;
