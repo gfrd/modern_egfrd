@@ -37,7 +37,7 @@ private:
    void print_header()
    {
       std::stringstream line;
-       max_name_length_ = 1;
+       max_name_length_ = 8;
 
        // Determine the column size based on the maximal species name length
        for (auto& s : world_.get_species())
@@ -159,7 +159,7 @@ private:
    void print_header()
    {
       std::stringstream line;
-      max_name_length_ = 1;
+      max_name_length_ = 8;
 
       // Determine the column size based on the maximal species name length
       for (auto& s : world_.get_species())
