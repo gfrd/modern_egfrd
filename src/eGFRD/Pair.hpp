@@ -559,6 +559,13 @@ public:
         // Calculate radii for center-of-motion vector R, and interparticle vector r
         determine_radii(radius);
 
+        // Prevent domain creation if the maximal length of the IV is close to its initial size,
+        // otherwise the particle will escape too soon, or drawTime() might not converge.
+        if (feq(a_r_, r0(), r0()))
+        {
+            return false;
+        }
+
         sid_pair_.second = Shell(domainID_, Cylinder(pos, radius, unit_z, height/2), Shell::Code::NORMAL);
         gf_com_ = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D_R(), a_R()));
         gf_iv_ = std::make_unique<GreensFunction2DRadAbs>(GreensFunction2DRadAbs(D_r, k_total(), r0(), sigma(), a_r()));
