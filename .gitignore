@@ -30,7 +30,10 @@ build/*
 .svn/*
 *.vcxproj.user
 
-# Temperary files
+# JetBrains stuff
+.idea/*
+
+# Temporary files
 *~
 *.bak
 *.swp

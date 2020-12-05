@@ -72,29 +72,87 @@ void Persistence::store_egfrd(const EGFRDSimulator& gfrd)
 
       if (rtti == "SingleSpherical")
       {
-         auto single = reinterpret_cast<Single*>(d.second.get());
-         write(single->pid_pair_);
-         write(single->sid_pair_);
-         THROW_UNLESS_MSG(not_implemented, single->rrule_ == nullptr, "Rule drawn between states???");
-         store_greensfunction(single->gf_);
+          auto single = reinterpret_cast<Single*>(d.second.get());
+          write(single->pid_pair_);
+          write(single->sid_pair_);
+          THROW_UNLESS_MSG(not_implemented, single->rrule_ == nullptr, "Rule drawn between states???");
+          store_greensfunction(single->gf_);
+      }
+      else if (rtti == "SingleCylindrical")
+      {
+          auto single = reinterpret_cast<SingleCylindrical*>(d.second.get());
+          write(single->pid_pair_);
+          write(single->sid_pair_);
+          THROW_UNLESS_MSG(not_implemented, single->rrule_ == nullptr, "Rule drawn between states???");
+          store_greensfunction(single->gf_);
+      }
+      else if (rtti == "SinglePlanarInteraction")
+      {
+          auto single = reinterpret_cast<SinglePlanarInteraction*>(d.second.get());
+          auto structure = *single->get_interacting_structure();
+          write(single->pid_pair_);
+          write(structure->sid());
+          write(single->sid_pair_);
+          THROW_UNLESS_MSG(not_implemented, single->rrule_ == nullptr, "Rule drawn between states???");
+          store_greensfunction(single->gf_);
       }
       else if (rtti == "PairSpherical")
       {
-         auto pair = reinterpret_cast<PairSpherical*>(d.second.get());
-         write(pair->pid_pair1_);
-         write(pair->pid_pair2_);
-         write(pair->sid_pair_);
-         store_vector(pair->iv_);
-         store_vector(pair->com_);
-         write(pair->a_R_);
-         write(pair->a_r_);
-         write(pair->single1_ktotal_);
-         write(pair->single2_ktotal_);
-         write(pair->pid_reactingsingle_);
-         THROW_UNLESS_MSG(not_implemented, pair->rrule_ == nullptr, "Rule drawn between states???");
-         THROW_UNLESS_MSG(not_implemented, pair->gf_tmp_ == nullptr, "tmpGf set between states???");
-         store_greensfunction(pair->gf_com_);
-         store_greensfunction(pair->gf_iv_);
+          auto pair = reinterpret_cast<PairSpherical*>(d.second.get());
+          write(pair->pid_pair1_);
+          write(pair->pid_pair2_);
+          write(pair->sid_pair_);
+          store_vector(pair->iv_);
+          store_vector(pair->com_);
+          write(pair->a_R_);
+          write(pair->a_r_);
+          write(pair->single1_ktotal_);
+          write(pair->single2_ktotal_);
+          write(pair->pid_reactingsingle_);
+          THROW_UNLESS_MSG(not_implemented, pair->rrule_ == nullptr, "Rule drawn between states???");
+          THROW_UNLESS_MSG(not_implemented, pair->gf_tmp_ == nullptr, "tmpGf set between states???");
+          store_greensfunction(pair->gf_com_);
+          store_greensfunction(pair->gf_iv_);
+      }
+      else if (rtti == "PairPlanar")
+      {
+          auto pair = reinterpret_cast<PairPlanar*>(d.second.get());
+          write(pair->pid_pair1_);
+          write(pair->pid_pair2_);
+          write(pair->structure_.get()->id());
+          write(pair->sid_pair_);
+          store_vector(pair->iv_);
+          store_vector(pair->com_);
+          write(pair->a_R_);
+          write(pair->a_r_);
+          write(pair->single1_ktotal_);
+          write(pair->single2_ktotal_);
+          write(pair->pid_reactingsingle_);
+          THROW_UNLESS_MSG(not_implemented, pair->rrule_ == nullptr, "Rule drawn between states???");
+          THROW_UNLESS_MSG(not_implemented, pair->gf_tmp_ == nullptr, "tmpGf set between states???");
+          store_greensfunction(pair->gf_com_);
+          store_greensfunction(pair->gf_iv_);
+      }
+      else if (rtti == "PairMixed2D3D")
+      {
+          auto pair = reinterpret_cast<PairMixed2D3D*>(d.second.get());
+          write(pair->pid_pair1_);
+          write(pair->pid_pair2_);
+          write(pair->structure_2d_.get()->id());
+          write(pair->structure_3d_.get()->id());
+          write(pair->sid_pair_);
+          store_vector(pair->iv_);
+          store_vector(pair->com_);
+          write(pair->a_R_);
+          write(pair->a_r_);
+          write(pair->single1_ktotal_);
+          write(pair->single2_ktotal_);
+          write(pair->pid_reactingsingle_);
+          write(pair->scaling_factor_);
+          write(pair->sqrt_DRDr_);
+          THROW_UNLESS_MSG(not_implemented, pair->rrule_ == nullptr, "Rule drawn between states???");
+          store_greensfunction(pair->gf_com_);
+          store_greensfunction(pair->gf_iv_);
       }
       else if (rtti == "Multi")
       {
@@ -164,29 +222,121 @@ void Persistence::retreive_egfrd(EGFRDSimulator& gfrd)
          retreive_greensfunction(single->gf_);
          gfrd.domains_[key] = std::move(single);
       }
+      else if (rtti == "SingleCylindrical")
+      {
+          Single::particle_id_pair pid_pair;
+          Single::shell_id_pair sid_pair;
+          read(pid_pair);
+          read(sid_pair);
+          const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid_pair.second.sid());
+          auto single = std::make_unique<SingleCylindrical>(SingleCylindrical(did, pid_pair, sid_pair, rr));
+          single->eventID_ = eid;
+          single->eventType_ = type;
+          single->last_time_ = last_time;
+          single->dt_ = dt;
+          retreive_greensfunction(single->gf_);
+          gfrd.domains_[key] = std::move(single);
+      }
+      else if (rtti == "SinglePlanarInteraction")
+      {
+          StructureID structureId;
+          Single::particle_id_pair pid_pair;
+          Single::shell_id_pair sid_pair;
+          read(pid_pair);
+          read(structureId);
+          read(sid_pair);
+          auto structure = gfrd.world_.get_structure(structureId);
+          auto plane = dynamic_cast<PlanarSurface*>(structure.get());
+          const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid_pair.second.sid());
+          const auto& ir = gfrd.reaction_rules_.query_interaction_rules(pid_pair.second.sid(), structure.get()->sid());
+          auto single = std::make_unique<SinglePlanarInteraction>(SinglePlanarInteraction(did, pid_pair, *plane, sid_pair, rr, ir));
+          single->eventID_ = eid;
+          single->eventType_ = type;
+          single->last_time_ = last_time;
+          single->dt_ = dt;
+          retreive_greensfunction(single->gf_);
+          gfrd.domains_[key] = std::move(single);
+      }
       else if (rtti == "PairSpherical")
       {
-         Single::particle_id_pair pid1_pair, pid2_pair;
-         Single::shell_id_pair sid_pair;
-         read(pid1_pair);
-         read(pid2_pair);
-         read(sid_pair);
-         const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid1_pair.second.sid(), pid2_pair.second.sid());
-         auto pair = std::make_unique<PairSpherical>(PairSpherical(did, pid1_pair, pid2_pair, sid_pair, rr));
-         pair->eventID_ = eid;
-         pair->eventType_ = type;
-         pair->last_time_ = last_time;
-         pair->dt_ = dt;
-         retreive_vector(pair->iv_);
-         retreive_vector(pair->com_);
-         read(pair->a_R_);
-         read(pair->a_r_);
-         read(pair->single1_ktotal_);
-         read(pair->single2_ktotal_);
-         read(pair->pid_reactingsingle_);
-         retreive_greensfunction(pair->gf_com_);
-         retreive_greensfunction(pair->gf_iv_);
-         gfrd.domains_[key] = std::move(pair);
+          Single::particle_id_pair pid1_pair, pid2_pair;
+          Single::shell_id_pair sid_pair;
+          read(pid1_pair);
+          read(pid2_pair);
+          read(sid_pair);
+          const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid1_pair.second.sid(), pid2_pair.second.sid());
+          auto pair = std::make_unique<PairSpherical>(PairSpherical(did, pid1_pair, pid2_pair, sid_pair, rr));
+          pair->eventID_ = eid;
+          pair->eventType_ = type;
+          pair->last_time_ = last_time;
+          pair->dt_ = dt;
+          retreive_vector(pair->iv_);
+          retreive_vector(pair->com_);
+          read(pair->a_R_);
+          read(pair->a_r_);
+          read(pair->single1_ktotal_);
+          read(pair->single2_ktotal_);
+          read(pair->pid_reactingsingle_);
+          retreive_greensfunction(pair->gf_com_);
+          retreive_greensfunction(pair->gf_iv_);
+          gfrd.domains_[key] = std::move(pair);
+      }
+      else if (rtti == "PairPlanar")
+      {
+          Single::particle_id_pair pid1_pair, pid2_pair;
+          Single::shell_id_pair sid_pair;
+          StructureID structureId;
+          read(pid1_pair);
+          read(pid2_pair);
+          read(structureId);
+          read(sid_pair);
+          auto structure = gfrd.world_.get_structure(structureId);
+          const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid1_pair.second.sid(), pid2_pair.second.sid());
+          auto pair = std::make_unique<PairPlanar>(PairPlanar(did, pid1_pair, pid2_pair, structure, sid_pair, rr));
+          pair->eventID_ = eid;
+          pair->eventType_ = type;
+          pair->last_time_ = last_time;
+          pair->dt_ = dt;
+          retreive_vector(pair->iv_);
+          retreive_vector(pair->com_);
+          read(pair->a_R_);
+          read(pair->a_r_);
+          read(pair->single1_ktotal_);
+          read(pair->single2_ktotal_);
+          read(pair->pid_reactingsingle_);
+          retreive_greensfunction(pair->gf_com_);
+          retreive_greensfunction(pair->gf_iv_);
+          gfrd.domains_[key] = std::move(pair);
+      }
+      else if (rtti == "PairMixed2D3D")
+      {
+          Single::particle_id_pair pid1_pair, pid2_pair;
+          Single::shell_id_pair sid_pair;
+          StructureID structureId1, structureId2;
+          read(pid1_pair);
+          read(pid2_pair);
+          read(structureId1);
+          read(sid_pair);
+          auto structure1 = gfrd.world_.get_structure(structureId1);
+          auto structure2 = gfrd.world_.get_structure(structureId2);
+          const auto& rr = gfrd.reaction_rules_.query_reaction_rules(pid1_pair.second.sid(), pid2_pair.second.sid());
+          auto pair = std::make_unique<PairMixed2D3D>(PairMixed2D3D(did, pid1_pair, pid2_pair, structure1, structure2, sid_pair, rr, gfrd.world_));
+          pair->eventID_ = eid;
+          pair->eventType_ = type;
+          pair->last_time_ = last_time;
+          pair->dt_ = dt;
+          retreive_vector(pair->iv_);
+          retreive_vector(pair->com_);
+          read(pair->a_R_);
+          read(pair->a_r_);
+          read(pair->single1_ktotal_);
+          read(pair->single2_ktotal_);
+          read(pair->pid_reactingsingle_);
+          read(pair->scaling_factor_);
+          read(pair->sqrt_DRDr_);
+          retreive_greensfunction(pair->gf_com_);
+          retreive_greensfunction(pair->gf_iv_);
+          gfrd.domains_[key] = std::move(pair);
       }
       else if (rtti == "Multi")
       {
@@ -830,6 +980,11 @@ void Persistence::store_greensfunction(const std::unique_ptr<GreensFunction>& gf
       auto gf2 = reinterpret_cast<GreensFunction3DAbsSym*>(gf.get());
       write(gf2->geta());
    }
+   else if (rtti == "GreensFunction2DAbsSym")
+   {
+       auto gf2 = reinterpret_cast<GreensFunction2DAbsSym*>(gf.get());
+       write(gf2->geta());
+   }
    else
       THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
 }
@@ -847,30 +1002,40 @@ void Persistence::retreive_greensfunction(std::unique_ptr<GreensFunction>& gf)
       double a = read<double>();
       gf = std::make_unique<GreensFunction3DAbsSym>(GreensFunction3DAbsSym(D, a));
    }
+   else if (rtti == "GreensFunction2DAbsSym")
+   {
+       double a = read<double>();
+       gf = std::make_unique<GreensFunction2DAbsSym>(GreensFunction2DAbsSym(D, a));
+   }
    else
-      THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
+       THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
 void Persistence::store_greensfunction(const std::unique_ptr<PairGreensFunction>& gf)
 {
-   std::string rtti = gf != nullptr ? gf->type_name() : "NULL";
-   store_string(rtti);
-   if (gf == nullptr) return;
+    std::string rtti = gf != nullptr ? gf->type_name() : "NULL";
+    store_string(rtti);
+    if (gf == nullptr) return;
 
-   write(gf->getD());
-   write(gf->getkf());
-   write(gf->getr0());
-   write(gf->getSigma());
+    write(gf->getD());
+    write(gf->getkf());
+    write(gf->getr0());
+    write(gf->getSigma());
 
-   if (rtti == "GreensFunction3DRadAbs")
-   {
-      auto gf2 = reinterpret_cast<GreensFunction3DRadAbs*>(gf.get());
-      write(gf2->geta());
-   }
-   else
-      THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
+    if (rtti == "GreensFunction3DRadAbs")
+    {
+        auto gf2 = reinterpret_cast<GreensFunction3DRadAbs*>(gf.get());
+        write(gf2->geta());
+    }
+    else if (rtti == "GreensFunction2DRadAbs")
+    {
+        auto gf2 = reinterpret_cast<GreensFunction2DRadAbs*>(gf.get());
+        write(gf2->geta());
+    }
+    else
+        THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");
 }
 
 void Persistence::retreive_greensfunction(std::unique_ptr<PairGreensFunction>& gf)
@@ -888,6 +1053,11 @@ void Persistence::retreive_greensfunction(std::unique_ptr<PairGreensFunction>& g
    {
       double a = read<double>();
       gf = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D, kf, r0, sigma, a));
+   }
+   else if (rtti == "GreensFunction2DRadAbs")
+   {
+       double a = read<double>();
+       gf = std::make_unique<GreensFunction2DRadAbs>(GreensFunction2DRadAbs(D, kf, r0, sigma, a));
    }
    else
       THROW_EXCEPTION(not_implemented, "Storage of type " << rtti << " is not implemented.");

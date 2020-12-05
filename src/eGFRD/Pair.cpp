@@ -13,22 +13,16 @@ const double Pair::CUTOFF_FACTOR = 5.6;
 
 GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& smat, const World& world, ShellID sid1, ShellID sid2)
 {
-   Vector3 pos1 = pid_pair1_.second.position();
-   Vector3 pos2 = pid_pair2_.second.position();
-   Vector3 pos2c = world.cyclic_transpose(pos2, pos1);
-
-   Vector3 com = D_tot() > 0 ? (pid_pair2_.second.D() * pos1 + pid_pair1_.second.D() * pos2c) / D_tot() : 0.5 * (pos1 + pos2c);
-   com_ = world.apply_boundary(com);
-
-   iv_ = pos2c - pos1;
+   // Create IV and CoM vectors from particles
+   do_transform(world);
 
    THROW_UNLESS(no_space, r0() >= sigma());        // distance_from_sigma (pair gap) between %s and %s = %s < 0' % \(self.single1, self.single2, (self.r0 - self.sigma)))
 
    double min_radius = get_min_pair_size();
-   double max_radius = smat.cell_size() / 2.0;      // assure spheres cannot overlap
+   double max_radius = smat.cell_size() * GfrdCfg.MAX_CELL_OCCUPANCY;      // assure spheres cannot overlap
    auto radius = max_radius;
 
-   // when not defusing, use minimal shell (we're not going anywhere, lease space for all others)
+   // when not diffusing, use minimal shell (we're not going anywhere, lease space for all others)
    if (D_tot() == 0.0) radius = min_radius;
 
    // check distances to surfaces, ignore def.struct and particle.structure
@@ -36,7 +30,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
    {
       if (/*s->id() != pid_pair_.second.structure_id() &&*/ s->id() != world.get_def_structure_id())    // ignore structure that particle is attached to
       {
-         double distance = s->distance(com_);    // fix cyclic world !
+         auto transposed = world.cyclic_transpose(com_, s->position());
+         double distance = s->distance(transposed);
          radius = std::min(radius, distance);
       }
    }
@@ -44,6 +39,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
    shell_distance_checker sdc(sid1, sid2, com_, radius, shell_distance_checker::Construct::SHARE5050);
    CompileConfigSimulator::TBoundCondition::each_neighbor(smat, sdc, com_);
    radius = std::min(radius, sdc.distance());
+
+   radius /= GfrdCfg.SAFETY;
 
    // OLDCODE radius = radius / 1.01;     // for compare with old code
 
@@ -53,8 +50,8 @@ GFRD_EXPORT bool PairSpherical::create_updated_shell(const shell_matrix_type& sm
 
    determine_radii(iv_.length(), radius);     // calculate inner and outer radius a_r_, a_R_.
 
-   gf_com_ = std::make_unique<GreensFunction3DAbsSym>(GreensFunction3DAbsSym(D_R(), a_R_));
-   gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(GreensFunction3DRadAbs(D_tot(), k_total(), r0(), sigma(), a_r_));
+   gf_com_ = std::make_unique<GreensFunction3DAbsSym>(D_R(), a_R_);
+   gf_iv_ = std::make_unique<GreensFunction3DRadAbs>(D_tot(), k_total(), r0(), sigma(), a_r_);
 
    return true;
 }
@@ -77,17 +74,17 @@ GFRD_EXPORT const PairGreensFunction& PairSpherical::choose_pair_greens_function
          return *gf_iv_.get();
 
       // near sigma; use GreensFunction3DRadInf
-      gf_tmp_ = std::make_unique<GreensFunction3DRadInf>(GreensFunction3DRadInf(D_tot(), k_total(), r0(), sigma()));
+      gf_tmp_ = std::make_unique<GreensFunction3DRadInf>(D_tot(), k_total(), r0(), sigma());
       return *gf_tmp_.get();
    }
 
    // sigma unreachable
    if (distance_from_shell < threshold_distance)
       // near a;
-      gf_tmp_ = std::make_unique<GreensFunction3DAbs>(GreensFunction3DAbs(D_tot(), r0(), a_r_));
+      gf_tmp_ = std::make_unique<GreensFunction3DAbs>(D_tot(), r0(), a_r_);
    else
       // distant from both a and sigma;
-      gf_tmp_ = std::make_unique<GreensFunction3D>(GreensFunction3D(D_tot(), r0()));
+      gf_tmp_ = std::make_unique<GreensFunction3D>(D_tot(), r0());
 
    return *gf_tmp_.get();
 }
@@ -136,6 +133,7 @@ GFRD_EXPORT void PairSpherical::determine_radii(double r0, double shell_size)
    a_R_ = (D_geom() * (Db * (shell_size - radiusa) + Da * (shell_size - r0 - radiusa))) / (Da * Da + Da * Db + D_geom() * D_tot());
    a_r_ = (D_geom() * r0 + D_tot() * (shell_size - radiusa)) / (Da + D_geom());
 
+
    // Now if the planned domainsize for r is too large for proper convergence of the Greenfunctions, make it the maximum allowed size
    //if (a_r_ > a_r_max)
    //{
@@ -144,24 +142,26 @@ GFRD_EXPORT void PairSpherical::determine_radii(double r0, double shell_size)
    //   Logger::get_logger("EGFRD").info("Domainsize changed for convergence: a_r_ = a_r_max = %.16g, a_R_ = %.16g", a_r_, a_R_);
    //}
 
+
+   auto sum_length = a_R_ + a_r_ + radiusa;
+
+//   if (shell_size < sum_length) {
+//       // Calculation of the radii for the IV and CoM vectors was erroneous, and they exceed the shell.
+//       // We'll rescale them both to ensure they fit in the shell, with an extra safety margin to prevent
+//       // still exceeding the shell due to numerical errors.
+////       Log("GFRD").warn() << "Reducing PairSpherical a_R and a_r because their sum exceeds the shell size";
+//       auto factor = (sum_length / shell_size) + (GfrdCfg.SAFETY - 1.0);
+//       a_R_ /= factor;
+//       a_r_ /= factor;
+//   }
+
    ASSERT(a_R_ + a_r_ * Da / D_tot() + radiusa >= a_R_ + a_r_ * Db / D_tot() + radiusb);
    ASSERT(std::abs(a_R_ + a_r_ * Da / D_tot() + radiusa - shell_size) < 1e-12 * shell_size);                        // here the shell_size is the relevant scale
-
-   //   if __debug__:
-   //log.debug('shell_size = %g, a_r_ = %g, a_R_ = %g r0 = %g' %
-   //   (shell_size, a_r_, a_R_, r0))
-   //   if __debug__ :
-   //      tr = ((a_r_ - r0)**2) / (6 * self.D_r)       // the expected escape time of the IV
-   //      if self.D_R == 0 :
-   //         tR = numpy.inf
-   //      else :
-   //         tR = (a_R_**2) / (6 * self.D_R)          // the expected escape time of the CoM
-   //         log.debug('tr = %g, tR = %g' % (tr, tR))
-
 
    ASSERT(a_r_ > 0);
    ASSERT(a_r_ > r0);
    ASSERT(a_R_ > 0 || (feq(a_R_, 0) && (D1 == 0 || D2 == 0)));
+//   ASSERT(shell_size >= a_r_ + a_R_)
 }
 
 

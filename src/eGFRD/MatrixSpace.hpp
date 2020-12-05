@@ -314,7 +314,10 @@ public:
                cell_index_type _idx = idx;
                const Vector3 pos_off = offset_index_cyclic(_idx, off);
                const cell_type& c = cell(_idx);
-               for (const auto &i : c) collector(values_.cbegin() + i, pos_off);
+               for (const auto &i : c)
+               {
+                   collector(values_.cbegin() + i, pos_off);
+               }
             }
          }
       }

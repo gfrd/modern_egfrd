@@ -344,8 +344,45 @@ private:
 
       auto overlap = world_.check_particle_overlap(Sphere(new_pos, radius + reaction_length_), pid);
       bool bounced = std::any_of(overlap.begin(), overlap.end(), [&](const particle_id_pair_and_distance& e) {return e.second < -reaction_length_; });
+      bool bounced_struct = world_.test_surfaces_overlap(Sphere(new_pos, radius), old_pos, 0,
+              std::vector<StructureID>({world_.get_def_structure_id(), new_structure_id}));
 
-      if (bounced)
+       auto structures = world_.get_structures();
+       for(const auto& structure : structures) {
+           if (structure.get()->id() == world_.get_def_structure_id() || structure.get()->id() == new_structure_id) {
+               continue;
+           }
+
+           auto distance = structure.get()->distance(world_.cyclic_transpose(old_pos, structure.get()->position()));
+           if(fabs(distance) < radius) {
+               // TODO: this scenario should never happen, but currently does. A root cause fix is necessary later in time.
+               Log("GFRD").warn() << "Particle " << pid << " overlaps structure, moving it forcefully to structure boundary";
+
+               auto plane = dynamic_cast<PlanarSurface*>(structure.get());
+               if(plane == nullptr) {
+                   THROW_EXCEPTION(unsupported, "Particle overlaps a structure that is not a PlanarSurface. This is not yet supported.");
+               }
+
+               // Move particle back to the side of the
+               auto projected = plane->project_point(old_pos);
+               auto z_distance = projected.second.first / GfrdCfg.SAFETY;
+               auto to_move = z_distance >= 0 ? radius - z_distance : -radius - z_distance;
+               new_pos = world_.apply_boundary(old_pos + plane->shape().unit_z() * to_move);
+
+               // Force particle move, which would not happen if we say a bounce occurred
+               bounced = false;
+               bounced_struct = false;
+
+               break;
+           }
+       }
+
+      if(bounced_struct)
+      {
+//          Log("GFRD").info() << "Particle " << pid << " bounced off of structure";
+      }
+
+      if (bounced || bounced_struct)
       {
          // restore old position and structure_id
          new_pos = old_pos;
@@ -374,7 +411,7 @@ private:
          }
       }
 
-      if (!bounced)
+      if(!bounced)
       {
          auto update = std::make_pair(pid, Particle(species.id(), Sphere(new_pos, radius), new_structure_id, species.D(), species.v()));
          if (vc_.check_move(update.second.shape(), pid)) world_.update_particle(update);

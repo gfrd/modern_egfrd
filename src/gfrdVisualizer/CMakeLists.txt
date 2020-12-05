@@ -68,7 +68,7 @@ if (WIN32)
 	target_include_directories(gfrdVisualizer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Resources )
 	target_sources(gfrdVisualizer PRIVATE Resources/resource.h ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)
 elseif (APPLE)
-	target_compile_options(gfrdVisualizer -Wno-deprecated-declarations)
+#	target_compile_options(gfrdVisualizer -Wno-deprecated-declarations)
 endif()
 
 

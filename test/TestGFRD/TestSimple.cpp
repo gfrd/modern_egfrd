@@ -136,7 +136,7 @@ int testCopyNumbers()
 
    CopyNumbersInst cn(w, 1E-6);
    EGFRDSimulator s(w, rules, rng);
-   s.add_extrnal_event(0, &cn);
+   s.add_external_event(0, &cn);
    TINYTEST_TIME_START();
    while (s.time() < 1E-3)
    {

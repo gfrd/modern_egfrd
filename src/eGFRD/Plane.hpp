@@ -89,21 +89,21 @@ public:
       Vector3 intern(to_internal(pos));
 
       // The (negative) distances to the plane edges (in x/y direction)
-      double const dx(abs(intern.X()) - half_extent_.X());
-      double const dy(abs(intern.Y()) - half_extent_.Y());
+      double const dx(fabs(intern.X()) - half_extent_.X());
+      double const dy(fabs(intern.Y()) - half_extent_.Y());
       // The z-distance (may be positive or negative, depending on the side)
       double const dz(intern.Z());
 
       if (dx < 0 && dy < 0)
       {
          // pos is positioned over the plane (projected point is in the plane, not next to it).
-         return abs(dz);
+         return fabs(dz);
       }
 
       if (dx > 0) // outside the plane in the x direction
          return std::sqrt((dy > 0 ? std::pow(dx,2) + std::pow(dy,2) : std::pow(dx,2)) + std::pow(dz,2));
       // inside the plane in x direction
-      return dy > 0 ? std::sqrt(std::pow(dy,2) + std::pow(dz,2)) : abs(dz);
+      return dy > 0 ? std::sqrt(std::pow(dy,2) + std::pow(dz,2)) : fabs(dz);
    }
 
    std::pair<Vector3, bool> deflect(const Vector3& r0, const Vector3& d) const

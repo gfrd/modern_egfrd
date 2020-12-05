@@ -29,7 +29,8 @@ void print_usage()
 void gsl_error_handler(const char* reason, const char* file, int line, int error)
 {
    std::string ex_msg = make_string() << "GSL_ERROR: " << gsl_strerror(error) << " in " << file << ":" << line << " - " << reason;
-   throw  gfrd_exception(ex_msg);
+    Logger::get_logger("GFRD").warn() << ex_msg;
+//   throw  gfrd_exception(ex_msg);
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------

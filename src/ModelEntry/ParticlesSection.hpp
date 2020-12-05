@@ -63,9 +63,17 @@ struct ME_EXPORT ParticlesSection : SectionModeBase
       for (auto& pp_pair : placement_)
       {
          auto sid = model.get_species_type_id_by_name(pp_pair.first);
-         auto swid = world.get_def_structure_id();
+         auto species = model.get_species_type_by_id(sid);
+         auto structureTypeId = species.structure_type_id();
+         auto structids = world.get_structure_ids(structureTypeId);
+
+         auto stid = world.get_def_structure_id();
+         if(structids.size() == 1) {
+             stid = *structids.begin();
+         }
+
          for (auto &v : pp_pair.second)
-            world.add_particle(sid, swid, v);
+            world.add_particle(sid, stid, v);
       }
    }
 

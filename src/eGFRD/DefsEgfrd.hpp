@@ -63,6 +63,11 @@ using idtype = unsigned long long;
 
 template<class... T> void unused(T&&...) { }
 
+// Specify customized Matrix Cell grid on build command line (e.q. make -DMATRIXSIZE=4)
+#ifndef MATRIXSIZE
+#define MATRIXSIZE 8
+#endif
+
 // --------------------------------------------------------------------------------------------------------------------------------
 // common constants 
 
@@ -70,17 +75,27 @@ static struct GlobalGfrdConfig
 {
    const double MINIMAL_SEPARATION_FACTOR = 1.0 + 1e-07;
    const double SAFETY = 1.0 + 1e-2;
-   const double SINGLE_SHELL_FACTOR = 3.5;
-   const double MULTI_SHELL_FACTOR = std::sqrt(3);
+   const double SINGLE_SHELL_FACTOR = 3.5;         // This is the threshold for when the algorithm switches from forming
+                                                   // NonInteractionSingles to forming a Pair or Interaction. It also defines
+                                                   // the radius in which the NonInteractionSingle will burst intruding domains.
+                                                   // IMPORTANT NOTE: SINGLE_SHELL_FACTOR should be AT_LEAST 2 * MULTI_SHELL_FACTOR !
+                                                   // Otherwise we risk the construction of situations in which two neighbouring
+                                                   // particles neither can burst nor form a multi nor form a minimal single!
+
+   const double MULTI_SHELL_FACTOR = std::sqrt(3); // This factor multiplied with the particle radius decides when to add
+                                                   // NonInteractionSingles to a Multi and also defines the Multi shell size.
+                                                   // IMPORTANT NOTE: MULTI_SHELL_FACTOR should be AT LEAST sqrt(2) !
+                                                   // This stems from the fact that there is vacant space in the cylinder //
    const double TIME_TOLERANCE = 1e-10;
+   const double MAX_CELL_OCCUPANCY = 0.5;          // Maximum size of domains relative to world cell size
 
    const double DEFAULT_STEPSIZE_FACTOR = 0.05;    // The maximum step size in the newBD algorithm is determined as DSSF * sigma_min.
                                                    // Make sure that DEFAULT_STEP_SIZE_FACTOR < MULTI_SHELL_FACTOR, or else the
                                                    // reaction volume sticks out of the multi.
    const double BD_DT_HARDCORE_MIN = -1e-9;        // This is to define a hardcore lower bound for the timestep that will be
-                                                   // dynamically determined by the new BD scheme.It will prevent the algorithm
+                                                   // dynamically determined by the new BD scheme. It will prevent the algorithm
                                                    // to calculate ridiculously small timesteps, but will break detail balance.
-                                                   // Take care : This is for testing only!Keep this at a negative value for normal sims!
+                                                   // Take care : This is for testing only! Keep this at a negative value for normal sims!
    const uint ThrowInRetryCount = 500000;          // When randomly inserting particles, stop after N failed placements per particle (due to overlap or out-of-bounds error)
 
 } GfrdCfg;
@@ -103,11 +118,6 @@ static struct GlobalGfrdConfig
 // forward declare available boundary conditions
 struct WorldCyclic;
 struct WorldNoBounds;
-
-// Specify customized Matrix Cell grid on build command line (e.q. make -DMATRIXSIZE=4)
-#ifndef MATRIXSIZE
-#define MATRIXSIZE 8
-#endif
 
 // Specify build configuration of world/simulator types (changing these needs rebuild of sources, only one kind of simulator per build is supported)
 struct CompileConfigSimulator
