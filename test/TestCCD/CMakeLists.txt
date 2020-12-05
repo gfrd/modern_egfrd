@@ -1,4 +1,4 @@
-find_package(ccd CONFIG PATHS /usr/include/ccd /usr/local/lib/ccd ~/ccdlib)
+find_package(ccd CONFIG REQUIRED PATHS /usr/include/ccd /usr/local/lib/ccd ~/ccdlib)
 
 set (SRC LibCCD_test.cpp tinytest.cpp ../common/tinytest_specific.cpp)
 set (HDR LibCCD_test.hpp ../common/tinytest.h)

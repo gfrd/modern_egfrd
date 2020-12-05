@@ -1,10 +1,11 @@
 
 ### Prerequisites
 
-1. an ISO standard C++11 compiler, like GNU GCC v5.0* or Microsoft Visual C++ 2017*
+1. an ISO standard C++11 compiler, like GNU GCC v5.0* or Microsoft Visual C++ 2019
 2. CMake v3.2* 
 3. GNU Scientific Library (GSL) 1.16*
-4. [optional] FreeGlut3 for visualization
+4. libCCD, library for a collision detection between two convex shapes.
+5. [optional] FreeGlut3 for visualization
 
    *or newer version
 
@@ -19,6 +20,20 @@
    ```
    > sudo apt-get install gcc-c++ cmake gsl-bin libgsl0-dev libccd2 libccd-dev
    ```
+   
+   You also need [LibCCD](https://github.com/danfis/libccd), which is not available as packaged distribution. 
+   'Clone or Download' the repository, build with the 'Using CMake' installation. 
+   
+   *NOTE: You must set the ENABLE_DOUBLE_PRECISION option to compile using double precision*
+   
+   ```
+   > mkdir build && cd build
+   > cmake -DENABLE_DOUBLE_PRECISION=ON -DCMAKE_INSTALL_LIBDIR=/usr/local/ -DCMAKE_INSTALL_INCLUDEDIR=/usr/local ..
+   > make
+   > sudo make install
+   ```
+   
+   
 2. Get source codes: 
 
    You can git clone the repository
@@ -53,7 +68,7 @@
 5. Build and execute tests
 
    ```
-   > make TestGreensFunctions TestGFRD test
+   > make TestGreensFunctions TestGFRD TestCCD test
    ```
 
 6. Build and execute 3D Visualizer [Optional]
@@ -78,7 +93,7 @@
 
 
 
-1. Get a [Visual Studio IDE 2017](https://www.visualstudio.com/) (any flavor)
+1. Get a [Visual Studio IDE 2019](https://www.visualstudio.com/) (any flavor)
 
    Run the installer and select "Desktop development with C++" and under 'Individual Components' check 'Visual C++ tools for CMake' and 'Git for Windows'.
 
@@ -86,6 +101,12 @@
 2. Get the dependencies:
 
    Install and setup Microsoft Vcpkg (https://github.com/Microsoft/vcpkg)
+   
+   Add the following lines to file '\ports\ccd\protfile.cmake' after _PREFER_NINJA_
+   ```
+	OPTIONS
+		-DENABLE_DOUBLE_PRECISION=1
+	```
    
    Get and build the required packages:
    ```
@@ -114,15 +135,14 @@
    
 4. Configure and build:
    
-   In general 'out-of-source' builds are preferred, so first make a sub-folder. Supply cmake with the desired 'x64' generator and the path to the VCPKG toolchain. Then build 'RunGfrd' in Release configuration.
+   In general 'out-of-source' builds are preferred, so first make a sub-folder. Run cmake with the path to the VCPKG toolchain. Then build 'RunGfrd' in Release configuration.
    ```
    > mkdir build
    > cd build
-   > cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
+   > cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
    > cmake --build . --config Release --target RunGfrd
    > 	
    ```
-   NOTE: for VS2019 you need to install CMake version 3.14, and include it in your PATH environment before the VS path. (The CMake version 3.13 installed with VS2019 does not include the right generator).
    
    
 5. Execute the sample:
@@ -272,13 +292,14 @@
    | Fedora 25            |           | g++ v6.3.1    | v2.1    |
    | Ubuntu 16            | v3.5.1    | g++ v5.4.0    | v2.1    |
    | Debian 8.8           |           | g++ v4.9.2    | v1.16   |
-   | Ubuntu 14            | v3.2.2    | g++ v4.9.2    | v1.16   |
+   | Ubuntu 14           *| v3.2.2    | g++ v4.9.2    | v1.16   |
    | CentOS 6.6           |           | g++ v4.9.2    | v1.13   |
    | Win7 / VS2017        | v3.7      | MSVC v19.10   | v1.16   |
    | Win10 / VS2017       | v3.7      | MSVC v19.10   | v2.3    |
-   | Win10 / VS2019       | v3.14.2   | MSVC v19.20   | v2.3    |
+   | Win10 / VS2019      *| v3.15     | MSVC v19.24   | v2.3    |
    | macOS Mojave 10.14.1 | v3.13     | LLVM v10.0.0  | v2.5    |
 
+   * Running continues integration builds, others may need tweaking for recent updates.
    
    For all distributions checked so far everything builds with zero errors and (almost) zero warnings!
    
