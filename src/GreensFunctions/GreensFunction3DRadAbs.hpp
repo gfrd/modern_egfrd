@@ -4,6 +4,7 @@
 
 #include <array>
 #include <functional>
+#include <stdexcept>
 #include "helperFunctionsGf.hpp"
 #include "PairGreensFunction.hpp"
 
