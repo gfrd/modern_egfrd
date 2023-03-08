@@ -1,0 +1,43 @@
+; eGFRD test that verifies BD motion does not permit particles to move through surfaces
+
+[Simulator]
+Seed = 0xdead1eaf
+PrepareTime = 0.1                      ; seconds
+EndTime = 60.0                         ; seconds
+
+[Variables]
+V = 1e-15                              ; 1 femto liter
+World_size = (1e-3 * V) ^ (1/3)        ; Liter to cube-length in m
+r = 1e-9                               ; m
+D = 1e-12                              ; m^2 s^-1
+
+[World]
+;Matrix = 8
+Size = World_size                      ; m
+
+[Structure]
+Name = plane
+Type = PlanarSurface
+Position = (0.5 * World_size, World_size - 5 * r, 0.5 * World_size)
+Vx = (1,0,0)
+Vy = (0,0,1)
+Lx = 0.55 * World_size
+Ly = 0.55 * World_size
+
+[Structure]
+Name = plane
+Type = PlanarSurface
+Position = (0.5 * World_size, 30 * r, 0.5 * World_size)
+Vx = (1,0,0)
+Vy = (0,0,1)
+Lx = 0.55 * World_size
+Ly = 0.55 * World_size
+
+[SpeciesType]
+Name = A
+r = r                               ; m
+D = D                               ; m^2*s^-1
+
+[Particles]
+A = ( 0.09*World_size*(n%10), World_size-3*r, 0.1*World_size*floor(n/10) ), 50
+

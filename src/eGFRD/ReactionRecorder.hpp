@@ -75,6 +75,7 @@ public:
       if (first_) print_header();
       log_.info() << std::scientific << std::setprecision(16) << std::setw(2 * c) << std::setfill(' ') <<
          time << std::setw(c / 2) << static_cast<idtype>(rid) << std::setw(c) << f(r1) << std::setw(c) << f(r2) << std::setw(c) << f(p1) << std::setw(c) << f(p2);
+      log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
       reaction_recorder::StoreReaction(time, rid, r1, r2, p1, p2);
    }
 
@@ -127,6 +128,7 @@ private:
       // show header
       first_ = false;
       log_.info() << "\n\n" << std::setw(2 * c) << "Time [s]" << std::setw(c / 2) << "Rule" << std::setw(c) << "oldP1" << std::setw(c) << "oldP2" << std::setw(c) << "newP1" << std::setw(c) << "newP2";
+      log_.stream().flush(); // Force line to be written immediately, so output files can be monitored live during run
    }
 
 protected:

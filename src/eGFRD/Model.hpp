@@ -74,6 +74,13 @@ public:
       return (*i).second;
    }
 
+    StructureTypeID get_structure_type_id_by_name(const std::string name) const
+    {
+        auto i = std::find_if(structure_map_.begin(), structure_map_.end(), [name](const structure_map::value_type& n) { return n.second.name() == name; });
+        if (structure_map_.end() == i) { return StructureTypeID(0); }
+        return i->first;
+    }
+
    StructureTypeID get_def_structure_type_id() const { return default_structure_type_id_; }
 
    StructureIteratorRange structures() const { return StructureIteratorRange(structure_map_); }
@@ -82,7 +89,7 @@ private:
    SerialIDGenerator<SpeciesTypeID>    spgen_;                             // The id generator which makes sure that all species-/structureTypes have a unique id
    SerialIDGenerator<StructureTypeID>  stgen_;                             // The id generator which makes sure that all species-/structureTypes have a unique id
    species_map                         species_map_;                       // mapping: SpeciesTypeID->SpeciesType
-   structure_map                       structure_map_;                     // mapping: SpeciesTypeID->StructureType
+   structure_map                       structure_map_;                     // mapping: StructureTypeID->StructureType
    StructureTypeID                     default_structure_type_id_;         // The id of the default structure_type ("world")
 };
 

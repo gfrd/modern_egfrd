@@ -121,13 +121,20 @@ protected:
       auto& vars = settings_.getVariablesSection();
 
       {
-         auto& sections = settings_.getSpeciesTypeSections();
-         for (auto& section : sections)
-            section.create_species(model_, vars);
+          auto& sections = settings_.getStructureSections();
+          for (auto& section : sections)
+              section.create_structure_type(model_);
+      }
+
+      {
+          auto& sections = settings_.getSpeciesTypeSections();
+          for (auto& section : sections)
+              section.create_species(model_, vars);
       }
 
       Simulation::SetupSimulation();
       set_reactionrule_section(true);
+      add_structures_section(true);
       add_particles_section(true);
 
       auto cns = settings_.getCopyNumbersSection();
@@ -137,7 +144,9 @@ protected:
       auto rrs = settings_.getReactionRecordSection();
       if (rrs != nullptr && test_mode_setup(true, rrs->mode())) set_reactionrecord_section(*rrs);
       auto ps = settings_.getProgressSection();
-      if (ps != nullptr && test_mode_setup(true, ps->mode())) set_progress_section(true, ps->column_width());
+      if (ps != nullptr && test_mode_setup(true, ps->mode())) {
+          set_progress_section(true, ps->column_width());
+      }
 
       return true;
    }
@@ -149,6 +158,7 @@ protected:
       Simulation::PostPreSimulation();
       set_reactionrule_section(false);
       add_particles_section(false);
+      add_structures_section(false);
 
       auto cns = settings_.getCopyNumbersSection();
       if (cns != nullptr && test_mode_setup(false, cns->mode(), true)) set_copynumbers_section(*cns);
@@ -171,8 +181,8 @@ private:
       case SectionModeBase::modes::Off: return false;
       case SectionModeBase::modes::On: return first || both;
       case SectionModeBase::modes::Run: return prepare_time() == 0 || !first;
+      default: THROW_EXCEPTION(illegal_state, "unknown mode");
       }
-      THROW_EXCEPTION(illegal_state, "unknown mode");
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +192,7 @@ private:
       if (cns.type() == CopyNumbersSection::types::Average)
       {
          cna_ = std::make_unique<CopyNumbersAvg>(world_, rules_, cns.interval());
-         simulator_->add_extrnal_event(0, cna_.get());
+         simulator_->add_external_event(0, cna_.get());
          simulator_->add_reaction_recorder(cna_.get());
          if (!cns.file().empty())
          {
@@ -193,7 +203,7 @@ private:
       else
       {
          cni_ = std::make_unique<CopyNumbersInst>(world_, cns.interval());
-         simulator_->add_extrnal_event(0, cni_.get());
+         simulator_->add_external_event(0, cni_.get());
          if (!cns.file().empty())
          {
             if (!cfile_.is_open()) cfile_.open(cns.file(), std::fstream::out | std::fstream::trunc);
@@ -205,7 +215,7 @@ private:
    void set_particlepostions_section(const ParticlePositionSection& pps)
    {
       pp_ = std::make_unique<ParticlePositions>(simulator_, pps.interval());
-      simulator_->add_extrnal_event(0, pp_.get());
+      simulator_->add_external_event(0, pp_.get());
       if (!pps.file().empty())
       {
          if (!pfile_.is_open()) pfile_.open(pps.file(), std::fstream::out | std::fstream::trunc);
@@ -233,27 +243,36 @@ private:
       }
    }
 
-   void add_particles_section(bool first)
-   {
-      for (auto& section : settings_.getParticlesSections())
-      {
-         if (test_mode_setup(first, section.mode()))
-            section.add_particles_to_world(model_, world_, rng_);
-      }
-   }
+    void add_structures_section(bool first)
+    {
+        for (auto& section : settings_.getStructureSections())
+        {
+            if (test_mode_setup(first, section.mode()))
+                section.create_structure(model_, world_);
+        }
+    }
+
+    void add_particles_section(bool first)
+    {
+        for (auto& section : settings_.getParticlesSections())
+        {
+            if (test_mode_setup(first, section.mode()))
+                section.add_particles_to_world(model_, world_, rng_);
+        }
+    }
 
    void set_progress_section(bool first, uint width)
    {
       if (first && (end_time_ > 0 || prep_time_ > 0))
       {
-         progress_ = std::make_unique<Progress>(Progress(prep_time_ > 0 ? prep_time_ : end_time_, width));
-         simulator_->add_extrnal_event(0, progress_.get());
+         progress_ = std::make_unique<Progress>(Progress(simulator_, prep_time_ > 0 ? prep_time_ : end_time_, width));
+         simulator_->add_external_event(0, progress_.get());
       }
       // Need to redo the progressbar (or other external events) since simulator is reset after pre-simulation phase.
       if (!first && end_time_ > 0)
       {
-         progress_ = std::make_unique<Progress>(Progress(end_time_, width));
-         simulator_->add_extrnal_event(0, progress_.get());
+         progress_ = std::make_unique<Progress>(Progress(simulator_, end_time_, width));
+         simulator_->add_external_event(0, progress_.get());
       }
    }
 

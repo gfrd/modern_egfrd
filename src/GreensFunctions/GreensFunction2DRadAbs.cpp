@@ -43,7 +43,7 @@ GreensFunction2DRadAbs::GreensFunction2DRadAbs(double D, double kf, double r0, d
 {
    // Check whether input makes sense, outer boundary a should be > inner 
    // boundary sigma.
-   THROW_UNLESS(std::invalid_argument, a < sigma);
+   THROW_UNLESS(std::invalid_argument, a > sigma);
 
    // Clear AlphaTables
    clearAlphaTable();

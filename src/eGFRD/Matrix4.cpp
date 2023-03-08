@@ -17,6 +17,8 @@ GFRD_EXPORT Vector3 Matrix4::multiply(const Vector3& v) const
 
 GFRD_EXPORT Matrix4 Matrix4::createRotationA(double theta, const Vector3& axis)
 {
+   // Returns a 3D (4x4) rotation matrix that rotates vectors theta radials around
+   // the given axis.
    auto ux = axis.x_; auto uy = axis.y_; auto uz = axis.z_;       // from Wiki: Rotation_matrix
    auto cost = std::cos(theta);
    auto sint = std::sin(theta);
@@ -29,6 +31,8 @@ GFRD_EXPORT Matrix4 Matrix4::createRotationA(double theta, const Vector3& axis)
 
 GFRD_EXPORT Matrix4 Matrix4::createRotationAB(const Vector3& a, const Vector3& b)
 {
+   // Returns a 3D (4x4) rotation matrix that rotates vector a to vector b, around the axis
+   // of a vector orthogonal to the plane spanned by (a, b).
    auto dot = Vector3::dot(a, b);
 
    if (dot > 0.9999999) return Matrix4::identity;

@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <Vector3.hpp>
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -74,16 +75,16 @@ protected:
       return std::regex_match(name, match, regex);
    }
 
-   // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
 
-   static bool get_bool(const std::string& value)
-   {
-      std::string lcvalue;
-      std::transform(value.begin(), value.end(), std::back_inserter(lcvalue), std::bind(std::tolower<char>, std::placeholders::_1, std::locale()));
-      return lcvalue == "true" || lcvalue == "yes" || lcvalue == "1";
-   }
+    static bool get_bool(const std::string& value)
+    {
+        std::string lcvalue;
+        std::transform(value.begin(), value.end(), std::back_inserter(lcvalue), std::bind(std::tolower<char>, std::placeholders::_1, std::locale()));
+        return lcvalue == "true" || lcvalue == "yes" || lcvalue == "1";
+    }
 
-   // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
 
    VariablesSection* vars_;
 

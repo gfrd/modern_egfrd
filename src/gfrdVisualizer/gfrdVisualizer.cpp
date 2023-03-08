@@ -10,6 +10,7 @@
 #include <Logger.hpp>
 #include <EGFRDSimulator.hpp>
 #include <Matrix4.hpp>
+#include <gsl/gsl_errno.h>
 #include "CameraController.hpp"
 #include "gfrdRenderer.hpp"
 #include "ScreenShot.hpp"
@@ -38,6 +39,15 @@ idtype selDomain = 0;
 idtype selStructure = 0;
 uint selSection = 0;
 std::string modelfile;
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+void gsl_error_handler(const char* reason, const char* file, int line, int error)
+{
+    std::string ex_msg = make_string() << "GSL_ERROR: " << gsl_strerror(error) << " in " << file << ":" << line << " - " << reason;
+    Logger::get_logger("GFRD").warn() << ex_msg;
+//    throw  gfrd_exception(ex_msg);
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -237,8 +247,9 @@ void handleIdle()
 
       if (extSim.active() && extSim.refresh()) glutPostRedisplay();
    }
-   catch (const std::exception&)
+   catch (const std::exception& ex)
    {
+      printf("Unhandled exception: %s", ex.what());
       abort();
    }
 }
@@ -487,8 +498,21 @@ void handleDisplay()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-void handleMouse(int button, int updown, int x, int y)
+void handleMouseWheel(int wheel_number, int direction, int x, int y)
 {
+    cam.handleMouseWheel(wheel_number, direction, x, y);
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+void handleMouse(int button, int updown, int x, int y) {
+    // Workaround for glutMouseWheelFunc() only being called on Windows
+    if (button == 3 || button == 4)
+    {
+        // Button 3 == SCROLL_UP, 4 == SCROLL_DOWN
+        return handleMouseWheel(0, button == 3 ? 1 : -1, x, y);
+    }
+
    cam.handleMouse(button, updown, x, y);
 }
 
@@ -504,13 +528,6 @@ void handlePassiveMouseMotion(int x, int y)
 void handleMouseMotion(int x, int y)
 {
    cam.handleMouseMotion(x, y);
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-void handleMouseWheel(int wheel_number, int direction, int x, int y)
-{
-   cam.handleMouseWheel(wheel_number, direction, x, y);
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -547,6 +564,13 @@ void SetupModel(const std::string& filename, const std::vector < std::string>& a
    auto& vars = settings.getVariablesSection();
 
    Model model;
+
+   {
+       auto& sections = settings.getStructureSections();
+       for (auto& section : sections)
+           section.create_structure_type(model);
+   }
+
    {
       auto& sections = settings.getSpeciesTypeSections();
       for (auto& section : sections)
@@ -558,8 +582,11 @@ void SetupModel(const std::string& filename, const std::vector < std::string>& a
    for (auto& section : settings.getReactionRuleSections())
       section.create_reaction_rule(model, rules);
 
-   for (auto& section : settings.getParticlesSections())
-      section.add_particles_to_world(model, world, rng);
+    for (auto& section : settings.getStructureSections())
+        section.create_structure(model, world);
+
+    for (auto& section : settings.getParticlesSections())
+        section.add_particles_to_world(model, world, rng);
 
 
    // Print !
@@ -839,7 +866,7 @@ int main(int argc, char** argv)
          auto sA = m.add_species_type(SpeciesType("A", sPlane, 2e-12, 1e-9));
          auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-9));
 
-         world.initialize(1E-6, m);
+         world.initialize(6e-6, m);
          auto ws = world.world_size();
          auto wsid = world.get_def_structure_id();
 
@@ -886,34 +913,277 @@ int main(int argc, char** argv)
          }
       } break;
 
-      case 105:
-      {
-         const double size = 1e-6;
-         auto sPlane = m.add_structure_type(StructureType("plane"));
-         auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, size * 5e-3));
-         auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, size * 5e-3));
-
-         world.initialize(size, m);
-         auto ws = world.world_size();
-         auto wsid = world.get_def_structure_id();
-
-         auto pos = ws / 2;
-         auto vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / -4.0));
-         auto plane1 = std::make_shared<PlanarSurface>(PlanarSurface("plane1", sPlane, wsid, Plane(pos, Vector3::ux, vy, ws.X() / 4, ws.Z() / 4, false)));
-         auto psid1 = world.add_structure(plane1);
-         vy = Vector3::transformVector(Vector3::uz, Matrix4::createRotationX(M_PI / 12.0));
-         auto plane2 = std::make_shared<PlanarSurface>(PlanarSurface("plane2", sPlane, wsid, Plane(pos + Vector3(0, -size / 4, 0), Vector3::ux, vy, ws.X() / 4, ws.Z() / 4, false)));
-         auto psid2 = world.add_structure(plane2);
-
-         world.add_particle(sA, psid1, pos);
-         world.add_particle(sA, psid2, pos - Vector3(0, size / 4, 0));
-         //world.throwInParticles(sA, 5, rng, false);
-         //world.add_particle(sB, world.get_def_structure_id(), pos + Vector3(0, size / 3, 0));
-      }
-      break;
+          case 105:
+          {
+              // Test interaction between membrane-bound and 3D-diffusing particles
 
 
-      default: THROW_EXCEPTION(illegal_size, "Demo number out of range.");
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, 3e-8));
+//              auto sC = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-11, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+              world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+
+//              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.2198775752446821e-06, 5.1948420752381338e-07, 5.9361989135308565e-06));
+//              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
+
+//            rules.add_reaction_rule(ReactionRule(sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+              rules.add_reaction_rule(ReactionRule(sA, sB, 2.5e-21, std::vector<SpeciesTypeID>{sC}));
+//              rules.add_reaction_rule(ReactionRule(sB, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+
+              // Reaction Rules bind and unbind to plane
+//              rules.add_interaction_rule(InteractionRule(sB, sPlane, 0.2, std::vector < SpeciesTypeID > {sA}));
+//              rules.add_interaction_rule(InteractionRule(sA, world.get_def_structure_type_id(), 0.22, std::vector < SpeciesTypeID > {sB}));
+          } break;
+
+          case 106:
+          {
+              // Test PairSpherical domain bug occurring in Demo 5
+
+
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 3e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-12, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 5e-13, 3e-8));
+              auto ws = world.world_size();
+
+              world.initialize(6e-6, m);
+
+              world.add_particle(sA, world.get_def_structure_id(), Vector3(4.2198775752446821e-06, 5.1948420752381338e-07, 5.9361989135308565e-06));
+              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.1343342814910925e-06, 2.9702066521452007e-07, 5.9544249965700063e-06));
+              world.add_particle(sB, world.get_def_structure_id(), Vector3(4.569515338729998e-06, 5.7614426642224702e-07, 5.5921173272375657e-06));
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+          }
+              break;
+
+          case 107:
+          {
+              // PairMixed2D3D test
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-11, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              for (int i = 0; i < 3; i++)
+              {
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2 - (1e-6 * i), 0.0, ws.Z() / 2));
+                  world.add_particle(sB, wsid, Vector3(ws.X() / 2 - (1e-6 * i), 2e-7, ws.Z() / 2));
+              }
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.21, std::vector<SpeciesTypeID>{sC}));
+          }
+              break;
+
+          case 108:
+          {
+              // PairPlanar test
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 1e-9));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 1e-13, 2e-9));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.55 * ws.X(), 0.55 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              for (int i = 0; i < 3; i++)
+              {
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2 - (1e-6 * i)));
+                  world.add_particle(sA, psid, Vector3(ws.X() / 2 + 5e-9, 0.0, ws.Z() / 2 - (1e-6 * i)));
+              }
+
+              rules.add_reaction_rule(ReactionRule(sA, sA, 0.21, std::vector<SpeciesTypeID>{sC}));
+          }
+              break;
+
+          case 109:
+          {
+              // PairSpherical test
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", m.get_def_structure_type_id(), 1e-12, 5e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              for (int i = 0; i < 3; i++)
+              {
+                  world.add_particle(sA, wsid, Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2, ws.Z() / 2));
+                  world.add_particle(sA, wsid, Vector3(ws.X() / 2 - (1e-6 * i), ws.Y() / 2 - 2e-7, ws.Z() / 2));
+              }
+
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2 + 1e-6, ws.Y() / 2, ws.Z() / 2));
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2 + 1e-6, ws.Y() / 2 - 4e-7, ws.Z() / 2));
+
+              rules.add_reaction_rule(ReactionRule(sA, sA, 0.21, std::vector<SpeciesTypeID>{sC}));
+          }
+              break;
+
+          case 110:
+          {
+              // 3D BD test
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-12, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2, ws.Y() / 2, ws.Z() / 2));
+              world.add_particle(sA, wsid, Vector3(ws.X() / 2, ws.Y() / 2 - 7e-8, ws.Z() / 2));
+          }
+              break;
+
+          case 111:
+          {
+              // 2D BD test
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-12, 3e-8));
+              auto sC = m.add_species_type(SpeciesType("C", sPlane, 5e-13, 3e-8));
+
+              world.initialize(6e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              world.add_particle(sA, psid, Vector3(ws.X() / 2, 0.0, ws.Z() / 2));
+              world.add_particle(sA, psid, Vector3(ws.X() / 2 - 7e-8, 0.0, ws.Z() / 2));
+          }
+              break;
+
+          case 112:
+          {
+              // 2D dissociation
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", sPlane, 1e-13, 1e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", sPlane, 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.001, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 0.30, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.throwInParticles(sAB, 1, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+          }
+              break;
+
+          case 113:
+          {
+              // 3D dissociation
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", m.get_def_structure_type_id(), 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", m.get_def_structure_type_id(), 1e-13, 1e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", m.get_def_structure_type_id(), 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 0.1, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 0.1, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.add_particle(sAB, wsid, Vector3(ws.X() / 2, ws.Y() / 2, ws.Z() / 2));
+          }
+              break;
+
+          case 130:
+          {
+              // IL-2/15 simulation
+              auto sPlane = m.add_structure_type(StructureType("plane"));
+
+              // TODO: find protein sizes and replace species radius
+              auto sA = m.add_species_type(SpeciesType("A", sPlane, 1e-13, 1e-8));
+              auto sB = m.add_species_type(SpeciesType("B", sPlane, 1e-13, 1e-8));
+              auto sG = m.add_species_type(SpeciesType("G", sPlane, 1e-13, 1e-8));
+              auto sIL2 = m.add_species_type(SpeciesType("IL2", m.get_def_structure_type_id(), 1e-12, 1e-8));
+              auto sIL15 = m.add_species_type(SpeciesType("IL15", m.get_def_structure_type_id(), 1e-12, 1e-8));
+
+              auto sAIL2 = m.add_species_type(SpeciesType("A-IL2", sPlane, 1e-13, 2e-8));
+              auto sAGIL2 = m.add_species_type(SpeciesType("A-G-IL2", sPlane, 1e-13, 2e-8));
+              auto sBIL2 = m.add_species_type(SpeciesType("B-IL2", sPlane, 1e-13, 2e-8));
+              auto sBGIL2 = m.add_species_type(SpeciesType("B-G-IL2", sPlane, 1e-13, 2e-8));
+              auto sABGIL2 = m.add_species_type(SpeciesType("A-B-G-IL2", sPlane, 1e-13, 2e-8));
+
+              auto sAB = m.add_species_type(SpeciesType("A-B", sPlane, 1e-13, 2e-8));
+
+              world.initialize(3.14 * 1e-6, m);
+              auto ws = world.world_size();
+              auto wsid = world.get_def_structure_id();
+
+              auto origin = Vector3(0, 0, 0);
+              auto pos = Vector3(ws.X() / 2, 0, ws.Z() / 2);
+              auto uz = Vector3::uz;
+              auto plane = std::make_shared<PlanarSurface>(PlanarSurface("plane", sPlane, wsid, Plane(pos, Vector3::ux, -uz, 0.5 * ws.X(), 0.5 * ws.Z(), false)));
+              auto psid = world.add_structure(plane);
+              UNUSED(psid);
+
+              rules.add_reaction_rule(ReactionRule(sA, sB, 1e-6, std::vector<SpeciesTypeID>{sAB}));
+              rules.add_reaction_rule(ReactionRule(sAB, 3e-4, std::vector<SpeciesTypeID>{sA, sB}));
+
+              world.throwInParticles(sA, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+              world.throwInParticles(sB, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+//              world.throwInParticles(sG, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), pos.Y(), ws.Z()));
+//              world.throwInParticles(sIL2, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+//              world.throwInParticles(sIL15, 10, rng, false, Vector3(0, pos.Y(), 0), Vector3(ws.X(), ws.Y(), ws.Z()));
+          }
+              break;
+
+         default: THROW_EXCEPTION(illegal_size, "Demo number out of range.");
 
       }
    }
@@ -943,7 +1213,7 @@ int main(int argc, char** argv)
    glutMouseFunc(handleMouse);
    glutMotionFunc(handleMouseMotion);
    glutPassiveMotionFunc(handlePassiveMouseMotion);
-   glutMouseWheelFunc(handleMouseWheel);
+   glutMouseWheelFunc(handleMouseWheel); // Only works on Windows, workaround implemented in handleMouse()
    glutKeyboardFunc(handleKeyboard);
    glutSpecialFunc(handleSpecial);
    glutDisplayFunc(handleDisplay);
@@ -957,7 +1227,11 @@ int main(int argc, char** argv)
    double side = 0.5 / std::max(ws.X(), std::max(ws.Y(), ws.Z()));      // scale largest side to GLunits 1.0
    cam.lookAt(side * ws);
 
-   // run message loop
+   // Override default error handler of GSL to catch thrown exceptions
+   gsl_set_error_handler(&gsl_error_handler);
+
+
+    // run message loop
    glutMainLoop();
 
    screen_capture_shutdown();

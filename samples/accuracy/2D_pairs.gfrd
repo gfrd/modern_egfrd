@@ -1,0 +1,79 @@
+; eGFRD accuracy test for two 2D diffusing species
+
+[Variables]
+seed = 0x1337c0de
+cnfile = $'copynumbers.bin'            ; copy number output file
+sfile = $'simstate.bin'                ; name of simulator state dump file
+N_A = 6.022e23                         ; Avogadro's constant
+World_size = 1                         ; um
+N = 20                                 ; number of particles for A and B
+Conc = N / N_A / World_size            ; initial concentration for A and B, mol um^-2
+Surf = World_size ^ 2                  ; um^2
+r = 1e-3                               ; um
+D = 1                                  ; um^2 s^-1
+sigma = 2 * r                          ; um
+k_D = 4 * pi * sigma * (D + D)         ; um^3 s^-1
+K_d = Conc / 2.0 * N_A                 ; molecules um^-2
+k_d = 0.1                              ; s^-1
+k_a = k_d / K_d                        ; um^2 s^-1
+
+Nc_th = (2*N+K_d*Surf - sqrt( (2*N+K_d*Surf)^2 - 4*N*N)) / 2
+
+[World]
+;Matrix = 8
+Size = World_size                      ; m
+
+[Structure]
+Name = plane
+Type = PlanarSurface
+Position = (0.5 * World_size, 0, 0.5 * World_size)
+Vx = (1,0,0)
+Vy = (0,0,1)
+Lx = 0.5 * World_size * 1.1
+Ly = 0.5 * World_size * 1.1
+
+[SpeciesType]
+Name = A
+Structure = plane
+r = r                               ; m
+D = D                               ; m^2*s^-1
+
+[SpeciesType]
+Name = B
+Structure = plane
+r = r                               ; m
+D = D                               ; m^2*s^-1
+
+[SpeciesType]
+Name = C
+Structure = plane
+r = r                               ; m
+D = 0                               ; m^2*s^-1
+
+[ReactionRule]
+Rule = A + B <=> C
+ka = k_a
+kd = k_d
+
+[Particles]
+;A = ( 0.09*World_size*(n%10), 0, 0.1*World_size*floor(n/10) ), N
+;B =( 0.09*World_size*(n%10)+5*r, 0, 0.1*World_size*floor(n/10) ), N
+A = N
+B = N
+C = 0
+
+[Progress]
+Width=20
+
+[CopyNumbers]
+Interval = 0.1
+Type = average
+File = $cnfile
+
+[Simulator]
+Seed = seed
+PrepareTime = 10                        ; seconds
+EndTime = 100                           ; seconds
+MaintenanceStep = 100000
+MaintenanceFile = $sfile
+

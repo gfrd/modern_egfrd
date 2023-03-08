@@ -350,7 +350,10 @@ public:
    const StructureType& get_structure_type(const StructureTypeID sid) const
    {
       structure_type_map::const_iterator i(structure_type_map_.find(sid));
-      if (structure_type_map_.end() == i) throw not_found(make_string() << "Unknown Structure (id=" << sid << ")");
+      if (structure_type_map_.end() == i)
+      {
+          throw not_found(make_string() << "Unknown Structure (id=" << sid << ")");
+      }
       return (*i).second;
    }
 
@@ -385,6 +388,32 @@ public:
       surface_overlap_checker(s, old_pos, sid, sigma, nc);
       return nc.result();
    }
+
+    bool get_surface_overlap(const Sphere& s, const Vector3& old_pos, double sigma, std::vector<StructureID> ignore)
+    {
+        ParticleContainerUtils::flag_collector<std::vector<StructureID>> nc(ignore);
+        auto structures = get_structures();
+        for(const auto& structure : structures) {
+            surface_overlap_checker(s, old_pos, structure.get()->id(), sigma, nc);
+            if (nc.result()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool test_surfaces_overlap(const Sphere& s, const Vector3& old_pos, double sigma, std::vector<StructureID> ignore)
+    {
+        ParticleContainerUtils::flag_collector<std::vector<StructureID>> nc(ignore);
+        auto structures = get_structures();
+        for(const auto& structure : structures) {
+            surface_overlap_checker(s, old_pos, structure.get()->id(), sigma, nc);
+            if (nc.result()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
    bool test_surface_overlap(const Sphere& s, const Vector3& old_pos, const StructureID sid, double sigma) const
    {
@@ -422,7 +451,10 @@ public:
          Vector3 cyc_old_pos2 = cyc_pos - displacement;                                // calculate the old_pos relative to the transposed new position.
 
          double distance = (*i).second->newBD_distance(cyc_pos, s.radius(), cyc_old_pos2, sigma);
-         if (distance < s.radius()) nc(i, distance);
+         if (distance < s.radius())
+         {
+             nc(i, distance);
+         }
       }
    }
 
@@ -452,7 +484,9 @@ public:
    // Get the default StructureID of the World 
    StructureID get_def_structure_id() const
    {
-      if (!default_structure_id_) throw not_found("Default Structure is not defined.");         // use set_def_structure first!
+      if (!default_structure_id_) {
+          throw not_found("Default Structure is not defined.");         // use set_def_structure first!
+      }
       return default_structure_id_;
    }
 

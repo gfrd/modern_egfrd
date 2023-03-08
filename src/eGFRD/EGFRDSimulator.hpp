@@ -1,3 +1,5 @@
+#include <random>
+
 #pragma once
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +76,7 @@ public:
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
             ovl = std::move(soc.overlap());
          }
-         
+
          std::cout << "Overlap: ";
          for (auto &did : ovl) std::cout << did << " ";
          std::cout << "\r\n";
@@ -100,7 +102,7 @@ public:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   void add_extrnal_event(double time, CustomAction* action)
+   void add_external_event(double time, CustomAction *action)
    {
       THROW_UNLESS_MSG(illegal_argument, action != nullptr, "No method provided");
       THROW_UNLESS_MSG(illegal_argument, time >= time_, "Cannot insert event in the past");
@@ -207,18 +209,27 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::unique_ptr<Pair> create_default_pair(const DomainID did, const ShellID sid, particle_id_pair pip1, std::shared_ptr<Structure> structure1, particle_id_pair pip2, std::shared_ptr<Structure> structure2, const ReactionRuleCollection::reaction_rule_set& rr) const
+   std::unique_ptr<Pair> create_default_pair(const DomainID did, const ShellID sid, particle_id_pair pip1, std::shared_ptr<Structure> structure1,
+           particle_id_pair pip2, std::shared_ptr<Structure> structure2, const ReactionRuleCollection::reaction_rule_set& reaction_rules) const
    {
       if (structure1.get() == structure2.get())
       {
+         auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
          auto* world = dynamic_cast<CuboidalRegion*>(structure1.get());
          if (world != nullptr)
          {
-            auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
-            auto domain = std::make_unique<PairSpherical>(did, pip1, pip2, sid_pair, rr);
+            auto domain = std::make_unique<PairSpherical>(did, pip1, pip2, sid_pair, reaction_rules);
             return std::unique_ptr<Pair>(std::move(domain));
          }
 
+         auto *plane = dynamic_cast<PlanarSurface*>(structure1.get());
+         if (plane != nullptr)
+         {
+             auto domain = std::make_unique<PairPlanar>(did, pip1, pip2, structure1, sid_pair, reaction_rules);
+             return std::unique_ptr<Pair>(std::move(domain));
+         }
+
+         // TODO: add support for PairCylinder
 
          //if isinstance(single1.structure, CuboidalRegion) :
          //   return SphericalPairtestShell(single1, single2, geometrycontainer, domains)
@@ -233,17 +244,68 @@ private:
       {
          // All sorts of Pair Interactions (on different structures)
 
+          if(are_structure_types<CuboidalRegion*, PlanarSurface*>(structure1, structure2)) {
+              // For the PairMixed2D3D constructor, the order of particle arguments matters (first should be 2D)
+              particle_id_pair pip_2d, pip_3d;
+              std::shared_ptr<Structure> struc_2d, struc_3d;
+
+              if(is_structure_type<PlanarSurface*>(structure1)) {
+                  pip_2d = pip1, pip_3d = pip2;
+                  struc_2d = structure1, struc_3d = structure2;
+              } else {
+                  pip_2d = pip2, pip_3d = pip1;
+                  struc_2d = structure2, struc_3d = structure1;
+              }
+
+              auto cylinder = Cylinder(pip_2d.second.position(), 1.0,
+                      dynamic_cast<PlanarSurface*>(struc_2d.get())->shape().unit_z(), 0.5);
+              auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(sid), Shell(did, Sphere(), Shell::Code::INIT));
+              auto domain = std::make_unique<PairMixed2D3D>(did, pip_2d, pip_3d, struc_2d, struc_3d, sid_pair, reaction_rules, world());
+              return std::unique_ptr<Pair>(std::move(domain));
+          }
+
          // PlanarSurface & PlanarSurface => PlanarSurfaceTransitionPairtestShell
-         // PlanarSurface & CuboidalRegion => MixedPair2D3DtestShell
-         // CuboidalRegion & PlanarSurface => MixedPair2D3DtestShell
          // PlanarSurface & DiskSurface => MixedPair2DStatictestShell
          // DiskSurface & PlanarSurface  => MixedPair2DStatictestShell
          // CylindricalSurface & DiskSurface => MixedPair1DStatictestShell
          // DiskSurface & CylindricalSurface => MixedPair1DStatictestShell
       }
 
-      THROW_EXCEPTION(not_implemented, "Structure types not available.");
+      THROW_EXCEPTION(not_implemented, "Needed structure types not yet available.");
    }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+   std::unique_ptr<Single> create_default_interaction(const DomainID did, const ShellID sid, const ShellID old_sid, particle_id_pair pip,
+           const std::shared_ptr<Structure>& interaction_structure, const ReactionRuleCollection::reaction_rule_set& reaction_rules,
+           const ReactionRuleCollection::interaction_rule_set& interaction_rules)
+   {
+       // We make a spherical init shell here, construct the cylinder at the next event update
+       auto sid_pair = std::make_pair<const ShellID, Shell>(std::move(old_sid), Shell(did, Sphere(pip.second.position(), pip.second.radius()), Shell::Code::INIT));
+
+       auto* plane = dynamic_cast<PlanarSurface*>(interaction_structure.get());
+       if (plane != nullptr)
+       {
+           auto domain = std::make_unique<SinglePlanarInteraction>(did, pip, *plane, sid_pair, reaction_rules, interaction_rules);
+           return std::unique_ptr<Single>(std::move(domain));
+       }
+
+       THROW_EXCEPTION(not_implemented, "Surface interactions other than 3D<->PlanarSurface are not yet implemented");
+   }
+
+   // --------------------------------------------------------------------------------------------------------------------------------
+
+    template<typename Type1, typename Type2>
+    bool are_structure_types(std::shared_ptr<Structure> structure1, std::shared_ptr<Structure> structure2) const {
+       // Check if structure 1 is type 1, and 2 is type 2, or vice versa.
+        return (is_structure_type<Type1>(structure1) && is_structure_type<Type2>(structure2)) ||
+                (is_structure_type<Type1>(structure2) && is_structure_type<Type2>(structure1));
+    }
+    template<typename Type>
+    bool is_structure_type(std::shared_ptr<Structure> structure) const {
+       // Check if structure is of given type
+        return dynamic_cast<Type>(structure.get()) != nullptr;
+    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -258,7 +320,7 @@ private:
       auto structure = world_.get_structure(pip.second.structure_id());
 
       // 2. Create and register the single domain.The type of the single that will be created depends on the 
-      // structure(region or surface) this particle is in / on.Either SphericalSingle, PlanarSurfaceSingle, or CylindricalSurfaceSingle.
+      // structure(region or surface) this particle is in / on. Either SphericalSingle, PlanarSurfaceSingle, or CylindricalSurfaceSingle.
       auto single = create_default_single(did, sid, pip, structure, rr);
 
       // 3. update time and shell container
@@ -348,7 +410,7 @@ private:
             if (custom_action != nullptr)    // Persistence restored simulations may encounter cleared CustomActions.
             {
                custom_action->do_action(time_);
-               add_extrnal_event(time_ + custom_action->interval(), custom_action);
+                add_external_event(time_ + custom_action->interval(), custom_action);
             }
          }  break;
 
@@ -379,6 +441,8 @@ private:
       auto& domain = domains_[did];
       std::vector<DomainID> ignore;
 
+//       Log("GFRD").info() << "Domain " << domain.get()->id() << " (" << domain.get()->type_name() << "): " << (int)domain.get()->eventType();
+
       switch (domain->multiplicity())
       {
       case Domain::Multiplicity::SINGLE:
@@ -407,9 +471,42 @@ private:
       }
    }
 
+   std::vector<particle_id_pair> fire_single_interaction(const particle_id_pair& reactant,
+           const InteractionRule& interaction_rule, const std::shared_ptr<const Structure*>& interacting_structure_p)
+   {
+       auto structure = *interacting_structure_p.get();
+       switch (interaction_rule.get_products().size()) {
+           case 0:
+           {
+               world_.remove_particle(reactant.first);
+               if (rrec_) rrec_->StoreDecayReaction(time_, interaction_rule.id(), reactant.first);
+               return std::vector<particle_id_pair>();
+           }
+           case 1:
+           {
+               const SpeciesType &reactant_species = world_.get_species(reactant.second.sid());
+               const SpeciesType &product_species = world_.get_species(interaction_rule.get_products()[0]);
+
+               // Determine position orthogonally projected on the surface the particle interacted with
+               auto projected_pos = structure->project_point(reactant.second.position()).first;
+               auto product_structure_id = structure->id();
+
+               // Remove old particle and add the new interacted particle
+               world_.remove_particle(reactant.first);
+               auto product = world_.add_particle(product_species.id(), product_structure_id, projected_pos);
+               if (rrec_) rrec_->StoreUniMolecularReaction(time_, interaction_rule.id(), reactant.first, product.first);
+               return std::vector<particle_id_pair>({product});
+           }
+           default:
+           {
+               THROW_EXCEPTION(not_implemented, "Interactions with more than 1 product are not yet supported.");
+           }
+       }
+   }
+
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   std::vector<particle_id_pair> fire_single_reaction(const particle_id_pair& reactant, const ReactionRule& rrule, const position_structid_pair& pair, std::vector<DomainID>& ignore)
+   std::vector<particle_id_pair> fire_single_reaction(const particle_id_pair& reactant, const ReactionRule& reaction_rule, const position_structid_pair& pair, std::vector<DomainID>& ignore)
    {
       /*
       # This takes care of the identity change when a single particle decays into one or a number of other particles
@@ -419,30 +516,56 @@ private:
       # A(any structure) -> B(same structure) + C(same structure or 3D)
       */
 
-      switch (rrule.get_products().size())
+      auto world_id = world().get_def_structure_id();
+
+      switch (reaction_rule.get_products().size())
       {
       case 0: // decay to zero
          world_.remove_particle(reactant.first);
-         if (rrec_) rrec_->StoreDecayReaction(time_, rrule.id(), reactant.first);
+         if (rrec_) rrec_->StoreDecayReaction(time_, reaction_rule.id(), reactant.first);
          return std::vector<particle_id_pair>();
 
       case 1:
       {
          // reactant -> single product
          const SpeciesType& reactant_species = world_.get_species(reactant.second.sid());
-         const SpeciesType& product_species = world_.get_species(rrule.get_products()[0]);
+         const SpeciesType& product_species = world_.get_species(reaction_rule.get_products()[0]);
 
          std::vector<Vector3> product_pos_list;
          StructureID product_structure_id;
-         if (reactant_species.structure_type_id() != product_species.structure_type_id())
+         if(reactant_species.structure_type_id() == product_species.structure_type_id())
          {
-            THROW_EXCEPTION(not_implemented, "Structure change not available.");
+             // no change in position
+             product_pos_list.emplace_back(reactant.second.position());
+             product_structure_id = world_.get_structure(reactant.second.structure_id())->id();
+         }
+         else if(product_species.structure_type_id() == world_id)
+         {
+             auto prev_structure = world_.get_structure(reactant.second.structure_id());
+             auto plane = dynamic_cast<PlanarSurface *>(prev_structure.get());
+             if(plane != nullptr) {
+                 // Tom: this was (GfrdCfg.MINIMAL_SEPARATION_FACTOR - 1), but this is likely wrong because the particle
+                 // would then intersect the structure.
+                 auto vector_length = product_species.radius() * (GfrdCfg.MINIMAL_SEPARATION_FACTOR);
+
+                 // An exit position in the direction of the plane's unit vector
+                 product_pos_list.emplace_back(reactant.second.position() + vector_length * plane->shape().unit_z() * 1);
+
+                 if (!plane->shape().is_one_sided()) {
+                     // An exit position in the direction opposite of the plane's unit vector
+                     product_pos_list.emplace_back(reactant.second.position() + vector_length * plane->shape().unit_z() * -1);
+                 }
+             } else {
+                 THROW_EXCEPTION(not_implemented, "Structure type of reaction product not yet implemented.");
+             }
+
+             product_structure_id = world_id;
+             // Shuffle the position candidates to randomise where the particle ends up
+             std::shuffle(product_pos_list.begin(), product_pos_list.end(), std::mt19937(std::random_device()()));
          }
          else
          {
-            // no change in position
-            product_pos_list.emplace_back(reactant.second.position());
-            product_structure_id = world_.get_structure(reactant.second.structure_id())->id();
+             THROW_EXCEPTION(not_implemented, "Structure change not available.");
          }
 
          // make room, when particle relocates or radius is increased
@@ -461,7 +584,7 @@ private:
             {
                world_.remove_particle(reactant.first);
                auto newparticle = world_.add_particle(product_species.id(), product_structure_id, pos);
-               if (rrec_) rrec_->StoreUniMolecularReaction(time_, rrule.id(), reactant.first, newparticle.first);
+               if (rrec_) rrec_->StoreUniMolecularReaction(time_, reaction_rule.id(), reactant.first, newparticle.first);
                return std::vector<particle_id_pair>({ newparticle });
             }
          }
@@ -476,47 +599,115 @@ private:
       {
          // reactant -> two products
          const SpeciesType& reactant_species = world_.get_species(reactant.second.sid());
-         const SpeciesType& product1_species = world_.get_species(rrule.get_products()[0]);
-         const SpeciesType& product2_species = world_.get_species(rrule.get_products()[1]);
+         const SpeciesType& product1_species = world_.get_species(reaction_rule.get_products()[0]);
+         const SpeciesType& product2_species = world_.get_species(reaction_rule.get_products()[1]);
          double r01 = product1_species.radius() + product2_species.radius();
 
-         if (reactant_species.structure_type_id() != product1_species.structure_type_id() || product1_species.structure_type_id() != product2_species.structure_type_id())
-         {
+         const auto same_struct_species = product1_species.structure_type_id() == reactant_species.structure_type_id() ? product1_species : product2_species;
+         const auto other_species = same_struct_species == product1_species ? product2_species : product1_species;
+         const auto D1 = same_struct_species.D();
+         const auto D2 = other_species.D();
+
+         if (reactant_species.structure_type_id() != same_struct_species.structure_type_id() ||
+         (same_struct_species.structure_type_id() != other_species.structure_type_id() &&
+         other_species.structure_type_id() != world_id)) {
             THROW_EXCEPTION(not_implemented, "Structure change not available.");
          }
 
-         // when fire_single-reaction is called from within a Pair domain, the pair-partner particel may be in the way of two products, so try 4 random placements
+         // when fire_single-reaction is called from within a Pair domain, the pair-partner particle may be in the way of two products, so try 4 random placements
          for (int retry = 4; retry > 0; --retry)
          {
-            // calculate a random vector in the structure with unit length
-            auto reactant_structure = world_.get_structure(reactant.second.structure_id());
-            Vector3 iv = GfrdCfg.MINIMAL_SEPARATION_FACTOR * reactant_structure->random_vector(r01, rng_);
+             if(product1_species.structure_type_id() == reactant_species.structure_type_id() &&
+                product2_species.structure_type_id() == reactant_species.structure_type_id())
+             {
+                 /* Reaction: A (structure) -> B (same structure) + C (same structure) */
 
-            double Dtot = product1_species.D() + product2_species.D();
-            Vector3 pos1 = reactant.second.position() - iv * (Dtot != 0.0 ? product1_species.D() / Dtot : 0.5);
-            Vector3 pos2 = reactant.second.position() + iv * (Dtot != 0.0 ? product2_species.D() / Dtot : 0.5);
+                 // calculate a random vector in the structure with unit length
+                 auto reactant_structure = world_.get_structure(reactant.second.structure_id());
+                 Vector3 iv = GfrdCfg.MINIMAL_SEPARATION_FACTOR * reactant_structure->random_vector(r01, rng_);
 
-            StructureID product1_structure_id = reactant_structure->id();     // no change in structure
-            StructureID product2_structure_id = reactant_structure->id();
+                 double Dtot = product1_species.D() + product2_species.D();
+                 Vector3 pos1 = reactant.second.position() - iv * (Dtot != 0.0 ? product1_species.D() / Dtot : 0.5);
+                 Vector3 pos2 = reactant.second.position() + iv * (Dtot != 0.0 ? product2_species.D() / Dtot : 0.5);
 
-            pos1 = world_.apply_boundary(pos1);
-            pos2 = world_.apply_boundary(pos2);
+                 StructureID product1_structure_id = reactant_structure->id();     // no change in structure
+                 StructureID product2_structure_id = reactant_structure->id();
 
-            auto ol1 = world_.test_particle_overlap(Sphere(pos1, product1_species.radius()), reactant.first);
-            auto ol2 = world_.test_particle_overlap(Sphere(pos2, product2_species.radius()), reactant.first);
-            if (!ol1 && !ol2)     // no overlap
-            {
-               double radius = std::max(world_.distance(reactant.second.position(), pos1) + product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
-                  world_.distance(reactant.second.position(), pos2) + product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
-               burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+                 pos1 = world_.apply_boundary(pos1);
+                 pos2 = world_.apply_boundary(pos2);
 
-               world_.remove_particle(reactant.first);
-               auto newparticle1 = world_.add_particle(product1_species.id(), product1_structure_id, pos1);
-               auto newparticle2 = world_.add_particle(product2_species.id(), product2_structure_id, pos2);
-               if (rrec_) rrec_->StoreUnbindingReaction(time_, rrule.id(), reactant.first, newparticle1.first, newparticle2.first);
-               return std::vector<particle_id_pair>({ newparticle1, newparticle2 });
-            }
-            //Log("GFRD").info("single reaction %d: placing product(s) failed, retry %d, iv: %g,%g,%g l=%g", reactant.first, retry, iv.X(), iv.Y(), iv.Z(), iv.length());
+                 auto ol1 = world_.test_particle_overlap(Sphere(pos1, product1_species.radius()), reactant.first);
+                 auto ol2 = world_.test_particle_overlap(Sphere(pos2, product2_species.radius()), reactant.first);
+                 if (!ol1 && !ol2)     // no overlap
+                 {
+                     double radius = std::max(world_.distance(reactant.second.position(), pos1) +
+                                              product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
+                                              world_.distance(reactant.second.position(), pos2) +
+                                              product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
+                     burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+
+                     world_.remove_particle(reactant.first);
+                     auto newparticle1 = world_.add_particle(product1_species.id(), product1_structure_id, pos1);
+                     auto newparticle2 = world_.add_particle(product2_species.id(), product2_structure_id, pos2);
+                     if (rrec_)
+                         rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first,
+                                                       newparticle2.first);
+                     return std::vector<particle_id_pair>({newparticle1, newparticle2});
+                 }
+                 //Log("GFRD").info("single reaction %d: placing product(s) failed, retry %d, iv: %g,%g,%g l=%g", reactant.first, retry, iv.X(), iv.Y(), iv.Z(), iv.length());
+             }
+             else if (same_struct_species.structure_type_id() == reactant_species.structure_type_id() &&
+                        other_species.structure_type_id() == world_id) {
+                 /* Reaction: A (plane) -> B (plane) + C (world / 3D) */
+
+                 auto plane = dynamic_cast<PlanarSurface *>(world_.get_structure(reactant.second.structure_id()).get());
+                 if (plane != nullptr) {
+                     // The scaling factor is needed to make the anisotropic diffusion problem
+                     // of the IV into an isotropic one.
+                     auto scaling_factor = sqrt((D1 + D2) / D2);
+                     auto pos1 = reactant.second.position();
+                     auto distance = r01 * scaling_factor * GfrdCfg.MINIMAL_SEPARATION_FACTOR;
+
+                     auto offset = Vector3::random(rng_) * distance;
+
+                     // Make sure the particle is placed on the correct side of the plane, if it is single-sided
+                     if (plane->shape().is_one_sided() && Vector3::dot(plane->shape().unit_z(), offset) < 0)
+                     {
+                         offset *= -1;
+                     }
+
+                     // Put second particle at the edge of the first particle's shell
+                     // TODO: previously positions were determined from Mixed2D3D.do_back_transform(), with
+                     // reactant_pos as CoM and (r1 + r2) * random unit vector. This does not keep the first product
+                     // on the structure, however, and seems erroneous. "eGFRD in all dimensions", supplementary
+                     // information, section S1.2.1 mentions that one product should be placed at reactant_pos, and the
+                     // other product should be put at contact with the first at a random orientation.
+                     auto pos2 = pos1 + offset;
+                     auto ol1 = world_.test_particle_overlap(Sphere(pos1, same_struct_species.radius()), reactant.first);
+                     auto ol2 = world_.test_particle_overlap(Sphere(pos2, other_species.radius()), reactant.first);
+                     if (!ol1 && !ol2)     // no overlap
+                     {
+                         double radius = std::max(world_.distance(reactant.second.position(), pos1) +
+                                                  product1_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY,
+                                                  world_.distance(reactant.second.position(), pos2) +
+                                                  product2_species.radius() * GfrdCfg.SINGLE_SHELL_FACTOR * GfrdCfg.SAFETY);
+                         burst_volume(Sphere(reactant.second.position(), radius), ignore);    // includes both particles
+
+                         world_.remove_particle(reactant.first);
+                         auto newparticle1 = world_.add_particle(same_struct_species.id(), reactant.second.structure_id(), pos1);
+                         auto newparticle2 = world_.add_particle(other_species.id(), world_id, pos2);
+                         if (rrec_)
+                             rrec_->StoreUnbindingReaction(time_, reaction_rule.id(), reactant.first, newparticle1.first,
+                                                           newparticle2.first);
+                         return std::vector<particle_id_pair>({newparticle1, newparticle2});
+                     }
+                 }
+                 else
+                 {
+                     /* Reaction: A (some structure) -> B (same structure) + C (world / 3D) */
+                     THROW_EXCEPTION(not_implemented, "Structure type of reaction product not yet implemented.");
+                 }
+             }
          }
 
          // Process (the lack of) change
@@ -625,35 +816,64 @@ private:
          if (eventType == Domain::EventType::IV_EVENT)
             eventType = single.draw_iv_event_type(rng_);
 
-         ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE || eventType == Domain::EventType::BURST);
+         ASSERT(eventType == Domain::EventType::SINGLE_REACTION || eventType == Domain::EventType::SINGLE_ESCAPE ||
+                  eventType == Domain::EventType::SINGLE_INTERACTION || eventType == Domain::EventType::BURST ||
+                  eventType == Domain::EventType::IV_ESCAPE || eventType == Domain::EventType::IV_INTERACTION);
+
          ReactionRule rrule = eventType == Domain::EventType::SINGLE_REACTION ? single.draw_reaction_rule(rng_) : ReactionRule::empty();
 
-         // get the(new) position and structure on which the particle is located.
+         // Get the (new) position and structure on which the particle is located.
          position_structid_pair pos_struct = single.draw_new_position(rng_);
          pos_struct = world_.apply_boundary(pos_struct);
 
+         auto ols = world_.test_surfaces_overlap(Sphere(pos_struct.first, pid_pair.second.radius()),
+                                                  pos_struct.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct.second}));
+         if(ols) {
+             Log("GFRD").warn() << single.type_name() << " move resulted in overlap with surface";
+         }
+
          // newpos now hold the new position of the particle (not yet committed to the world)
          // if we would here move the particles and make new shells, then it would be similar to a propagate
-
-         remove_domain(single.id());      // single does not exist after this!!!
 
          std::vector<particle_id_pair> new_particles;
          switch (eventType) // possible actions for Single domains
          {
          case Domain::EventType::SINGLE_REACTION:
-            new_particles = fire_single_reaction(pid_pair, rrule, pos_struct, ignore);
-            break;
+         case Domain::EventType::IV_INTERACTION:
+         {
+             // Particle underwent a single-molecular reaction
+             remove_domain(single.id());      // single does not exist after this!!!
+             new_particles = fire_single_reaction(pid_pair, rrule, pos_struct, ignore);
+             break;
+         }
 
          case Domain::EventType::SINGLE_INTERACTION:
-            //TODO particles, zero_singles_b, ignore = self.fire_interaction(single, newpos, struct_id, ignore)
-            THROW_EXCEPTION(not_implemented, "SINGLE_INTERACTION not supported.")
+         {
+             // Particle interacted with a structure
+             auto pip = single.pip();
+             auto domain = domains_[single.id()].get();
+             auto single_interaction = dynamic_cast<SingleInteraction *>(domain);
+             if (single_interaction == nullptr) {
+                 THROW_EXCEPTION(illegal_state, "SINGLE_INTERACTION event type without SingleInteraction type domain");
+             }
+             auto interaction_rule = single_interaction->draw_interaction_rule(rng_);
+             auto interacting_surface = single_interaction->get_interacting_structure();
+             remove_domain(single.id());      // single does not exist after this!!!
+
+             new_particles = fire_single_interaction(pip, interaction_rule, interacting_surface);
+             break;
+         }
 
          case Domain::EventType::SINGLE_ESCAPE:
+         case Domain::EventType::IV_ESCAPE:
          case Domain::EventType::BURST:
          {
+            // Particle was burst or escaped its protective domain
+            remove_domain(single.id());      // single does not exist after this!!!
             auto new_pid = fire_move(pid_pair, pos_struct);
             new_particles.emplace_back(new_pid);
-         }  break;
+            break;
+         }
 
          default:
             THROW_EXCEPTION(illegal_state, "unexpected eventType")
@@ -715,7 +935,22 @@ private:
          pos_struct1 = world_.apply_boundary(pos_struct1);
          pos_struct2 = world_.apply_boundary(pos_struct2);
 
-         //world_.check_overlap();
+
+         auto ol1 = world_.test_particle_overlap(Sphere(pos_struct1.first, pid_pair1.second.radius()), std::vector<ParticleID>{ pid_pair1.first, pid_pair2.first });
+         auto ol2 = world_.test_particle_overlap(Sphere(pos_struct2.first, pid_pair2.second.radius()), std::vector<ParticleID>{ pid_pair1.first, pid_pair2.first });
+         if(ol1 || ol2) {
+             Log("GFRD").warn() << pair.type_name() << " move resulted in overlap with another particle";
+         }
+
+
+          //world_.check_overlap();
+         auto ols1 = world_.test_surfaces_overlap(Sphere(pos_struct1.first, pid_pair1.second.radius()),
+                                                  pos_struct1.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct1.second}));
+         auto ols2 = world_.test_surfaces_overlap(Sphere(pos_struct2.first, pid_pair2.second.radius()),
+                                                  pos_struct2.first, 0, std::vector<StructureID>({world_.get_def_structure_id(), pos_struct2.second}));
+         if(ols1 || ols2) {
+             Log("GFRD").warn() << pair.type_name() << " move resulted in overlap with surface";
+         }
       }
       else
       {
@@ -960,7 +1195,8 @@ private:
    particle_id_pair fire_move(particle_id_pair pip, position_structid_pair pos_struct) const
    {
       // check if there is enough space
-      auto ol = world_.test_particle_overlap(Sphere(pos_struct.first, pip.second.radius()), pip.first);     // check location of new position, ignore old location
+      auto sphere = Sphere(pos_struct.first, pip.second.radius());
+      auto ol = world_.test_particle_overlap(sphere, pip.first);     // check location of new position, ignore old location
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first);
       return move_particle(pip, pos_struct);
    }
@@ -970,7 +1206,8 @@ private:
    particle_id_pair fire_move_pair(particle_id_pair pip, position_structid_pair pos_struct, const ParticleID partner_id) const
    {
       // check if there is enough space
-      auto ol = world_.test_particle_overlap(Sphere(pos_struct.first, pip.second.radius()), std::vector<ParticleID>{ pip.first, partner_id });     // check location of new position, ignore old location and partner particle
+      auto sphere = Sphere(pos_struct.first, pip.second.radius());
+      auto ol = world_.test_particle_overlap(sphere, std::vector<ParticleID>{ pip.first, partner_id });     // check location of new position, ignore old location and partner particle
       THROW_UNLESS_MSG(no_space, !ol, "No space to move particle:" << pip.first << " partner:" << partner_id);
       return move_particle(pip, pos_struct);
    };
@@ -1017,39 +1254,93 @@ private:
 
       // collect all distances and radii of surrounding particles with init-shells
 
-      bool succes;
-      ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single.shell_id(), single.particle());
-      CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single_pos);
-      if (sic.multiple())
-      {
-         // make a MULTI domain
-         succes = form_multi(single.id(), sic.multi_range());
-      }
-      else if (sic.did())
-      {
-         // Make a PAIR domain, with this single and sic.did()
-         succes = try_pair(single.id(), sic.did());
+      bool success = false;
 
-         // When pair failed, try create a Single
-         if (!succes)
-         {
-            succes = update_single(single);
-         }
-      }
-      else
+      // Find particles within interaction range
+      ShellCreateUtils::shell_interaction_check<shell_matrix_type> interacting_shells(single.shell_id(), single.particle());
+      CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, interacting_shells, single_pos);
+
+      // Find surfaces within interaction range
+      auto ignored_structures = std::vector<StructureID>{world_.get_def_structure_id(), single.particle().structure_id()};
+      ShellCreateUtils::surface_interaction_check interacting_surfaces(ignored_structures, single.particle(), world_);
+      interacting_surfaces.find_interacting_surfaces(world_.get_structures());
+
+      if (interacting_shells.multiple() || interacting_surfaces.multiple())
       {
-         // Just scale and update the Single domain
-         succes = update_single(single);
+         // Multiple interacting particles/structures, so we must make a MULTI domain
+         success = form_multi(single, interacting_shells.multi_range());
+      }
+      else if (interacting_shells.did())
+      {
+          // Make a PAIR domain, with this single and interacting_shells.did()
+          success = try_pair(single.id(), interacting_shells.did());
+
+          // When pair failed, try create a Single
+          if (!success)
+          {
+              success = update_single(single);
+          }
+      }
+      else if (interacting_surfaces.sid() && interacting_surfaces.sid() != single.pip().second.structure_id())
+      {
+          // Make a new SurfaceInteraction domain
+          success = try_interaction(single, interacting_surfaces.sid());
       }
 
-      if (!succes)
+      if(!success)
       {
-         succes = form_multi(single.id(), sic.multi_range());
-         THROW_UNLESS_MSG(illegal_state, succes, "Failed to make new domain!");
+         // No interacting particles/surfaces nearby, or creating interaction domains failed.
+         // Try to scale and update just this Single domain
+         success = update_single(single);
+      }
+
+      // If nothing else worked, make a multi domain as a fallback
+      if (!success)
+      {
+         success = form_multi(single, interacting_shells.multi_range());
+         THROW_UNLESS_MSG(illegal_state, success, "Failed to make new domain!");
       }
    }
 
    // --------------------------------------------------------------------------------------------------------------------------------
+
+   bool try_interaction(const Single& single, StructureID sid)
+   {
+       auto struc = world_.get_structure(sid);
+
+       DomainID old_did = single.id();
+       DomainID new_did = didgen_();
+       ShellID new_sid = sidgen_();         // TODO, maybe move id-gen to after we know there is space!
+       auto old_domain = dynamic_cast<Single*>(domains_[old_did].get());
+       auto old_sid = old_domain->shell_pair().first;
+
+       const auto& reaction_rules = reaction_rules_.query_reaction_rules(single.particle().sid());
+       const auto& interaction_rules = reaction_rules_.query_interaction_rules(single.particle().sid(), struc->sid());
+       auto interaction = create_default_interaction(new_did, new_sid, old_sid, single.pip(), struc, reaction_rules, interaction_rules);
+       if (interaction != nullptr)
+       {
+           bool success = interaction->create_updated_shell(shellmat_, world_);
+           if (!success) return false;
+
+           // determine next action for this event
+           interaction->determine_next_event(rng_);
+           interaction->set_last_time(time_);
+
+           // remove old domain, and add new interaction domain
+           remove_domain(old_did);
+           shellmat_.update(interaction->shell_pair());
+           domains_[new_did] = std::unique_ptr<Domain>(std::move(interaction));
+
+           // update scheduler
+           add_domain_event(new_did);
+           return true;
+       }
+       else
+       {
+           Log("GFRD").info() << "Make interaction from " << single.shell().did() << " and " << sid << " failed (surfaces other than PlanarSurface not implemented)!";
+           return false;
+       }
+   }
 
    bool try_pair(DomainID did1, DomainID did2)
    {
@@ -1073,8 +1364,8 @@ private:
       auto pair = create_default_pair(did, sid, pip1, structure1, pip2, structure2, rules);
       if (pair != nullptr)
       {
-         bool succes = pair->create_updated_shell(shellmat_, world_, single1->shell_id(), single2->shell_id());
-         if (!succes) return false;
+         bool success = pair->create_updated_shell(shellmat_, world_, single1->shell_id(), single2->shell_id());
+         if (!success) return false;
 
          pair->set_k_totals(single1->particle().sid(), single1->k_total(), single2->k_total());
          // # 3. update the shell containers with the new shell
@@ -1105,12 +1396,18 @@ private:
 
    // --------------------------------------------------------------------------------------------------------------------------------
 
-   bool form_multi(DomainID did, const gi::iteratorRange<std::vector<DomainID>>& neighbors)
+   bool form_multi(Single& single, const gi::iteratorRange<std::vector<DomainID>>& neighbors)
    {
+      auto did = single.id();
       Multi* multi = nullptr;
       std::vector<DomainID> neighbor_list;
 
-      // Copy known neigbors to our neigbor list
+      // Clear volume around the particle to ensure the multi domain won't overlap any other domains
+      auto particle = single.particle();
+      std::vector<DomainID> ignore = {did};
+      burst_volume(Sphere(particle.position(), particle.radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
+
+      // Copy known neighbors to our neighbor list
       std::copy(neighbors.begin(), neighbors.end(), std::back_inserter(neighbor_list));
 
       // loop all neighbor domains, add any init/multi domains whos particles lays within the multi_horizon distance
@@ -1122,19 +1419,19 @@ private:
             std::vector<DomainID> more_neighbors;
             for (auto ndid : check_neighbors)
             {
-               const auto& domain = domains_[ndid];
+               const auto& neighbour_domain = domains_[ndid];
 
-               // is new_neighbor a single(init)?
-               auto single = dynamic_cast<Single*>(domain.get());
-               if (single != nullptr)
+               // is new_neighbor a single_neighbour(init)?
+               auto single_neighbour = dynamic_cast<Single*>(neighbour_domain.get());
+               if (single_neighbour != nullptr)
                {
                   // make room for MSF shell ?        TODO not sure if this is needed, and its also expensive since we also do sic here.
                   // ignore.emplace_back(ndid);
-                  // burst_volume(Sphere(single->particle().position(), single->particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
+                  // burst_volume(Sphere(single_neighbour->particle().position(), single_neighbour->particle().radius() * GfrdCfg.MULTI_SHELL_FACTOR * GfrdCfg.SAFETY), ignore, true);
 
                   // add other (init)singles and multies within multi_horizon, that are not yet in the list
-                  ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single->shell_id(), single->particle());
-                  CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single->particle().position());
+                  ShellCreateUtils::shell_interaction_check<shell_matrix_type> sic(single_neighbour->shell_id(), single_neighbour->particle());
+                  CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, sic, single_neighbour->particle().position());
                   for (auto edid : sic.multi_range())
                   {
                      // already in list?
@@ -1148,7 +1445,7 @@ private:
                }
 
                // is new_neighbor a multi?
-               auto multi1 = dynamic_cast<Multi*>(domain.get());
+               auto multi1 = dynamic_cast<Multi*>(neighbour_domain.get());
                if (multi1 != nullptr)
                {
                   if (multi == nullptr || multi1 == multi)      // first multi in list (reuse it), or re-hit the same (remove from list)
@@ -1179,8 +1476,7 @@ private:
       }
 
       // put original Single into Multi
-      auto single = dynamic_cast<Single*>(domains_[did].get());
-      add_to_multi(multi, single->pip());
+      add_to_multi(multi, single.pip());
       remove_domain(did);
 
       // Add our neighbor particles, and merge other multi's.
@@ -1322,29 +1618,29 @@ private:
          const auto& shell = i.second;
          DomainID did = shell.did();
          auto& domain = domains_.at(did);
-         std::vector<DomainID> ovl;
+         std::vector<DomainID> overlap;
 
          if (shell.shape() == Shell::Shape::SPHERE)
          {
             auto sphere = shell.get_sphere();
             ShellCreateUtils::shell_overlap_check_sphere<shell_matrix_type> soc(sphere);
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, sphere.position());
-            ovl = std::move(soc.overlap());
+            overlap = std::move(soc.overlap());
          }
          else
          {
             auto cylinder = shell.get_cylinder();
             ShellCreateUtils::shell_overlap_check_cylinder<shell_matrix_type> soc(cylinder, 1.0 / world_.cell_size());
             CompileConfigSimulator::TBoundCondition::each_neighbor(shellmat_, soc, cylinder.position());
-            ovl = std::move(soc.overlap());
+            overlap = std::move(soc.overlap());
          }
 
          auto multi = dynamic_cast<Multi*>(domain.get());
          if (multi != nullptr)
          {
             // Multi domain has one or more shells, overlap-count should be between one (itself) and shell count
-            THROW_UNLESS_MSG(illegal_state, ovl.size() >= 1 && ovl.size() <= multi->num_shells(), "Shells of multi domain:" << did << " overlaps with more shells (" << ovl.size() << ") than it holds (" << multi->num_shells() << ").");
-            for (const auto& j : ovl)
+            THROW_UNLESS_MSG(illegal_state, overlap.size() >= 1 && overlap.size() <= multi->num_shells(), "Shells of multi domain:" << did << " overlaps with more shells (" << overlap.size() << ") than it holds (" << multi->num_shells() << ").");
+            for (const auto& j : overlap)
                THROW_UNLESS_MSG(illegal_state, j == did, "Shell of multi domain:" << did << " overlaps with shell from domain:" << j);
 
             // From all shells in the domain, there should be one equal to the shell in the matrix.
@@ -1353,11 +1649,11 @@ private:
             THROW_UNLESS_MSG(illegal_state, dshell != dshells.end(), "Multi domain:" << did << " does not contain ShellID " << i.first <<".");
             THROW_UNLESS_MSG(illegal_state, (*dshell).second.get() == shell, "Shell of domain:" << did << " differs from Shell in ShellMatrix.");
          }
-         else
+         else if(overlap.size() > 0)
          {
             // Single/Pair domain has one shell, overlap-count should be one (itself)
-            THROW_UNLESS_MSG(illegal_state, ovl.size() == 1, "Shell of domain:" << did << " overlaps with other shells.");
-            THROW_UNLESS_MSG(illegal_state, *ovl.begin() == did, "Shell of domain:" << did << " overlaps with other shell (Domain:" << *ovl.begin() << " ).");
+            THROW_UNLESS_MSG(illegal_state, overlap.size() == 1, "Shell of domain:" << did << " overlaps with other shells.");
+            THROW_UNLESS_MSG(illegal_state, *overlap.begin() == did, "Shell of domain:" << did << " overlaps with other shell (Domain:" << *overlap.begin() << " ).");
 
             // The shell in the domain, should be equal to the shell in the matrix.
             const auto& dshell = domain->get_shell();

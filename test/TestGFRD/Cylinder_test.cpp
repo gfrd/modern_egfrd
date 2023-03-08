@@ -1,5 +1,6 @@
 #include <functional>
 #include <sstream>
+#include <helperFunctions.hpp>
 #include "Cylinder.hpp"
 #include "Cylinder_test.hpp"
 #include "randomNumberGenerator.hpp"
@@ -153,6 +154,137 @@ int testCylinderRandom_position()
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
+/* Tests distance between cylinders. */
+int testCylinderDistanceCylinderParallel()
+{
+    Cylinder c1(Vector3(0.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5),
+            c2(Vector3(3.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5);
+
+    Vector3 start1 = c1.position() - c1.half_length() * c1.unit_z(),
+            end1 = c1.position() + c1.half_length() * c1.unit_z(),
+            start2 = c2.position() - c2.half_length() * c2.unit_z(),
+            end2 = c2.position() + c2.half_length() * c2.unit_z();
+
+    double line_squared_dist = squared_distance::line_segments(start1, end1, start2, end2);
+    double sum_radii = c1.radius() + c2.radius();
+
+    TINYTEST_ASSERT(line_squared_dist == 3.0*3.0);
+    TINYTEST_ASSERT(std::sqrt(line_squared_dist) - sum_radii == 1.0);
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/* Tests distance between cylinders. */
+int testCylinderDistanceCylinderParallelOffset()
+{
+    Cylinder c1(Vector3(0.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5),
+            c2(Vector3(3.0, 2.0, 0.0), 1.0, Vector3(0.0, -1.0, 0.0), 0.5);
+
+    Vector3 start1 = c1.position() - c1.half_length() * c1.unit_z(),
+            end1 = c1.position() + c1.half_length() * c1.unit_z(),
+            start2 = c2.position() - c2.half_length() * c2.unit_z(),
+            end2 = c2.position() + c2.half_length() * c2.unit_z();
+
+    double line_squared_dist = squared_distance::line_segments(start1, end1, start2, end2);
+
+    TINYTEST_ASSERT(line_squared_dist == (3*3 + 1*1));
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/* Tests distance between cylinders. */
+int testCylinderDistanceCylinderOrthogonal()
+{
+    Cylinder c1(Vector3(0.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5),
+            c2(Vector3(0.0, 0.0, 3.0), 1.0, Vector3(0.0, 0.0, 1.0), 0.5);
+
+    Vector3 start1 = c1.position() - c1.half_length() * c1.unit_z(),
+            end1 = c1.position() + c1.half_length() * c1.unit_z(),
+            start2 = c2.position() - c2.half_length() * c2.unit_z(),
+            end2 = c2.position() + c2.half_length() * c2.unit_z();
+
+    double line_squared_dist = squared_distance::line_segments(start1, end1, start2, end2);
+    double dist = std::sqrt(line_squared_dist);
+
+    TINYTEST_ASSERT(feq(line_squared_dist, 2.5 * 2.5));
+    TINYTEST_ASSERT(feq(dist, 2.5));
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/* Tests distance between a cylinder and point. */
+int testCylinderDistancePointOrthogonal()
+{
+    Cylinder c1(Vector3(0.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5);
+
+    Vector3 start1 = c1.position() - c1.half_length() * c1.unit_z(),
+            end1 = c1.position() + c1.half_length() * c1.unit_z(),
+            point = Vector3(0, 0.0, 2.0);
+
+    double line_squared_dist = squared_distance::line_segment_point(start1, end1, point);
+
+    TINYTEST_ASSERT(feq(line_squared_dist, 2.0 * 2.0));
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/* Tests distance between a cylinder and point. */
+int testCylinderDistancePointSkewed()
+{
+    Cylinder c1(Vector3(0.0, 0.0, 0.0), 1.0, Vector3(0.0, 1.0, 0.0), 0.5);
+
+    Vector3 start1 = c1.position() - c1.half_length() * c1.unit_z(),
+            end1 = c1.position() + c1.half_length() * c1.unit_z(),
+            point = Vector3(0, 2.5, 2.0);
+
+    double line_squared_dist = squared_distance::line_segment_point(start1, end1, point);
+
+    TINYTEST_ASSERT(feq(line_squared_dist, 2*2 + 2*2));
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+/* Tests distance between two cylinder segments, taken from a failed real-life simulation. */
+int testCylinderDistanceCylinderReallife()
+{
+    Vector3 start1 = Vector3(5.0571393536220332e-06, 7.4999999999999997e-08, 5.0069888802998225e-06),
+            end1 = start1 + Vector3(0.0, -1.0, 0.0) * (2.3325209014324453e-07 + 1.2491372177778911e-07),
+            start2 = Vector3(4.943833216010993e-06, -5.1961524227066312e-08, 5.2983685217658504e-06),
+            end2 = Vector3(4.943833216010993e-06, 5.1961524227066312e-08, 5.2983685217658504e-06);
+
+    // If both cylinders point in the same direction, distance calculation succeeds
+    double line_squared_dist = squared_distance::line_segments(start1, end1, end2, start2);
+
+    auto other_dist = Vector3(start1.X(), 0, start1.Z()) - Vector3(start2.X(), 0, start2.Z());
+    auto flat_dist = Vector3(other_dist.X(), 0, other_dist.Z());
+    auto flat_length = flat_dist.length();
+
+    TINYTEST_ASSERT(feq(line_squared_dist, flat_length * flat_length));
+
+    // If one of the cylinders' unit_z is directly opposite to the other, distance calculation fails
+    line_squared_dist = squared_distance::line_segments(start1, end1, start2, end2);
+
+    other_dist = Vector3(start1.X(), 0, start1.Z()) - Vector3(start2.X(), 0, start2.Z());
+    flat_dist = Vector3(other_dist.X(), 0, other_dist.Z());
+    flat_length = flat_dist.length();
+
+    TINYTEST_ASSERT(feq(line_squared_dist, flat_length * flat_length));
+
+    return 1;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
 TINYTEST_START_SUITE(Cylinder);
 TINYTEST_ADD_TEST(testCylinderCreate);
 TINYTEST_ADD_TEST(testCylinderDof);
@@ -163,6 +295,12 @@ TINYTEST_ADD_TEST(testCylinderProject_point_on_surface);
 TINYTEST_ADD_TEST(testCylinderDistance);
 TINYTEST_ADD_TEST(testCylinderDeflect);
 TINYTEST_ADD_TEST(testCylinderRandom_position);
+TINYTEST_ADD_TEST(testCylinderDistanceCylinderParallel);
+TINYTEST_ADD_TEST(testCylinderDistanceCylinderParallelOffset);
+TINYTEST_ADD_TEST(testCylinderDistanceCylinderOrthogonal);
+TINYTEST_ADD_TEST(testCylinderDistanceCylinderReallife);
+TINYTEST_ADD_TEST(testCylinderDistancePointOrthogonal);
+TINYTEST_ADD_TEST(testCylinderDistancePointSkewed);
 TINYTEST_END_SUITE();
 
 // --------------------------------------------------------------------------------------------------------------------------------
